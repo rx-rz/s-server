@@ -64,15 +64,18 @@ export const room = pgTable(
 
 export const roomType = pgTable("room_types", {
   id: serial("id").primaryKey(),
-  rating: decimal("rating", { precision: 2 }).notNull().default("0.0"),
-  name: varchar("name", { length: 50 }).notNull(),
-  price: decimal("price", { precision: 2 }).notNull(),
+  rating: decimal("rating", { precision: 10, scale: 2 })
+    .notNull()
+    .default("0.0"),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  roomImageURLS: text("room_image_url").array(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const payment = pgTable("payments", {
   id: uuid("id").primaryKey().defaultRandom(),
-  amount: decimal("amount", { precision: 2 }).notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   customerId: uuid("customer_id")
     .references(() => customer.id, {

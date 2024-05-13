@@ -1,13 +1,17 @@
-import { config } from "dotenv";
-import express, { Express, NextFunction, Request, Response } from "express";
-import { customerRouter } from "./customer/customer.routes";
+import cors from "cors";
 import morgan from "morgan";
+import express, { Express, NextFunction, Request, Response } from "express";
+
+import { config } from "dotenv";
 import { handleErrors } from "./errors";
 import { ENV_VARS } from "../env";
 import { connectToDb } from "./db/db";
-import cors from "cors";
+
+import { customerRouter } from "./customer/customer.routes";
 import { otpRouter } from "./otp/otp.routes";
 import { adminRouter } from "./admin/admin.routes";
+import { roomTypeRouter } from "./room_types/roomtype.routes";
+
 config({ path: ".env" });
 export const app: Express = express();
 app.use(cors());
@@ -18,6 +22,7 @@ app.use(morgan("tiny"));
 app.use("/api/v1/customers", customerRouter);
 app.use("/api/v1/otp", otpRouter);
 app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/roomtypes", roomTypeRouter);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   const errors = handleErrors(err);
