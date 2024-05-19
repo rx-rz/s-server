@@ -5,26 +5,26 @@ import { generateOtp } from "./otp.helpers";
 import { customerRepository } from "../customer/customer.repository";
 
 const otpTable = ctx.schema.userOtps;
-const userOtp = {
+const userOtpValues = {
   expiresAt: otpTable.expiresAt,
   email: otpTable.email,
   otp: otpTable.otp,
 };
 const createOTP = async (email: string) => {
-  const otp = generateOtp();
+  const otpNo = generateOtp();
   const customerDetails = await customerRepository.getCustomerDetails(email);
   if (customerDetails) {
     const [customerOTP] = await ctx.db
       .insert(otpTable)
-      .values({ email, otp, expiresAt: Date.now() + 600000 })
-      .returning(userOtp);
+      .values({ email, otp: otpNo, expiresAt: Date.now() + 600000 })
+      .returning(userOtpValues);
     return customerOTP;
   }
 };
 
 const getOTP = async (email: string) => {
   const otps = await ctx.db
-    .select(userOtp)
+    .select(userOtpValues)
     .from(otpTable)
     .where(eq(otpTable.email, email))
     .orderBy(desc(otpTable.expiresAt));
@@ -37,7 +37,7 @@ const deleteOTP = async (email: string) => {
   const deletedOtps = await ctx.db
     .delete(otpTable)
     .where(eq(otpTable.email, email))
-    .returning(userOtp);
+    .returning(userOtpValues);
 
   if (!deletedOtps)
     throw new NotFoundError("No OTPs have been provided for this email.");

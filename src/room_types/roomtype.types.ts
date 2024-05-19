@@ -1,7 +1,7 @@
 export type CreateRoomTypeRequest = {
   name: string;
   price: string;
-  roomImageURLS?: string[];
+  roomImageURL?: string[];
 };
 
 export type UpdateRoomTypeRequest = {

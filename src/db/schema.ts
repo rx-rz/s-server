@@ -44,10 +44,17 @@ export const customer = pgTable(
   }
 );
 
+export const customerRelation = relations(customer, ({ many }) => {
+  return {
+    bookings: many(booking, {relationName: "customer"}),
+    payments: many(payment),
+  };
+});
+
 export const room = pgTable(
   "rooms",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    roomNo: serial("roomNo").unique().primaryKey(),
     typeId: integer("type_id")
       .notNull()
       .references(() => roomType.id, { onDelete: "cascade" }),
@@ -62,6 +69,17 @@ export const room = pgTable(
   }
 );
 
+export const roomRelation = relations(room, ({ one, many }) => {
+  return {
+    roomType: one(roomType, {
+      fields: [room.typeId],
+      references: [roomType.id],
+      relationName: "roomType",
+    }),
+    bookings: many(booking, { relationName: "bookings" }),
+  };
+});
+
 export const roomType = pgTable("room_types", {
   id: serial("id").primaryKey(),
   rating: decimal("rating", { precision: 10, scale: 2 })
@@ -73,6 +91,12 @@ export const roomType = pgTable("room_types", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const roomTypeRelation = relations(roomType, ({ one, many }) => {
+  return {
+    rooms: many(room, { relationName: "roomType" }),
+  };
+});
+
 export const payment = pgTable("payments", {
   id: uuid("id").primaryKey().defaultRandom(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
@@ -82,25 +106,53 @@ export const payment = pgTable("payments", {
       onDelete: "cascade",
     })
     .notNull(),
+  bookingId: uuid("booking_id").references(() => booking.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade"
+  }),
+});
+
+export const paymentRelation = relations(payment, ({ one, many }) => {
+  return {
+    customer: one(customer, {
+      fields: [payment.customerId],
+      references: [customer.id],
+    }),
+    booking: one(booking, {
+      fields: [payment.bookingId],
+      references: [booking.id]
+    }),
+  };
 });
 
 export const booking = pgTable("bookings", {
   id: uuid("id").primaryKey().defaultRandom(),
-  roomId: uuid("rooms_id")
-    .references(() => room.id, {
+  roomNo: integer("roomNo")
+    .references(() => room.roomNo, {
       onDelete: "cascade",
     })
     .notNull(),
   customerId: uuid("customer_id")
     .references(() => customer.id, { onDelete: "no action" })
     .notNull(),
-  paymentId: uuid("payment_id")
-    .references(() => payment.id, { onDelete: "no action" })
-    .notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
-  paymentIsComplete: boolean("payment_is_complete").default(false),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const bookingRelation = relations(booking, ({ one, many }) => {
+  return {
+    rooms: one(room, {
+      fields: [booking.roomNo],
+      references: [room.roomNo],
+      relationName: "bookings",
+    }),
+    customers: one(customer, {
+      fields: [booking.customerId],
+      references: [customer.id],
+      relationName: "customer"
+    }),
+  };
 });
 
 export const userOtps = pgTable("user_otps", {
@@ -110,58 +162,17 @@ export const userOtps = pgTable("user_otps", {
   expiresAt: bigint("expires_at", { mode: "number" }).notNull(),
 });
 
-export const bookingRelation = relations(booking, ({ one, many }) => {
-  return {
-    payments: one(payment, {
-      fields: [booking.paymentId],
-      references: [payment.id],
-    }),
-    rooms: many(room),
-    customers: one(customer, {
-      fields: [booking.customerId],
-      references: [customer.id],
-    }),
-  };
-});
-
-export const customerRelation = relations(customer, ({ many }) => {
-  return {
-    bookings: many(booking),
-    payments: many(payment),
-  };
-});
-
-export const roomRelation = relations(room, ({ one, many }) => {
-  return {
-    roomType: one(roomType, {
-      fields: [room.typeId],
-      references: [roomType.id],
-    }),
-    bookings: many(booking),
-  };
-});
-
-export const roomTypeRelation = relations(roomType, ({ one, many }) => {
-  return {
-    rooms: many(room),
-  };
-});
-
-export const paymentRelation = relations(payment, ({ one, many }) => {
-  return {
-    customer: one(customer, {
-      fields: [payment.customerId],
-      references: [customer.id],
-    }),
-  };
-});
-
 export const dbSchema = {
   customer,
+  customerRelation,
   room,
+  roomRelation,
   roomType,
+  roomTypeRelation,
   payment,
+  paymentRelation,
   booking,
+  bookingRelation,
   admin,
   userOtps,
 };

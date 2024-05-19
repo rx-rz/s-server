@@ -11,6 +11,8 @@ import { customerRouter } from "./customer/customer.routes";
 import { otpRouter } from "./otp/otp.routes";
 import { adminRouter } from "./admin/admin.routes";
 import { roomTypeRouter } from "./room_types/roomtype.routes";
+import { roomRouter } from "./room/room.routes";
+import { bookingRouter } from "./booking/booking.routes";
 
 config({ path: ".env" });
 export const app: Express = express();
@@ -23,6 +25,8 @@ app.use("/api/v1/customers", customerRouter);
 app.use("/api/v1/otp", otpRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/roomtypes", roomTypeRouter);
+app.use("/api/v1/rooms", roomRouter);
+app.use("/api/v1/bookings", bookingRouter);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   const errors = handleErrors(err);

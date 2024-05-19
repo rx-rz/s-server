@@ -37,6 +37,7 @@ const getRoomTypeDetails = async (name: string, isRequired = true) => {
 };
 
 const deleteRoomType = async (name: string) => {
+  await getRoomTypeDetails(name);
   const [deletedRoomType] = await ctx.db
     .delete(roomTypeTable)
     .where(eq(roomTypeTable.name, name))
@@ -45,19 +46,17 @@ const deleteRoomType = async (name: string) => {
 };
 
 const updateRoomType = async (request: UpdateRoomTypeRequest) => {
-  const roomTypeExists = await getRoomTypeDetails(request.currentName);
-  if (roomTypeExists) {
-    const [updatedRoomType] = await ctx.db
-      .update(roomTypeTable)
-      .set({})
-      .returning(roomTypeValues);
-    return updatedRoomType;
-  }
+  await getRoomTypeDetails(request.currentName);
+  const [updatedRoomType] = await ctx.db
+    .update(roomTypeTable)
+    .set({})
+    .returning(roomTypeValues);
+  return updatedRoomType;
 };
 
 const getPossibleRoomTypes = async () => {
   const roomTypes = await ctx.db
-    .selectDistinct({ name: roomTypeTable.name })
+    .selectDistinct({ name: roomTypeTable.name, id: roomTypeTable.id })
     .from(roomTypeTable);
   return roomTypes;
 };
