@@ -9,3 +9,7 @@ roomTypeRouter.get(
   roomTypeHandlers.listPossibleRoomTypes
 );
 roomTypeRouter.patch("/updateRoomType", roomTypeHandlers.updateRoomType);
+roomTypeRouter.patch(
+  "/addRoomImageURLs",
+  roomTypeHandlers.addRoomImageURLSToRoom
+);

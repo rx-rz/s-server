@@ -88,6 +88,7 @@ export const roomType = pgTable("room_types", {
   name: varchar("name", { length: 50 }).notNull().unique(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   roomImageURLS: text("room_image_url").array(),
+  imageFileNames: text("room_image_name").array(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

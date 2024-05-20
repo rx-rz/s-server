@@ -46,10 +46,11 @@ const deleteRoomType = async (name: string) => {
 };
 
 const updateRoomType = async (request: UpdateRoomTypeRequest) => {
-  await getRoomTypeDetails(request.currentName);
+  const { currentName, ...values } = request;
   const [updatedRoomType] = await ctx.db
     .update(roomTypeTable)
-    .set({})
+    .set(values)
+    .where(eq(roomTypeTable.name, currentName))
     .returning(roomTypeValues);
   return updatedRoomType;
 };
@@ -61,10 +62,21 @@ const getPossibleRoomTypes = async () => {
   return roomTypes;
 };
 
+const getRoomsForRoomType = async (name: string) => {
+  await getRoomTypeDetails(name);
+  const roomtypeRooms = await ctx.db.query.roomType.findFirst({
+    where: eq(roomTypeTable.name, name),
+    with: {
+      rooms: true,
+    },
+  });
+  return roomtypeRooms;
+};
 export const roomTypeRepository = {
   updateRoomType,
   deleteRoomType,
   getRoomTypeDetails,
   createRoomType,
   getPossibleRoomTypes,
+  getRoomsForRoomType,
 };

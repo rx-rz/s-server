@@ -9,4 +9,5 @@ export type UpdateRoomTypeRequest = {
   name?: string;
   price?: string;
   roomImageURLS?: string[];
+  imageFileNames?: string[];
 };

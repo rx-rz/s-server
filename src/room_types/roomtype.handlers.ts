@@ -26,14 +26,12 @@ const deleteRoomType: Handler = async (req, res, next) => {
 const updateRoomType: Handler = async (req, res, next) => {
   try {
     const { name: currentName } = v.roomTypeNameValidator.parse(req.query);
-    const { newName, price, roomImageURLS } = v.updateRoomTypeValidator.parse(
-      req.body
-    );
+    const { newName, price } = v.updateRoomTypeValidator.parse(req.body);
+    console.log({ currentName, newName, price });
     const updatedRoomType = await roomTypeRepository.updateRoomType({
       currentName,
       name: newName,
       price,
-      roomImageURLS,
     });
     return res.status(httpstatus.OK).send({ updatedRoomType, isSuccess: true });
   } catch (err) {
@@ -50,9 +48,26 @@ const listPossibleRoomTypes: Handler = async (req, res, next) => {
   }
 };
 
+const addRoomImageURLSToRoom: Handler = async (req, res, next) => {
+  try {
+    const { urls, imageFileNames, name } = v.updateRoomTypeImageURLs.parse(
+      req.body
+    );
+    const updatedRoom = await roomTypeRepository.updateRoomType({
+      currentName: name,
+      roomImageURLS: urls,
+      imageFileNames
+    });
+    return res.status(httpstatus.OK).json({ updatedRoom, isSuccess: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const roomTypeHandlers = {
   createRoomType,
   deleteRoomType,
   updateRoomType,
   listPossibleRoomTypes,
+  addRoomImageURLSToRoom,
 };
