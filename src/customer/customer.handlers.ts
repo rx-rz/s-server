@@ -163,4 +163,5 @@ export const customerHandlers = {
   updateCustomerEmail,
   updateCustomerPassword,
   loginCustomer,
+  getCustomerBookings,
 };
