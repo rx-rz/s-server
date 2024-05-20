@@ -4,7 +4,7 @@ import { generateAccessToken } from "../middleware/jwt-token";
 import { checkIfPasswordIsCorrect, hashUserPassword } from "./customer.helpers";
 import { customerRepository } from "./customer.repository";
 import { v } from "./customer.validators";
-import e, { Handler } from "express";
+import { Handler } from "express";
 
 const { httpstatus } = ctx;
 
@@ -34,7 +34,9 @@ const loginCustomer: Handler = async (req, res, next) => {
       id: customerDetails.id,
       role: "CUSTOMER",
     });
-    return res.status(httpstatus.OK).send({ customerDetails, token, isSuccess: true });
+    return res
+      .status(httpstatus.OK)
+      .send({ customerDetails, token, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -51,7 +53,7 @@ const listCustomers: Handler = async (req, res, next) => {
 
 const deleteCustomer: Handler = async (req, res, next) => {
   try {
-    const { email } = v.deletionValidator.parse(req.query);
+    const { email } = v.emailValidator.parse(req.query);
     const customerExists = await customerRepository.getCustomerDetails(email);
     if (customerExists) {
       const deletedCustomer = await customerRepository.deleteCustomer({
@@ -143,6 +145,16 @@ const updateCustomerPassword: Handler = async (req, res, next) => {
   }
 };
 
+const getCustomerBookings: Handler = async (req, res, next) => {
+  try {
+    const { email } = v.emailValidator.parse(req.query);
+    const customerBookings = await customerRepository.getCustomerBookings(
+      email
+    );
+  } catch (err) {
+    next(err);
+  }
+};
 export const customerHandlers = {
   registerCustomer,
   listCustomers,

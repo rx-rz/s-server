@@ -22,7 +22,9 @@ const registrationValidator = z.object({
     .optional(),
 });
 
-const deletionValidator = z.object({
+
+
+const emailValidator = z.object({
   email: z.string({ required_error: "Email is required!" }).email({
     message: "Email input is not a valid email. Please correct and try again.",
   }),
@@ -87,7 +89,7 @@ const updateEmailValidator = z.object({
 
 export const v = {
   registrationValidator,
-  deletionValidator,
+  emailValidator,
   updateEmailValidator,
   updatePasswordValidator,
   updateValidator,

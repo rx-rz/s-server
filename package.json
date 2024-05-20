@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "ts-node-dev src/app.ts --file",
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate:pg",
     "db:migrate": "ts-node ./src/db/migrate.ts"
   },
@@ -39,7 +40,9 @@
     "bcryptjs": "^2.4.3",
     "drizzle-kit": "^0.20.17",
     "express": "^4.19.2",
+    "supertest": "^7.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
   }
 }

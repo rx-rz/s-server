@@ -22,6 +22,8 @@ const ENV = z.object({
     process.env.FIREBASE_MESSAGING_SENDER_ID
   ),
   FIREBASE_APP_ID: z.literal(process.env.FIREBASE_APP_ID),
+  PAYMENT_PUBLIC_KEY: z.literal(process.env.PAYMENT_PUBLIC_KEY),
+  PAYMENT_SECRET_KEY: z.literal(process.env.PAYMENT_SECRET_KEY),
 });
 
 export const ENV_VARS = ENV.parse(process.env);
