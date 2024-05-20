@@ -56,9 +56,19 @@ const addRoomImageURLSToRoom: Handler = async (req, res, next) => {
     const updatedRoom = await roomTypeRepository.updateRoomType({
       currentName: name,
       roomImageURLS: urls,
-      imageFileNames
+      imageFileNames,
     });
     return res.status(httpstatus.OK).json({ updatedRoom, isSuccess: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getRoomTypeDetails: Handler = async (req, res, next) => {
+  try {
+    const { name } = v.roomTypeNameValidator.parse(req.query);
+    const roomTypeDetails = await roomTypeRepository.getRoomTypeDetails(name);
+    return res.status(httpstatus.OK).json({ roomTypeDetails, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -70,4 +80,5 @@ export const roomTypeHandlers = {
   updateRoomType,
   listPossibleRoomTypes,
   addRoomImageURLSToRoom,
+  getRoomTypeDetails,
 };

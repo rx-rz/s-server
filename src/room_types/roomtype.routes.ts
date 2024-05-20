@@ -13,3 +13,4 @@ roomTypeRouter.patch(
   "/addRoomImageURLs",
   roomTypeHandlers.addRoomImageURLSToRoom
 );
+roomTypeRouter.get("/roomTypeDetails", roomTypeHandlers.getRoomTypeDetails);
