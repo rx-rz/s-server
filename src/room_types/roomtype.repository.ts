@@ -8,7 +8,10 @@ const roomTypeValues = {
   name: roomTypeTable.name,
   price: roomTypeTable.price,
   roomImageURLS: roomTypeTable.roomImageURLS,
+  imageFileNames: roomTypeTable.imageFileNames,
   id: roomTypeTable.id,
+  features: roomTypeTable.features,
+  description: roomTypeTable.description,
   rating: roomTypeTable.rating,
 };
 const createRoomType = async (request: CreateRoomTypeRequest) => {
@@ -47,6 +50,7 @@ const deleteRoomType = async (name: string) => {
 
 const updateRoomType = async (request: UpdateRoomTypeRequest) => {
   const { currentName, ...values } = request;
+  await getRoomTypeDetails(currentName);
   const [updatedRoomType] = await ctx.db
     .update(roomTypeTable)
     .set(values)
@@ -55,10 +59,8 @@ const updateRoomType = async (request: UpdateRoomTypeRequest) => {
   return updatedRoomType;
 };
 
-const getPossibleRoomTypes = async () => {
-  const roomTypes = await ctx.db
-    .selectDistinct({ name: roomTypeTable.name, id: roomTypeTable.id })
-    .from(roomTypeTable);
+const getRoomTypes = async () => {
+  const roomTypes = await ctx.db.select(roomTypeValues).from(roomTypeTable);
   return roomTypes;
 };
 
@@ -77,6 +79,6 @@ export const roomTypeRepository = {
   deleteRoomType,
   getRoomTypeDetails,
   createRoomType,
-  getPossibleRoomTypes,
+  getRoomTypes,
   getRoomsForRoomType,
 };

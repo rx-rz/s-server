@@ -17,7 +17,7 @@ import { bookingRouter } from "./booking/booking.routes";
 config({ path: ".env" });
 export const app: Express = express();
 app.use(cors());
-app.use(express.json({limit: "50mb"}));
+app.use(express.json({ limit: "50mb" }));
 
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan("tiny"));
@@ -37,19 +37,11 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     .json({ error_type: errors.type, error: errors.error, isSuccess: false });
 });
 
-app.listen(ENV_VARS.PORT, ENV_VARS.HOST, () => {
-  connectToDb();
-  process.on("uncaughtException", (err) => {
-    const errors = handleErrors(err);
-    console.error({ error_type: errors.type, error: errors.error });
-    process.exit(1);
+if (process.env.NODE_ENV === "development") {
+  app.listen(ENV_VARS.PORT, ENV_VARS.HOST, () => {
+    connectToDb();
+    console.log(
+      `\nServer running at http://${ENV_VARS.HOST}:${ENV_VARS.PORT}/. 🚀 \n`
+    );
   });
-  process.on("SIGTERM", (err) => {
-    console.error(err);
-    process.exit(1);
-  });
-
-  console.log(
-    `\nServer running at http://${ENV_VARS.HOST}:${ENV_VARS.PORT}/. 🚀 \n`
-  );
-});
+}

@@ -15,4 +15,5 @@ export async function migrateToDb() {
       console.trace(err);
     });
 }
+
 migrateToDb();

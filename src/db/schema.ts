@@ -12,6 +12,7 @@ import {
   text,
   serial,
   bigint,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 export const admin = pgTable("admins", {
@@ -46,7 +47,7 @@ export const customer = pgTable(
 
 export const customerRelation = relations(customer, ({ many }) => {
   return {
-    bookings: many(booking, {relationName: "customer"}),
+    bookings: many(booking, { relationName: "customer" }),
     payments: many(payment),
   };
 });
@@ -76,7 +77,7 @@ export const roomRelation = relations(room, ({ one, many }) => {
       references: [roomType.id],
       relationName: "roomType",
     }),
-    bookings: many(booking, { relationName: "bookings" }),
+    roomsToBooking: many(roomsToBooking),
   };
 });
 
@@ -88,11 +89,13 @@ export const roomType = pgTable("room_types", {
   name: varchar("name", { length: 50 }).notNull().unique(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   roomImageURLS: text("room_image_url").array(),
+  description: text("description"),
+  features: text("features").array(),
   imageFileNames: text("room_image_name").array(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const roomTypeRelation = relations(roomType, ({ one, many }) => {
+export const roomTypeRelation = relations(roomType, ({ many }) => {
   return {
     rooms: many(room, { relationName: "roomType" }),
   };
@@ -109,7 +112,7 @@ export const payment = pgTable("payments", {
     .notNull(),
   bookingId: uuid("booking_id").references(() => booking.id, {
     onDelete: "cascade",
-    onUpdate: "cascade"
+    onUpdate: "cascade",
   }),
 });
 
@@ -121,18 +124,13 @@ export const paymentRelation = relations(payment, ({ one, many }) => {
     }),
     booking: one(booking, {
       fields: [payment.bookingId],
-      references: [booking.id]
+      references: [booking.id],
     }),
   };
 });
 
 export const booking = pgTable("bookings", {
   id: uuid("id").primaryKey().defaultRandom(),
-  roomNo: integer("roomNo")
-    .references(() => room.roomNo, {
-      onDelete: "cascade",
-    })
-    .notNull(),
   customerId: uuid("customer_id")
     .references(() => customer.id, { onDelete: "no action" })
     .notNull(),
@@ -143,15 +141,11 @@ export const booking = pgTable("bookings", {
 
 export const bookingRelation = relations(booking, ({ one, many }) => {
   return {
-    rooms: one(room, {
-      fields: [booking.roomNo],
-      references: [room.roomNo],
-      relationName: "bookings",
-    }),
+    roomsToBooking: many(roomsToBooking),
     customers: one(customer, {
       fields: [booking.customerId],
       references: [customer.id],
-      relationName: "customer"
+      relationName: "customer",
     }),
   };
 });
@@ -162,6 +156,32 @@ export const userOtps = pgTable("user_otps", {
   otp: integer("otp").notNull(),
   expiresAt: bigint("expires_at", { mode: "number" }).notNull(),
 });
+
+export const roomsToBooking = pgTable(
+  "rooms_to_booking",
+  {
+    roomNo: integer("room_no")
+      .notNull()
+      .references(() => room.roomNo, { onDelete: "cascade" }),
+    bookingId: uuid("booking_id")
+      .notNull()
+      .references(() => booking.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.roomNo, t.bookingId] }),
+  })
+);
+
+export const roomsToBookingRelation = relations(roomsToBooking, ({ one }) => ({
+  room: one(room, {
+    fields: [roomsToBooking.roomNo],
+    references: [room.roomNo],
+  }),
+  booking: one(booking, {
+    fields: [roomsToBooking.bookingId],
+    references: [booking.id],
+  }),
+}));
 
 export const dbSchema = {
   customer,
@@ -174,6 +194,8 @@ export const dbSchema = {
   paymentRelation,
   booking,
   bookingRelation,
+  roomsToBooking,
+  roomsToBookingRelation,
   admin,
   userOtps,
 };

@@ -1,12 +1,14 @@
 import z from "zod";
 import { config } from "dotenv";
-config({ path: ".env" });
+
+config({ path: process.env.NODE_ENV === "test" ? ".env.test" : ".env" });
 
 const ENV = z.object({
   HOST: z.coerce.string().default(process.env.HOST || ""),
   PORT: z.coerce.number().default(Number(process.env.PORT) || 8081),
   USER: z.literal(process.env.USER),
   DATABASE: z.literal(process.env.DATABASE),
+  TEST_DATABASE: z.literal(process.env.TEST_DATABASE),
   DB_PORT: z.literal(process.env.DB_PORT),
   PASSWORD: z.literal(process.env.PASSWORD),
   JWT_SECRET: z.literal(process.env.JWT_SECRET),
@@ -16,6 +18,7 @@ const ENV = z.object({
   SMTPPASS: z.literal(process.env.SMTPPASS),
   PAYMENT_PUBLIC_KEY: z.literal(process.env.PAYMENT_PUBLIC_KEY),
   PAYMENT_SECRET_KEY: z.literal(process.env.PAYMENT_SECRET_KEY),
+  NODE_ENV: z.literal(process.env.NODE_ENV).default("development"),
 });
 
 export const ENV_VARS = ENV.parse(process.env);

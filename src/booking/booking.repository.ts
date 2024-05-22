@@ -6,7 +6,6 @@ import { CreateBookingRequest, UpdateBookingRequest } from "./booking.types";
 const bookingTable = ctx.schema.booking;
 const bookingValues = {
   id: bookingTable.id,
-  roomNo: bookingTable.roomNo,
   customerId: bookingTable.customerId,
   startDate: bookingTable.startDate,
   endDate: bookingTable.endDate,
@@ -36,7 +35,6 @@ const getBookingDetails = async (bookingID: string) => {
     where: eq(bookingTable.id, bookingID),
     with: {
       customers: true,
-      rooms: true
     }
   })
   if (!booking) {

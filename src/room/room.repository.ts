@@ -41,10 +41,6 @@ const getRoomDetails = async (roomNo: number, withDetails = false) => {
   if (withDetails) {
     const roomDetails = await ctx.db.query.room.findFirst({
       where: eq(roomTable.roomNo, roomNo),
-      with: {
-        bookings: true,
-        roomType: true,
-      }
     }); 
     console.log({roomDetails})
     if (!roomDetails)

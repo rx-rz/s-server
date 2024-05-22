@@ -118,28 +118,21 @@ const updateCustomerEmail: Handler = async (req, res, next) => {
 const updateCustomerPassword: Handler = async (req, res, next) => {
   try {
     const body = v.updatePasswordValidator.parse(req.body);
-    const customerExists = await customerRepository.getCustomerDetails(
+    const passwordIsCorrect = await checkIfPasswordIsCorrect(
+      body.currentPassword,
       body.email
     );
-    if (customerExists) {
-      const passwordIsCorrect = await checkIfPasswordIsCorrect(
-        body.currentPassword,
-        body.email
+    if (!passwordIsCorrect) {
+      throw new NotFoundError(
+        `User with the provided credentials could not be found.`
       );
-      if (!passwordIsCorrect) {
-        throw new NotFoundError(
-          `User with the provided credentials could not be found.`
-        );
-      }
-      const newPassword = hashUserPassword(body.newPassword);
-      const updatedCustomer = await customerRepository.updateCustomerPassword({
-        ...body,
-        newPassword,
-      });
-      return res
-        .status(httpstatus.OK)
-        .send({ updatedCustomer, isSuccess: true });
     }
+    const newPassword = hashUserPassword(body.newPassword);
+    const updatedCustomer = await customerRepository.updateCustomerPassword({
+      ...body,
+      newPassword,
+    });
+    return res.status(httpstatus.OK).send({ updatedCustomer, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -151,6 +144,8 @@ const getCustomerBookings: Handler = async (req, res, next) => {
     const customerBookings = await customerRepository.getCustomerBookings(
       email
     );
+    console.log({ customerBookings });
+    return res.status(200).json({ customerBookings, isSuccess: true });
   } catch (err) {
     next(err);
   }

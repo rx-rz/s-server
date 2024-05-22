@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "ts-node-dev src/app.ts --file",
     "build": "tsc",
-    "test": "vitest",
+    "test": "cross-env NODE_ENV=test vitest --coverage.enabled=true",
     "coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate:pg",
-    "db:migrate": "ts-node ./src/db/migrate.ts"
+    "db:migrate": "ts-node ./src/db/migrate.ts",
+    "testdb:migrate": "cross-env NODE_ENV=test ts-node ./src/db/migrate.ts"
   },
   "keywords": [],
   "author": "",
@@ -31,12 +32,15 @@
     "zod": "^3.23.5"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.12.7",
     "@types/nodemailer": "^6.4.15",
+    "@types/supertest": "^6.0.2",
+    "@vitest/coverage-v8": "^1.6.0",
     "bcryptjs": "^2.4.3",
     "drizzle-kit": "^0.20.17",
     "express": "^4.19.2",

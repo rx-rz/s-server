@@ -13,7 +13,7 @@ export class DuplicateEntryError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "DuplicateEntryError";
-    Object.setPrototypeOf(this, NotFoundError.prototype);
+    Object.setPrototypeOf(this, DuplicateEntryError.prototype);
   }
 }
 

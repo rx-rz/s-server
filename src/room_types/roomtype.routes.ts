@@ -5,12 +5,9 @@ export const roomTypeRouter = Router();
 roomTypeRouter.post("/createRoomType", roomTypeHandlers.createRoomType);
 roomTypeRouter.delete("/deleteRoomType", roomTypeHandlers.deleteRoomType);
 roomTypeRouter.get(
-  "/getPossibleRoomTypes",
-  roomTypeHandlers.listPossibleRoomTypes
+  "/getRoomTypes",
+  roomTypeHandlers.getRoomTypes,
 );
 roomTypeRouter.patch("/updateRoomType", roomTypeHandlers.updateRoomType);
-roomTypeRouter.patch(
-  "/addRoomImageURLs",
-  roomTypeHandlers.addRoomImageURLSToRoom
-);
 roomTypeRouter.get("/roomTypeDetails", roomTypeHandlers.getRoomTypeDetails);
+roomTypeRouter.get("/roomsForRoomType", roomTypeHandlers.getRoomsForRoomType);
