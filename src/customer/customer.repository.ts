@@ -7,7 +7,6 @@ import {
   CustomerUpdatePasswordRequest,
   CustomerUpdateRequest,
 } from "./customer.types";
-import { DuplicateEntryError, NotFoundError } from "../errors";
 
 const customerTable = ctx.schema.customer;
 
@@ -21,15 +20,6 @@ const customer = {
 };
 
 const register = async (customerRequest: CustomerRegisterRequest) => {
-  const customerDetails = await getCustomerDetails(
-    customerRequest.email,
-    false
-  );
-  if (customerDetails) {
-    throw new DuplicateEntryError(
-      `Customer with email ${customerRequest.email} already exists.`
-    );
-  }
   const [user] = await ctx.db
     .insert(customerTable)
     .values(customerRequest)
@@ -37,15 +27,11 @@ const register = async (customerRequest: CustomerRegisterRequest) => {
   return user;
 };
 
-const getCustomerDetails = async (customerEmail: string, isRequired = true) => {
+const getCustomerDetails = async (customerEmail: string) => {
   const [customerDetails] = await ctx.db
     .select(customer)
     .from(customerTable)
     .where(eq(customerTable.email, customerEmail));
-  if (!customerDetails && isRequired)
-    throw new NotFoundError(
-      `Customer with email ${customerEmail} could not be found.`
-    );
   return customerDetails;
 };
 
@@ -59,25 +45,16 @@ const deleteCustomer = async (customerRequest: CustomerDeleteRequest) => {
     .delete(customerTable)
     .where(eq(customer.email, customerRequest.email))
     .returning(customer);
-  if (!deletedUser) {
-    throw new NotFoundError(
-      `customer with email ${customerRequest.email} does not exist.`
-    );
-  }
   return deletedUser;
 };
 
 const updateCustomer = async (customerRequest: CustomerUpdateRequest) => {
+  const { email, ...request } = customerRequest;
   const [updatedCustomer] = await ctx.db
     .update(customerTable)
-    .set(customerRequest)
-    .where(eq(customerTable.email, customerRequest.email))
+    .set(request)
+    .where(eq(customerTable.email, email))
     .returning(customer);
-  if (!updatedCustomer) {
-    throw new NotFoundError(
-      `customer with email ${customerRequest.email} does not exist.`
-    );
-  }
   return updatedCustomer;
 };
 
@@ -89,11 +66,6 @@ const updateCustomerEmail = async (
     .set({ email: customerRequest.newEmail })
     .where(eq(customerTable.email, customerRequest.email))
     .returning(customer);
-  if (!updatedCustomer) {
-    throw new NotFoundError(
-      `customer with email ${customerRequest.email} does not exist.`
-    );
-  }
   return updatedCustomer;
 };
 
@@ -105,11 +77,6 @@ const updateCustomerPassword = async (
     .set({ password: customerRequest.newPassword })
     .where(eq(customerTable.email, customerRequest.email))
     .returning(customer);
-  if (!updatedCustomer) {
-    throw new NotFoundError(
-      `customer with email ${customerRequest.email} does not exist.`
-    );
-  }
   return updatedCustomer;
 };
 
@@ -122,7 +89,6 @@ const getCustomerPassword = async (email: string) => {
 };
 
 const getCustomerBookings = async (email: string) => {
-  await getCustomerDetails(email);
   const customerBookings = await ctx.db.query.customer.findFirst({
     where: eq(customerTable.email, email),
     columns: { password: false },

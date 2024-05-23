@@ -1,12 +1,27 @@
 import { z } from "zod";
 
-const createBookingValidator = z.object({
-  roomNo: z.number().int().positive(),
-  startDate: z.coerce.date(),
-  endDate: z.coerce.date(),
-  customerId: z.string().uuid(),
-  createdAt: z.coerce.date(),
-});
+const currentTimestamp = new Date();
+
+const createBookingValidator = z
+  .object({
+    roomNos: z.array(z.number().int().positive()),
+    startDate: z.coerce.date().refine((date) => date > currentTimestamp, {
+      message: "Start date must be greater than the current date.",
+    }),
+    endDate: z.coerce.date().refine((date) => date > currentTimestamp, {
+      message: "End date must be greater than the current date.",
+    }),
+    customerId: z.string().uuid(),
+  })
+  .superRefine(({ startDate, endDate }, ctx) => {
+    if (endDate < startDate) {
+      ctx.addIssue({
+        code: "custom",
+        message: "End date must be greater than the start date",
+        path: ["endDate"],
+      });
+    }
+  });
 
 const bookingIDValidator = z.object({
   id: z.string().uuid(),

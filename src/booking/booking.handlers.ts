@@ -2,13 +2,30 @@ import { Handler } from "express";
 import { v } from "./booking.validators";
 import { bookingRepository } from "./booking.repository";
 import { httpstatus } from "../ctx";
+import { checkIfRoomsAreAvailable } from "./booking.helpers";
+import { DuplicateEntryError } from "../errors";
 
 const createBooking: Handler = async (req, res, next) => {
   try {
     const bookingRequest = v.createBookingValidator.parse(req.body);
-    const booking = await bookingRepository.createBooking(bookingRequest);
-    return res.status(httpstatus.CREATED).json({ booking, isSuccess: true });
+    const unavailableRoomsNo = await checkIfRoomsAreAvailable(
+      bookingRequest.roomNos
+    );
+    if (unavailableRoomsNo.length > 0) {
+      throw new DuplicateEntryError(
+        `Room(s) with Room Number ${unavailableRoomsNo.join(
+          ", "
+        )} are already booked.`
+      );
+    }
+    const createdBookings = await bookingRepository.createBooking(
+      bookingRequest
+    );
+    return res
+      .status(httpstatus.CREATED)
+      .json({ createdBookings, isSuccess: true });
   } catch (err) {
+    console.log({err})
     next(err);
   }
 };
@@ -50,7 +67,7 @@ const getBookingDetails: Handler = async (req, res, next) => {
 const listBookings: Handler = async (req, res, next) => {
   try {
     const bookings = await bookingRepository.listBookings();
-    return res.status(httpstatus.OK).json({bookings, isSuccess: true});
+    return res.status(httpstatus.OK).json({ bookings, isSuccess: true });
   } catch (err) {
     next(err);
   }

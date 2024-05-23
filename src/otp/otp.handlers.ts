@@ -9,9 +9,9 @@ import { NotFoundError } from "../errors";
 const sendOTP: Handler = async (req, res, next) => {
   try {
     const { email } = v.createOTPValidator.parse(req.query);
-    const { firstName, lastName } = await customerRepository.getCustomerDetails(
-      email
-    );
+    // const { firstName, lastName } = await customerRepository.getCustomerDetails(
+    //   email
+    // );
     const otpDetails = await otpRepository.createOTP(email);
     //TODO:uncomment later lol
     // if (otpDetails) {

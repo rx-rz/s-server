@@ -1,9 +1,12 @@
 import { eq } from "drizzle-orm";
 import { ctx } from "../ctx";
-import { NotFoundError } from "../errors";
 import { CreateBookingRequest, UpdateBookingRequest } from "./booking.types";
+import { db } from "../db/db";
 
 const bookingTable = ctx.schema.booking;
+const roomsToBookingTable = ctx.schema.roomsToBooking;
+const roomsTable = ctx.schema.room;
+
 const bookingValues = {
   id: bookingTable.id,
   customerId: bookingTable.customerId,
@@ -12,17 +15,49 @@ const bookingValues = {
   createdAt: bookingTable.createdAt,
 };
 
-const createBooking = async (request: CreateBookingRequest) => {
-  const [booking] = await ctx.db
-    .insert(bookingTable)
-    .values(request)
-    .returning(bookingValues);
-  return booking;
+type bookings = {
+  roomNo: number;
+  id: string;
+  createdAt: Date | null;
+  customerId: string;
+  startDate: Date;
+  endDate: Date;
+}[];
+const createBooking = async ({
+  customerId,
+  endDate,
+  roomNos,
+  startDate,
+}: CreateBookingRequest) => {
+  const createdBookings = await db.transaction(async (tx) => {
+    try {
+      let createdBookings = [];
+      for (let i = 0; i < roomNos.length; i++) {
+        const [booking] = await tx
+          .insert(bookingTable)
+          .values({ customerId, endDate, startDate })
+          .returning(bookingValues);
+        const [room] = await tx
+          .insert(roomsToBookingTable)
+          .values({ bookingId: booking.id, roomNo: roomNos[i] })
+          .returning({ roomNo: roomsToBookingTable.roomNo });
+        await tx
+          .update(roomsTable)
+          .set({ isAvailable: false })
+          .where(eq(roomsTable.roomNo, roomNos[i]));
+        createdBookings.push({ ...booking, roomNo: room.roomNo });
+      }
+      return createdBookings;
+    } catch (err) {
+      console.log({error: err})
+      tx.rollback();
+    }
+  });
+  return createdBookings;
 };
 
 const updateBooking = async (request: UpdateBookingRequest) => {
   const { id, ...requestBody } = request;
-  await getBookingDetails(id);
   const [updatedBooking] = await ctx.db
     .update(bookingTable)
     .set(requestBody)
@@ -35,16 +70,13 @@ const getBookingDetails = async (bookingID: string) => {
     where: eq(bookingTable.id, bookingID),
     with: {
       customers: true,
-    }
-  })
-  if (!booking) {
-    throw new NotFoundError(`Booking with ID ${bookingID} could not be found.`);
-  }
+      roomsToBooking: true,
+    },
+  });
   return booking;
 };
 
 const deleteBooking = async (bookingID: string) => {
-  await getBookingDetails(bookingID);
   const [deletedBooking] = await ctx.db
     .delete(bookingTable)
     .where(eq(bookingTable.id, bookingID))

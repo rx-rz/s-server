@@ -1,3 +1,10 @@
+export type Room = {
+  typeId: number;
+  roomNo: number;
+  isAvailable: boolean | null;
+  noOfTimesBooked: number | null;
+  createdAt: Date | null;
+};
 export type CreateRoomRequest = {
   typeId: number;
   noOfRooms: number;
@@ -5,7 +12,8 @@ export type CreateRoomRequest = {
 
 export type UpdateRoomRequest = {
   roomNo: number;
-  typeId: number;
+  typeId?: number;
+  isAvailable?: boolean;
 };
 
 export type ListRoomRequest = {

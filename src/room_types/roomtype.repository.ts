@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm";
 import { ctx } from "../ctx";
-import { DuplicateEntryError, NotFoundError } from "../errors";
 import { CreateRoomTypeRequest, UpdateRoomTypeRequest } from "./roomtype.types";
 const roomTypeTable = ctx.schema.roomType;
 
@@ -15,11 +14,6 @@ const roomTypeValues = {
   rating: roomTypeTable.rating,
 };
 const createRoomType = async (request: CreateRoomTypeRequest) => {
-  const roomTypeExists = await getRoomTypeDetails(request.name, false);
-  if (roomTypeExists)
-    throw new DuplicateEntryError(
-      `Room type with name ${request.name} already exists.`
-    );
   const [roomType] = await ctx.db
     .insert(roomTypeTable)
     .values(request)
@@ -27,20 +21,15 @@ const createRoomType = async (request: CreateRoomTypeRequest) => {
   return roomType;
 };
 
-const getRoomTypeDetails = async (name: string, isRequired = true) => {
+const getRoomTypeDetails = async (name: string) => {
   const [roomDetails] = await ctx.db
     .select(roomTypeValues)
     .from(roomTypeTable)
     .where(eq(roomTypeTable.name, name));
-  if (isRequired && !roomDetails)
-    throw new NotFoundError(
-      `Room type with the particular name '${name}' does not exist.`
-    );
   return roomDetails;
 };
 
 const deleteRoomType = async (name: string) => {
-  await getRoomTypeDetails(name);
   const [deletedRoomType] = await ctx.db
     .delete(roomTypeTable)
     .where(eq(roomTypeTable.name, name))
@@ -50,7 +39,6 @@ const deleteRoomType = async (name: string) => {
 
 const updateRoomType = async (request: UpdateRoomTypeRequest) => {
   const { currentName, ...values } = request;
-  await getRoomTypeDetails(currentName);
   const [updatedRoomType] = await ctx.db
     .update(roomTypeTable)
     .set(values)
@@ -65,7 +53,6 @@ const getRoomTypes = async () => {
 };
 
 const getRoomsForRoomType = async (name: string) => {
-  await getRoomTypeDetails(name);
   const roomtypeRooms = await ctx.db.query.roomType.findFirst({
     where: eq(roomTypeTable.name, name),
     with: {

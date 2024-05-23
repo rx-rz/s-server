@@ -8,8 +8,9 @@ const roomCreationValidator = z.object({
 });
 
 const roomUpdateValidator = z.object({
-  typeId: z.coerce.number({ required_error: "Room type must be provided" }),
+  typeId: z.coerce.number({ required_error: "Room type must be provided" }).optional(),
   roomNo: z.coerce.number({ required_error: "Room number must be provided" }),
+  isAvailable: z.boolean().optional(),
 });
 
 const roomNoValidator = z.object({

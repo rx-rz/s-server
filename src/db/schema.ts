@@ -13,6 +13,7 @@ import {
   serial,
   bigint,
   primaryKey,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 
 export const admin = pgTable("admins", {
@@ -68,7 +69,7 @@ export const room = pgTable(
       roomtypeid_idx: index("roomtypeid_idx").on(table.typeId),
     };
   }
-);
+);  
 
 export const roomRelation = relations(room, ({ one, many }) => {
   return {
@@ -129,6 +130,7 @@ export const paymentRelation = relations(payment, ({ one, many }) => {
   };
 });
 
+export const bookingstatusEnum = pgEnum("booking_status", ['active', 'cancelled', 'done']);
 export const booking = pgTable("bookings", {
   id: uuid("id").primaryKey().defaultRandom(),
   customerId: uuid("customer_id")
@@ -136,6 +138,7 @@ export const booking = pgTable("bookings", {
     .notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
+  status: bookingstatusEnum("booking_status").notNull().default("active"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -196,6 +199,7 @@ export const dbSchema = {
   bookingRelation,
   roomsToBooking,
   roomsToBookingRelation,
+  bookingstatusEnum,
   admin,
   userOtps,
 };

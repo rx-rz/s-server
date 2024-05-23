@@ -3,14 +3,12 @@ import { ctx } from "../ctx";
 import {
   CreateRoomRequest,
   ListRoomRequest,
+  Room,
   UpdateRoomRequest,
 } from "./room.types";
-import { NotFoundError } from "../errors";
 import { db } from "../db/db";
 
 const roomTable = ctx.schema.room;
-const roomTypeTable = ctx.schema.roomType;
-const bookingTable = ctx.schema.booking;
 
 const roomValues = {
   typeId: roomTable.typeId,
@@ -37,37 +35,15 @@ const createRoom = async (request: CreateRoomRequest) => {
   });
 };
 
-const getRoomDetails = async (roomNo: number, withDetails = false) => {
-  if (withDetails) {
-    const roomDetails = await ctx.db.query.room.findFirst({
-      where: eq(roomTable.roomNo, roomNo),
-    }); 
-    console.log({roomDetails})
-    if (!roomDetails)
-      throw new NotFoundError(
-        `Room with room number ${roomNo} could not be found.`
-      );
-    return roomDetails;
-  } else {
-    const [roomDetails] = await ctx.db
-      .select(roomValues)
-      .from(roomTable)
-      .where(eq(roomTable.roomNo, roomNo));
-    if (!roomDetails)
-      throw new NotFoundError(
-        `Room with room number ${roomNo} could not be found.`
-      );
-    return roomDetails;
-  }
-};
-
-const deleteRoom = async (roomNo: number) => {
-  await getRoomDetails(roomNo);
-  const [deletedRoom] = await ctx.db
-    .delete(roomTable)
-    .where(eq(roomTable.roomNo, roomNo))
-    .returning(roomValues);
-  return deletedRoom;
+const getRoomDetails = async (roomNo: number) => {
+  const roomDetails = await ctx.db.query.room.findFirst({
+    where: eq(roomTable.roomNo, roomNo),
+    with: {
+      roomsToBooking: true,
+      roomType: true,
+    },
+  });
+  return roomDetails;
 };
 
 const updateRoom = async (request: UpdateRoomRequest) => {
@@ -84,15 +60,39 @@ const listRooms = async (request: ListRoomRequest) => {
   const rooms = await ctx.db
     .select({ ...roomValues })
     .from(roomTable)
-    // .where(and(eq(roomTable.isAvailable, request.isAvailable)))
-    .limit(request.noOfEntries || 10)
-    .offset((request.pageNo || 0) * 10);
   return rooms;
+};
+
+const deleteRoom = async (roomNo: number) => {
+  await getRoomDetails(roomNo);
+  const [deletedRoom] = await ctx.db
+    .delete(roomTable)
+    .where(eq(roomTable.roomNo, roomNo))
+    .returning(roomValues);
+  return deletedRoom;
 };
 
 const getTotalNoOfRooms = async () => {
   const rooms = await ctx.db.select().from(roomTable);
   return rooms.length;
+};
+
+const fetchRoomsByProvidedRoomNumbers = async (roomNos: number[]) => {
+  let rooms: Room[] | null = [];
+  await db.transaction(async (tx) => {
+    try {
+      for (let i = 0; i < roomNos.length; i++) {
+        const [room] = await tx
+          .select(roomValues)
+          .from(roomTable)
+          .where(eq(roomTable.roomNo, roomNos[i]));
+        rooms.push(room);
+      }
+    } catch (err) {
+      tx.rollback();
+    }
+  });
+  return rooms;
 };
 
 export const roomRepository = {
@@ -102,4 +102,5 @@ export const roomRepository = {
   listRooms,
   getRoomDetails,
   getTotalNoOfRooms,
+  fetchRoomsByProvidedRoomNumbers,
 };
