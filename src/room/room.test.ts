@@ -92,7 +92,7 @@ describe("/PATCH /rooms/updateRoom", () => {
       .patch(route)
       .send({
         typeId: typeIDs[0],
-        roomNo: availableRooms.length + 1,
+        roomNo: availableRooms[availableRooms.length - 1],
       });
     expect(response.body.isSuccess).toBe(true);
   });
@@ -110,11 +110,12 @@ describe("/PATCH /rooms/updateRoom", () => {
     const availableRooms = availableRoomsResponse.body.rooms.map(
       (room: any) => room.roomNo
     );
+
     const response = await request(app)
       .patch(route)
       .send({
         typeId: typeIDs[typeIDs.length - 1] + 1,
-        roomNo: availableRooms.length + 1,
+        roomNo: availableRooms.length + 2000,
       });
     expect(response.body.isSuccess).toBe(false);
     expect(response.statusCode).toBe(httpstatus.NOT_FOUND);

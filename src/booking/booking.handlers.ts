@@ -3,7 +3,7 @@ import { v } from "./booking.validators";
 import { bookingRepository } from "./booking.repository";
 import { httpstatus } from "../ctx";
 import { checkIfRoomsAreAvailable } from "./booking.helpers";
-import { DuplicateEntryError } from "../errors";
+import { DuplicateEntryError, NotFoundError } from "../errors";
 
 const createBooking: Handler = async (req, res, next) => {
   try {
@@ -25,7 +25,7 @@ const createBooking: Handler = async (req, res, next) => {
       .status(httpstatus.CREATED)
       .json({ createdBookings, isSuccess: true });
   } catch (err) {
-    console.log({err})
+    console.log({ err });
     next(err);
   }
 };
@@ -33,6 +33,13 @@ const createBooking: Handler = async (req, res, next) => {
 const updateBooking: Handler = async (req, res, next) => {
   try {
     const bookingRequest = v.updateBookingValidator.parse(req.body);
+    const bookingExists = await bookingRepository.getBookingDetails(
+      bookingRequest.id
+    );
+    if (!bookingExists)
+      throw new NotFoundError(
+        `Booking with ID ${bookingRequest.id} does not exist.`
+      );
     const updatedBooking = await bookingRepository.updateBooking(
       bookingRequest
     );
@@ -47,6 +54,9 @@ const updateBooking: Handler = async (req, res, next) => {
 const deleteBooking: Handler = async (req, res, next) => {
   try {
     const { id } = v.bookingIDValidator.parse(req.query);
+    const bookingExists = await bookingRepository.getBookingDetails(id);
+    if (!bookingExists)
+      throw new NotFoundError(`Booking with ID ${id} does not exist.`);
     const deletedBooking = await bookingRepository.deleteBooking(id);
     return res.status(httpstatus.OK).json({ deletedBooking, isSuccess: true });
   } catch (err) {
@@ -58,6 +68,8 @@ const getBookingDetails: Handler = async (req, res, next) => {
   try {
     const { id } = v.bookingIDValidator.parse(req.query);
     const booking = await bookingRepository.getBookingDetails(id);
+    if (!booking)
+      throw new NotFoundError(`Booking with ID ${id} does not exist.`);
     return res.status(httpstatus.OK).json({ booking, isSuccess: true });
   } catch (err) {
     next(err);

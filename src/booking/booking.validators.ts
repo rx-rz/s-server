@@ -29,7 +29,7 @@ const bookingIDValidator = z.object({
 
 const updateBookingValidator = z.object({
   id: z.string(),
-  roomNo: z.number().optional(),
+  roomNos: z.array(z.number()).optional(),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
   customerId: z.string().optional(),

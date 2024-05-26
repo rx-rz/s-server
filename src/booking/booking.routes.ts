@@ -1,9 +1,19 @@
 import { Router } from "express";
 import { bookingHandlers } from "./booking.handlers";
+import { bookingRoutes } from "../routes";
 
 export const bookingRouter = Router();
-bookingRouter.post("/createBooking", bookingHandlers.createBooking);
-bookingRouter.patch("/updateBooking", bookingHandlers.updateBooking);
-bookingRouter.delete("/deleteBooking", bookingHandlers.deleteBooking);
-bookingRouter.get("/bookingDetails", bookingHandlers.getBookingDetails);
-bookingRouter.get("/listBookings", bookingHandlers.listBookings);
+bookingRouter.post(bookingRoutes.create_booking, bookingHandlers.createBooking);
+bookingRouter.patch(
+  bookingRoutes.update_booking,
+  bookingHandlers.updateBooking
+);
+bookingRouter.delete(
+  bookingRoutes.delete_booking,
+  bookingHandlers.deleteBooking
+);
+bookingRouter.get(
+  bookingRoutes.booking_details,
+  bookingHandlers.getBookingDetails
+);
+bookingRouter.get(bookingRoutes.list_bookings, bookingHandlers.listBookings);

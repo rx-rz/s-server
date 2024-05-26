@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { roomHandlers } from "./room.handlers";
+import { roomRoutes } from "../routes";
 
 export const roomRouter = Router();
-roomRouter.post("/createRooms", roomHandlers.createRoom);
-roomRouter.patch("/updateRoom", roomHandlers.updateRoom);
-roomRouter.get("/listRooms", roomHandlers.listRooms);
-roomRouter.get("/roomDetails", roomHandlers.getRoomDetails);
-roomRouter.delete("/deleteRoom", roomHandlers.deleteRoom);
+roomRouter.post(roomRoutes.create_rooms, roomHandlers.createRoom);
+roomRouter.patch(roomRoutes.update_rooms, roomHandlers.updateRoom);
+roomRouter.get(roomRoutes.list_rooms, roomHandlers.listRooms);
+roomRouter.get(roomRoutes.room_details, roomHandlers.getRoomDetails);
+roomRouter.delete(roomRoutes.delete_room, roomHandlers.deleteRoom);

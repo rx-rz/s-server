@@ -31,25 +31,29 @@ const createBooking = async ({
 }: CreateBookingRequest) => {
   const createdBookings = await db.transaction(async (tx) => {
     try {
-      let createdBookings = [];
+      let roomsBooked = [];
+      const [booking] = await tx
+        .insert(bookingTable)
+        .values({ customerId, endDate, startDate })
+        .returning(bookingValues);
       for (let i = 0; i < roomNos.length; i++) {
-        const [booking] = await tx
-          .insert(bookingTable)
-          .values({ customerId, endDate, startDate })
-          .returning(bookingValues);
-        const [room] = await tx
+        await tx
           .insert(roomsToBookingTable)
           .values({ bookingId: booking.id, roomNo: roomNos[i] })
           .returning({ roomNo: roomsToBookingTable.roomNo });
-        await tx
+        const [room] = await tx
           .update(roomsTable)
           .set({ isAvailable: false })
-          .where(eq(roomsTable.roomNo, roomNos[i]));
-        createdBookings.push({ ...booking, roomNo: room.roomNo });
+          .where(eq(roomsTable.roomNo, roomNos[i]))
+          .returning({
+            roomNo: roomsTable.roomNo,
+            roomType: roomsTable.typeId,
+          });
+        roomsBooked.push(room);
       }
-      return createdBookings;
+      return { booking, roomsBooked };
     } catch (err) {
-      console.log({error: err})
+      console.log({ error: err });
       tx.rollback();
     }
   });
@@ -57,12 +61,44 @@ const createBooking = async ({
 };
 
 const updateBooking = async (request: UpdateBookingRequest) => {
-  const { id, ...requestBody } = request;
-  const [updatedBooking] = await ctx.db
-    .update(bookingTable)
-    .set(requestBody)
-    .returning(bookingValues);
-  return updatedBooking;
+  const bookingsUpdated = await db.transaction(async (tx) => {
+    let roomsBooked = [];
+    try {
+      const { id, roomNos, ...requestBody } = request;
+      const [booking] = await tx
+        .update(bookingTable)
+        .set(requestBody)
+        .where(eq(bookingTable.id, id))
+        .returning(bookingValues);
+      console.log({ roomNos });
+      if (roomNos) {
+        console.log("here!");
+        for (let i = 0; i < roomNos.length; i++) {
+          await tx
+            .delete(roomsToBookingTable)
+            .where(eq(roomsToBookingTable.bookingId, id));
+          await tx
+            .insert(roomsToBookingTable)
+            .values({ bookingId: booking.id, roomNo: roomNos[i] })
+            .returning({ roomNo: roomsToBookingTable.roomNo });
+          const [room] = await tx
+            .update(roomsTable)
+            .set({ isAvailable: false })
+            .where(eq(roomsTable.roomNo, roomNos[i]))
+            .returning({
+              roomNo: roomsTable.roomNo,
+              roomType: roomsTable.typeId,
+            });
+          console.log({ room });
+          roomsBooked.push(room);
+        }
+      }
+      return { booking, roomsBooked };
+    } catch (err) {
+      tx.rollback();
+    }
+  });
+  return bookingsUpdated;
 };
 
 const getBookingDetails = async (bookingID: string) => {
@@ -77,10 +113,27 @@ const getBookingDetails = async (bookingID: string) => {
 };
 
 const deleteBooking = async (bookingID: string) => {
-  const [deletedBooking] = await ctx.db
-    .delete(bookingTable)
-    .where(eq(bookingTable.id, bookingID))
-    .returning(bookingValues);
+  const deletedBooking = await db.transaction(async (tx) => {
+    const roomsAssociatedWithDeletedBooking = await tx
+      .delete(roomsToBookingTable)
+      .where(eq(roomsToBookingTable.bookingId, bookingID))
+      .returning({
+        roomNo: roomsToBookingTable.roomNo,
+      });
+    for (let i = 0; i < roomsAssociatedWithDeletedBooking.length; i++) {
+      await tx
+        .update(roomsTable)
+        .set({ isAvailable: true })
+        .where(
+          eq(roomsTable.roomNo, roomsAssociatedWithDeletedBooking[i].roomNo)
+        );
+    }
+    const [booking] = await tx
+      .delete(bookingTable)
+      .where(eq(bookingTable.id, bookingID))
+      .returning(bookingValues);
+    return booking;
+  });
   return deletedBooking;
 };
 
