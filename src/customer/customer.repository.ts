@@ -28,10 +28,13 @@ const register = async (customerRequest: CustomerRegisterRequest) => {
 };
 
 const getCustomerDetails = async (customerEmail: string) => {
-  const [customerDetails] = await ctx.db
-    .select(customer)
-    .from(customerTable)
-    .where(eq(customerTable.email, customerEmail));
+  const customerDetails = await ctx.db.query.customer.findFirst({
+    where: eq(customerTable.email, customerEmail),
+    columns: { password: false },
+    with: {
+      bookings: true,
+    },
+  });
   return customerDetails;
 };
 
@@ -88,15 +91,6 @@ const getCustomerPassword = async (email: string) => {
   return customerPassword?.password || "";
 };
 
-const getCustomerBookings = async (email: string) => {
-  const customerBookings = await ctx.db.query.customer.findFirst({
-    where: eq(customerTable.email, email),
-    columns: { password: false },
-    with: {
-      bookings: true,
-    },
-  });
-};
 
 export const customerRepository = {
   register,
@@ -107,5 +101,4 @@ export const customerRepository = {
   updateCustomerEmail,
   updateCustomerPassword,
   getCustomerDetails,
-  getCustomerBookings,
 };

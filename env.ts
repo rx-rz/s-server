@@ -17,7 +17,7 @@ const ENV = z.object({
   SMTPUSER: z.literal(process.env.SMTPUSER),
   SMTPPASS: z.literal(process.env.SMTPPASS),
   PAYMENT_PUBLIC_KEY: z.literal(process.env.PAYMENT_PUBLIC_KEY),
-  PAYMENT_SECRET_KEY: z.literal(process.env.PAYMENT_SECRET_KEY),
+  PAYMENT_SECRET_KEY: z.literal(process.env.PAYMENT_SECRET_KEY).default(""),
   NODE_ENV: z.literal(process.env.NODE_ENV).default("development"),
 });
 

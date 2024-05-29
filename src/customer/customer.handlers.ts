@@ -150,20 +150,6 @@ const updateCustomerPassword: Handler = async (req, res, next) => {
   }
 };
 
-const getCustomerBookings: Handler = async (req, res, next) => {
-  try {
-    const { email } = v.emailValidator.parse(req.query);
-    const customerDetails = await customerRepository.getCustomerDetails(email);
-    if (!customerDetails)
-      throw new NotFoundError(`Customer with email ${email} does not exist.`);
-    const customerBookings = await customerRepository.getCustomerBookings(
-      email
-    );
-    return res.status(200).json({ customerBookings, isSuccess: true });
-  } catch (err) {
-    next(err);
-  }
-};
 export const customerHandlers = {
   registerCustomer,
   listCustomers,
@@ -172,5 +158,4 @@ export const customerHandlers = {
   updateCustomerEmail,
   updateCustomerPassword,
   loginCustomer,
-  getCustomerBookings,
 };

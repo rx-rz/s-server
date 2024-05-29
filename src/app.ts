@@ -13,6 +13,7 @@ import { adminRouter } from "./admin/admin.routes";
 import { roomTypeRouter } from "./room_types/roomtype.routes";
 import { roomRouter } from "./room/room.routes";
 import { bookingRouter } from "./booking/booking.routes";
+import { paymentRouter } from "./payment/payment.routes";
 
 config({ path: ".env" });
 export const app: Express = express();
@@ -28,6 +29,7 @@ app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/roomtypes", roomTypeRouter);
 app.use("/api/v1/rooms", roomRouter);
 app.use("/api/v1/bookings", bookingRouter);
+app.use("/api/v1/payments", paymentRouter);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   const errors = handleErrors(err);

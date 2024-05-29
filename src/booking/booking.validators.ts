@@ -33,7 +33,6 @@ const updateBookingValidator = z.object({
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
   customerId: z.string().optional(),
-  createdAt: z.coerce.date().optional(),
 });
 
 export const v = {

@@ -16,7 +16,3 @@ customerRouter.patch(
   "/updateCustomerPassword",
   customerHandlers.updateCustomerPassword
 );
-customerRouter.get(
-  "/getCustomerBookings",
-  customerHandlers.getCustomerBookings
-);

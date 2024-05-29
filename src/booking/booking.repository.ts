@@ -70,9 +70,7 @@ const updateBooking = async (request: UpdateBookingRequest) => {
         .set(requestBody)
         .where(eq(bookingTable.id, id))
         .returning(bookingValues);
-      console.log({ roomNos });
       if (roomNos) {
-        console.log("here!");
         for (let i = 0; i < roomNos.length; i++) {
           await tx
             .delete(roomsToBookingTable)
@@ -89,7 +87,7 @@ const updateBooking = async (request: UpdateBookingRequest) => {
               roomNo: roomsTable.roomNo,
               roomType: roomsTable.typeId,
             });
-          console.log({ room });
+
           roomsBooked.push(room);
         }
       }

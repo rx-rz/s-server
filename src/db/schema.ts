@@ -69,7 +69,7 @@ export const room = pgTable(
       roomtypeid_idx: index("roomtypeid_idx").on(table.typeId),
     };
   }
-);  
+);
 
 export const roomRelation = relations(room, ({ one, many }) => {
   return {
@@ -101,21 +101,29 @@ export const roomTypeRelation = relations(roomType, ({ many }) => {
     rooms: many(room, { relationName: "roomType" }),
   };
 });
-
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "pending",
+  "confirmed",
+]);
 export const payment = pgTable("payments", {
   id: uuid("id").primaryKey().defaultRandom(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+  payedAt: timestamp("payed_at", { mode: "string" }),
   customerId: uuid("customer_id")
     .references(() => customer.id, {
       onDelete: "cascade",
     })
     .notNull(),
+  reference: text("reference").notNull(),
+
+  status: paymentStatusEnum("payment_status").notNull().default("pending"),
   bookingId: uuid("booking_id").references(() => booking.id, {
     onDelete: "cascade",
     onUpdate: "cascade",
   }),
 });
+
 
 export const paymentRelation = relations(payment, ({ one, many }) => {
   return {
@@ -130,7 +138,11 @@ export const paymentRelation = relations(payment, ({ one, many }) => {
   };
 });
 
-export const bookingstatusEnum = pgEnum("booking_status", ['active', 'cancelled', 'done']);
+export const bookingstatusEnum = pgEnum("booking_status", [
+  "active",
+  "cancelled",
+  "done",
+]);
 export const booking = pgTable("bookings", {
   id: uuid("id").primaryKey().defaultRandom(),
   customerId: uuid("customer_id")
