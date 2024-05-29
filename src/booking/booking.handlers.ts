@@ -25,7 +25,6 @@ const createBooking: Handler = async (req, res, next) => {
       .status(httpstatus.CREATED)
       .json({ createdBookings, isSuccess: true });
   } catch (err) {
-    console.log({ err });
     next(err);
   }
 };

@@ -76,8 +76,6 @@ describe("PATCH /bookings/updateBooking", () => {
 
   it("should update a booking", async () => {
     const bookingID = await getAvailableBookingID();
-
-    console.log({ bookingID });
     const testBooking = await getTestBooking();
     const room = await getRooms({});
     const response = await request(app)

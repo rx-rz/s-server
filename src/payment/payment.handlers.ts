@@ -57,7 +57,6 @@ export const updatePaymentStatus: Handler = async (req, res, next) => {
           status: "confirmed",
           reference: body.data.reference,
         });
-        console.log("updated!", payment);
       }
     }
   } catch (err) {
