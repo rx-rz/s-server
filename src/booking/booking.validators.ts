@@ -1,14 +1,15 @@
 import { z } from "zod";
 
-const currentTimestamp = new Date();
+const currentTimestamp = new Date().toISOString();
 
 const createBookingValidator = z
   .object({
     roomNos: z.array(z.number().int().positive()),
-    startDate: z.coerce.date().refine((date) => date > currentTimestamp, {
+    startDate: z.coerce.string().refine((date) => date > currentTimestamp, {
       message: "Start date must be greater than the current date.",
     }),
-    endDate: z.coerce.date().refine((date) => date > currentTimestamp, {
+    amount: z.coerce.string(),
+    endDate: z.coerce.string().refine((date) => date > currentTimestamp, {
       message: "End date must be greater than the current date.",
     }),
     customerId: z.string().uuid(),
@@ -30,8 +31,8 @@ const bookingIDValidator = z.object({
 const updateBookingValidator = z.object({
   id: z.string(),
   roomNos: z.array(z.number()).optional(),
-  startDate: z.coerce.date().optional(),
-  endDate: z.coerce.date().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
   customerId: z.string().optional(),
 });
 

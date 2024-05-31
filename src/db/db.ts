@@ -43,4 +43,5 @@ export async function endDBConnection() {
 
 export const db = drizzle(client, { schema: dbSchema });
 
+
 export const dbType = typeof db;

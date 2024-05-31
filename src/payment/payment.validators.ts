@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const updatePaymentStatusValidator = z.object({
+const updateBookingPaymentStatusValidator = z.object({
   status: z.enum(["pending", "confirmed"]).default("pending").optional(),
   payedAt: z.coerce.date().optional(),
 });
@@ -16,7 +16,6 @@ const paymentIDValidator = z.object({
 });
 
 export const v = {
-  updatePaymentStatusValidator,
   makePaymentValidator,
   paymentIDValidator,
 };

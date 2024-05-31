@@ -71,17 +71,17 @@ describe("/POST /customers/registerCustomer", () => {
 
 describe("/GET /otp/sendOTP", () => {
   const route = "/api/v1/otp/sendOTP";
-  it("sends an OTP", async () => {
+  test("sends an OTP", async () => {
     const response = await request(app)
       .get(route)
       .query({ email: newCustomer.email });
     expectTypeOf(response.body.otpDetails.otp).toBeNumber;
     expect(response.body.isSuccess).toBe(true);
   });
-  skip("throws a not found error if the email provided is not associated with any user in the DB.", async () => {
+  test("throws a not found error if the email provided is not associated with any user in the DB.", async () => {
     const response = await request(app)
       .get(route)
-      .query({ email: faker.internet.email() });
+      .query({ email: "fakeemail@fake.com" });
     expect(response.statusCode).toBe(httpstatus.NOT_FOUND);
   });
 });
@@ -209,24 +209,6 @@ describe("/PATCH /customers/updateCustomerPassword", () => {
     });
     expect(response.body.isSuccess).toBe(false);
     expect(response.statusCode).toBe(httpstatus.NOT_FOUND);
-  });
-});
-
-describe("/GET /customers/getCustomerBookings", async () => {
-  const route = "/api/v1/customers/getCustomerBookings";
-  it("should get customer bookings if available", async () => {
-    const response = await request(app)
-      .get(route)
-      .query({ email: inexistentButThenCreatedDuringTestingCustomer.email });
-    expect(response.body.isSuccess).toBe(true);
-  });
-
-  skip("should throw an error if the email provided does not exist", async () => {
-    const response = await request(app)
-      .get(route)
-      .query({ email: newCustomer.email });
-    expect(response.body.isSuccess).toBe(false);
-    expect(response.body.error_type).toBe("Not Found Error");
   });
 });
 

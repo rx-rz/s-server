@@ -6,7 +6,6 @@ const paymentTable = ctx.schema.payment;
 const paymentValues = {
   id: paymentTable.id,
   paymentReference: paymentTable.reference,
-  status: paymentTable.status,
   amount: paymentTable.amount,
   customerId: paymentTable.customerId,
   createdAt: paymentTable.createdAt,
@@ -18,15 +17,6 @@ const createPayment = async (request: CreatePaymentRequest) => {
     .values(request)
     .returning(paymentValues);
   return payment;
-};
-
-const updatePaymentStatus = async (request: UpdatePaymentStatus) => {
-  const [updatedPayment] = await ctx.db
-    .update(paymentTable)
-    .set(request)
-    .where(eq(paymentTable.reference, request.reference))
-    .returning(paymentValues);
-  return updatedPayment;
 };
 
 const deletePayment = async (id: string) => {
@@ -48,9 +38,18 @@ const getPaymentDetails = async (id: string) => {
   return paymentDetails;
 };
 
+const getPaymentDetailsByReference = async (reference: string) => {
+  const paymentDetails = await ctx.db.query.payment.findFirst({
+    where: eq(paymentTable.reference, reference),
+    with: {
+      booking: true,
+    },
+  });
+  return paymentDetails;
+};
 export const paymentRepository = {
   createPayment,
-  updatePaymentStatus,
   deletePayment,
+  getPaymentDetailsByReference,
   getPaymentDetails,
 };

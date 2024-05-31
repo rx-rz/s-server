@@ -2,8 +2,16 @@ import { Handler } from "express";
 import { v } from "./booking.validators";
 import { bookingRepository } from "./booking.repository";
 import { httpstatus } from "../ctx";
-import { checkIfRoomsAreAvailable } from "./booking.helpers";
-import { DuplicateEntryError, NotFoundError } from "../errors";
+import { checkBookingPrice, checkIfRoomsAreAvailable } from "./booking.helpers";
+import {
+  DuplicateEntryError,
+  InvalidInputError,
+  NotFoundError,
+} from "../errors";
+import { createHmac } from "node:crypto";
+import { ENV_VARS } from "../../env";
+import { paymentRepository } from "../payment/payment.repository";
+import { schedule } from "node-cron";
 
 const createBooking: Handler = async (req, res, next) => {
   try {
@@ -18,12 +26,41 @@ const createBooking: Handler = async (req, res, next) => {
         )} are already booked.`
       );
     }
+    const bookingPrice = await checkBookingPrice(bookingRequest.roomNos);
+    if (bookingPrice !== Number(bookingRequest.amount))
+      throw new InvalidInputError(
+        `Booking price is incorrect. The correct booking price is ${bookingPrice}`
+      );
     const createdBookings = await bookingRepository.createBooking(
       bookingRequest
     );
     return res
       .status(httpstatus.CREATED)
       .json({ createdBookings, isSuccess: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const updateBookingStatus: Handler = async (req, res, next) => {
+  try {
+    const hash = createHmac("sha512", ENV_VARS.PAYMENT_SECRET_KEY)
+      .update(JSON.stringify(req.body))
+      .digest("hex");
+    if (hash == req.headers["x-paystack-signature"]) {
+      const body = req.body;
+      if (body.event === "charge.success") {
+        const payment = await paymentRepository.getPaymentDetailsByReference(
+          body.data.reference
+        );
+        if (payment && payment.booking) {
+          await bookingRepository.updateBooking({
+            id: payment.booking.id,
+            paymentStatus: "confirmed",
+          });
+        }
+      }
+    }
   } catch (err) {
     next(err);
   }
@@ -75,6 +112,18 @@ const getBookingDetails: Handler = async (req, res, next) => {
   }
 };
 
+const checkExpiredBookings: Handler = async (req, res, next) => {
+  try {
+    const bookings = await bookingRepository.getExpiredBookings();
+    if (bookings) {
+      await bookingRepository.updateBookingStatusesToDone(bookings);
+    }
+    return res.json({ bookings });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const listBookings: Handler = async (req, res, next) => {
   try {
     const bookings = await bookingRepository.listBookings();
@@ -83,10 +132,13 @@ const listBookings: Handler = async (req, res, next) => {
     next(err);
   }
 };
+
 export const bookingHandlers = {
   createBooking,
   updateBooking,
   deleteBooking,
   getBookingDetails,
   listBookings,
+  checkExpiredBookings,
+  updateBookingStatus,
 };

@@ -1,10 +1,22 @@
 export type Room = {
-  typeId: number;
+  createdAt: string | null;
   roomNo: number;
-  isAvailable: boolean | null;
+  typeId: number;
+  status: "available" | "pending" | "booked" | null;
   noOfTimesBooked: number | null;
-  createdAt: Date | null;
+  roomType: {
+    id: number;
+    name: string;
+    createdAt: string | null;
+    description: string | null;
+    rating: string;
+    price: string;
+    roomImageURLS: string[] | null;
+    features: string[] | null;
+    imageFileNames: string[] | null;
+  };
 };
+
 export type CreateRoomRequest = {
   typeId: number;
   noOfRooms: number;

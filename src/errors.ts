@@ -9,6 +9,14 @@ export class NotFoundError extends Error {
   }
 }
 
+export class InvalidInputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidInputError";
+    Object.setPrototypeOf(this, InvalidInputError.prototype);
+  }
+}
+
 export class DuplicateEntryError extends Error {
   constructor(message: string) {
     super(message);
@@ -18,6 +26,13 @@ export class DuplicateEntryError extends Error {
 }
 
 export const handleErrors = (err: Error) => {
+  if (err instanceof InvalidInputError) {
+    return {
+      type: "Invalid Input Error",
+      error: err.message,
+      status: httpstatus.BAD_REQUEST,
+    };
+  }
   if (err instanceof NotFoundError) {
     return {
       type: "Not Found Error",

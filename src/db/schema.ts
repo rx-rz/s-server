@@ -22,7 +22,7 @@ export const admin = pgTable("admins", {
   lastName: varchar("last_name", { length: 30 }).notNull(),
   email: varchar("email", { length: 255 }).unique().notNull(),
   password: text("password"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", {mode: "string"}).defaultNow(),
 });
 
 export const customer = pgTable(
@@ -33,7 +33,7 @@ export const customer = pgTable(
     lastName: varchar("last_name", { length: 30 }).notNull(),
     email: varchar("email", { length: 255 }).unique().notNull(),
     password: text("password"),
-    createdAt: timestamp("created_at").defaultNow(),
+    createdAt: timestamp("created_at", {mode: "string"}).defaultNow(),
     hasCreatedPasswordForAccount: boolean(
       "has_created_password_for_account"
     ).default(false),
@@ -53,6 +53,12 @@ export const customerRelation = relations(customer, ({ many }) => {
   };
 });
 
+export const roomStatusEnum = pgEnum("room_status", [
+  "available",
+  "pending",
+  "booked",
+]);
+
 export const room = pgTable(
   "rooms",
   {
@@ -60,9 +66,9 @@ export const room = pgTable(
     typeId: integer("type_id")
       .notNull()
       .references(() => roomType.id, { onDelete: "cascade" }),
-    isAvailable: boolean("is_available").default(true),
+    status: roomStatusEnum("status").default("available"),
     noOfTimesBooked: integer("no_of_times_booked").default(0),
-    createdAt: timestamp("created_at").defaultNow(),
+    createdAt: timestamp("created_at", {mode: "string"}).defaultNow(),
   },
   (table) => {
     return {
@@ -82,48 +88,63 @@ export const roomRelation = relations(room, ({ one, many }) => {
   };
 });
 
-export const roomType = pgTable("room_types", {
-  id: serial("id").primaryKey(),
-  rating: decimal("rating", { precision: 10, scale: 2 })
-    .notNull()
-    .default("0.0"),
-  name: varchar("name", { length: 50 }).notNull().unique(),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  roomImageURLS: text("room_image_url").array(),
-  description: text("description"),
-  features: text("features").array(),
-  imageFileNames: text("room_image_name").array(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+export const roomType = pgTable(
+  "room_types",
+  {
+    id: serial("id").primaryKey(),
+    rating: decimal("rating", { precision: 10, scale: 2 })
+      .notNull()
+      .default("0.0"),
+    name: varchar("name", { length: 50 }).notNull().unique(),
+    price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+    roomImageURLS: text("room_image_url").array(),
+    description: text("description"),
+    features: text("features").array(),
+    imageFileNames: text("room_image_name").array(),
+    createdAt: timestamp("created_at", {mode: "string"}).defaultNow(),
+  },
+  (table) => {
+    return {
+      name_idx: index("name_idx").on(table.name),
+    };
+  }
+);
 
 export const roomTypeRelation = relations(roomType, ({ many }) => {
   return {
     rooms: many(room, { relationName: "roomType" }),
   };
 });
+
 export const paymentStatusEnum = pgEnum("payment_status", [
   "pending",
   "confirmed",
 ]);
-export const payment = pgTable("payments", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  payedAt: timestamp("payed_at", { mode: "string" }),
-  customerId: uuid("customer_id")
-    .references(() => customer.id, {
+
+export const payment = pgTable(
+  "payments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+    createdAt: timestamp("created_at", {mode: "string"}).defaultNow(),
+    payedAt: timestamp("payed_at", { mode: "string" }),
+    customerId: uuid("customer_id")
+      .references(() => customer.id, {
+        onDelete: "cascade",
+      })
+      .notNull(),
+    reference: text("reference").notNull().unique(),
+    bookingId: uuid("booking_id").references(() => booking.id, {
       onDelete: "cascade",
-    })
-    .notNull(),
-  reference: text("reference").notNull(),
-
-  status: paymentStatusEnum("payment_status").notNull().default("pending"),
-  bookingId: uuid("booking_id").references(() => booking.id, {
-    onDelete: "cascade",
-    onUpdate: "cascade",
-  }),
-});
-
+      onUpdate: "cascade",
+    }),
+  },
+  (table) => {
+    return {
+      reference_idx: index("reference_idx").on(table.reference),
+    };
+  }
+);
 
 export const paymentRelation = relations(payment, ({ one, many }) => {
   return {
@@ -142,17 +163,30 @@ export const bookingstatusEnum = pgEnum("booking_status", [
   "active",
   "cancelled",
   "done",
+  "pending",
 ]);
-export const booking = pgTable("bookings", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  customerId: uuid("customer_id")
-    .references(() => customer.id, { onDelete: "no action" })
-    .notNull(),
-  startDate: timestamp("start_date").notNull(),
-  endDate: timestamp("end_date").notNull(),
-  status: bookingstatusEnum("booking_status").notNull().default("active"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+export const booking = pgTable(
+  "bookings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    customerId: uuid("customer_id")
+      .references(() => customer.id, { onDelete: "no action" })
+      .notNull(),
+    amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+    startDate: timestamp("start_date", { mode: "string" }).notNull(),
+    endDate: timestamp("end_date", { mode: "string" }).notNull(),
+    status: bookingstatusEnum("booking_status").notNull().default("pending"),
+    paymentStatus: paymentStatusEnum("payment_status")
+      .notNull()
+      .default("pending"),
+    createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
+  },
+  (table) => {
+    return {
+      customer_id_idx: index("customer_id_idx").on(table.customerId),
+    };
+  }
+);
 
 export const bookingRelation = relations(booking, ({ one, many }) => {
   return {

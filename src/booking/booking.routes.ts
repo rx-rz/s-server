@@ -17,3 +17,11 @@ bookingRouter.get(
   bookingHandlers.getBookingDetails
 );
 bookingRouter.get(bookingRoutes.list_bookings, bookingHandlers.listBookings);
+bookingRouter.post(
+  "/updateBookingPaymentStatus",
+  bookingHandlers.updateBookingStatus
+);
+bookingRouter.get(
+  "/checkExpiredBookings",
+  bookingHandlers.checkExpiredBookings
+);

@@ -13,7 +13,7 @@ const roomTable = ctx.schema.room;
 const roomValues = {
   typeId: roomTable.typeId,
   roomNo: roomTable.roomNo,
-  isAvailable: roomTable.isAvailable,
+  status: roomTable.status,
   noOfTimesBooked: roomTable.noOfTimesBooked,
   createdAt: roomTable.createdAt,
 };
@@ -57,9 +57,11 @@ const updateRoom = async (request: UpdateRoomRequest) => {
 };
 
 const listRooms = async (request: ListRoomRequest) => {
-  const rooms = await ctx.db
-    .select({ ...roomValues })
-    .from(roomTable)
+  const rooms = await ctx.db.query.room.findMany({
+    with: {
+      roomType: true,
+    },
+  });
   return rooms;
 };
 
@@ -82,11 +84,13 @@ const fetchRoomsByProvidedRoomNumbers = async (roomNos: number[]) => {
   await db.transaction(async (tx) => {
     try {
       for (let i = 0; i < roomNos.length; i++) {
-        const [room] = await tx
-          .select(roomValues)
-          .from(roomTable)
-          .where(eq(roomTable.roomNo, roomNos[i]));
-        rooms.push(room);
+        const room = await tx.query.room.findFirst({
+          where: eq(roomTable.roomNo, roomNos[i]),
+          with: {
+            roomType: true,
+          },
+        });
+        if (room) rooms.push(room);
       }
     } catch (err) {
       tx.rollback();

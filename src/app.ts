@@ -5,7 +5,7 @@ import express, { Express, NextFunction, Request, Response } from "express";
 import { config } from "dotenv";
 import { handleErrors } from "./errors";
 import { ENV_VARS } from "../env";
-import { connectToDb } from "./db/db";
+import { connectToDb, db } from "./db/db";
 
 import { customerRouter } from "./customer/customer.routes";
 import { otpRouter } from "./otp/otp.routes";
@@ -14,6 +14,8 @@ import { roomTypeRouter } from "./room_types/roomtype.routes";
 import { roomRouter } from "./room/room.routes";
 import { bookingRouter } from "./booking/booking.routes";
 import { paymentRouter } from "./payment/payment.routes";
+import { Server } from "socket.io";
+import { createServer } from "http";
 
 config({ path: ".env" });
 export const app: Express = express();
@@ -34,14 +36,21 @@ app.use("/api/v1/payments", paymentRouter);
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   const errors = handleErrors(err);
   console.trace(errors);
+  console.log({ err: errors.error });
   return res
     .status(errors.status)
     .json({ error_type: errors.type, error: errors.error, isSuccess: false });
 });
 
+const server = createServer(app);
+const io = new Server(server);
+
 if (process.env.NODE_ENV === "development") {
-  app.listen(ENV_VARS.PORT, ENV_VARS.HOST, () => {
+  server.listen(ENV_VARS.PORT, ENV_VARS.HOST, () => {
     connectToDb();
+    io.on("connection", (socket) => {
+      console.log("a user connected!");
+    });
     console.log(
       `\nServer running at http://${ENV_VARS.HOST}:${ENV_VARS.PORT}/. 🚀 \n`
     );

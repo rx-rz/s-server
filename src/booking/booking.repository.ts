@@ -1,40 +1,39 @@
-import { eq } from "drizzle-orm";
+import { eq, lte } from "drizzle-orm";
 import { ctx } from "../ctx";
-import { CreateBookingRequest, UpdateBookingRequest } from "./booking.types";
+import {
+  Bookings,
+  CreateBookingRequest,
+  UpdateBookingRequest,
+} from "./booking.types";
 import { db } from "../db/db";
 
 const bookingTable = ctx.schema.booking;
 const roomsToBookingTable = ctx.schema.roomsToBooking;
 const roomsTable = ctx.schema.room;
-
 const bookingValues = {
   id: bookingTable.id,
   customerId: bookingTable.customerId,
   startDate: bookingTable.startDate,
   endDate: bookingTable.endDate,
+  status: bookingTable.status,
+  paymentStatus: bookingTable.paymentStatus,
   createdAt: bookingTable.createdAt,
+  amount: bookingTable.amount,
 };
 
-type bookings = {
-  roomNo: number;
-  id: string;
-  createdAt: Date | null;
-  customerId: string;
-  startDate: Date;
-  endDate: Date;
-}[];
 const createBooking = async ({
   customerId,
   endDate,
   roomNos,
   startDate,
+  amount,
 }: CreateBookingRequest) => {
   const createdBookings = await db.transaction(async (tx) => {
     try {
       let roomsBooked = [];
       const [booking] = await tx
         .insert(bookingTable)
-        .values({ customerId, endDate, startDate })
+        .values({ customerId, endDate, startDate, amount })
         .returning(bookingValues);
       for (let i = 0; i < roomNos.length; i++) {
         await tx
@@ -43,7 +42,7 @@ const createBooking = async ({
           .returning({ roomNo: roomsToBookingTable.roomNo });
         const [room] = await tx
           .update(roomsTable)
-          .set({ isAvailable: false })
+          .set({ status: "pending" })
           .where(eq(roomsTable.roomNo, roomNos[i]))
           .returning({
             roomNo: roomsTable.roomNo,
@@ -81,22 +80,58 @@ const updateBooking = async (request: UpdateBookingRequest) => {
             .returning({ roomNo: roomsToBookingTable.roomNo });
           const [room] = await tx
             .update(roomsTable)
-            .set({ isAvailable: false })
+            .set({ status: "pending" })
             .where(eq(roomsTable.roomNo, roomNos[i]))
             .returning({
               roomNo: roomsTable.roomNo,
               roomType: roomsTable.typeId,
             });
-
           roomsBooked.push(room);
         }
       }
       return { booking, roomsBooked };
     } catch (err) {
+      console.log(err);
       tx.rollback();
     }
   });
   return bookingsUpdated;
+};
+
+const getExpiredBookings = async () => {
+  const date = new Date();
+  const bookings = await ctx.db.query.booking.findMany({
+    where: lte(bookingTable.endDate, date.toISOString()),
+    with: {
+      roomsToBooking: true,
+    },
+  });
+  return bookings;
+};
+
+const updateBookingStatusesToDone = async (bookings: Bookings) => {
+  await ctx.db.transaction(async (tx) => {
+    try {
+      for (let i = 0; bookings.length; i++) {
+        await tx
+          .update(bookingTable)
+          .set({ status: "done" })
+          .where(eq(bookingTable.id, bookings[i].id));
+        let roomsBooked = bookings[i].roomsToBooking;
+        for (let j = 0; j < roomsBooked.length; j++) {
+          await tx
+            .delete(roomsToBookingTable)
+            .where(eq(roomsToBookingTable.roomNo, roomsBooked[i].roomNo));
+          await tx
+            .update(roomsTable)
+            .set({ status: "available" })
+            .where(eq(roomsTable.roomNo, roomsBooked[i].roomNo));
+        }
+      }
+    } catch (err) {
+      tx.rollback();
+    }
+  });
 };
 
 const getBookingDetails = async (bookingID: string) => {
@@ -121,7 +156,7 @@ const deleteBooking = async (bookingID: string) => {
     for (let i = 0; i < roomsAssociatedWithDeletedBooking.length; i++) {
       await tx
         .update(roomsTable)
-        .set({ isAvailable: true })
+        .set({ status: "available" })
         .where(
           eq(roomsTable.roomNo, roomsAssociatedWithDeletedBooking[i].roomNo)
         );
@@ -139,10 +174,13 @@ const listBookings = async () => {
   const bookings = await ctx.db.select(bookingValues).from(bookingTable);
   return bookings;
 };
+
 export const bookingRepository = {
   deleteBooking,
   updateBooking,
   createBooking,
   getBookingDetails,
   listBookings,
+  getExpiredBookings,
+  updateBookingStatusesToDone,
 };

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { asc, eq, gte, ilike, or } from "drizzle-orm";
 import { ctx } from "../ctx";
 import {
   CustomerDeleteRequest,
@@ -10,7 +10,7 @@ import {
 
 const customerTable = ctx.schema.customer;
 
-const customer = {
+export const customerValues = {
   firstName: customerTable.firstName,
   lastName: customerTable.lastName,
   email: customerTable.email,
@@ -20,11 +20,11 @@ const customer = {
 };
 
 const register = async (customerRequest: CustomerRegisterRequest) => {
-  const [user] = await ctx.db
+  const [customer] = await ctx.db
     .insert(customerTable)
     .values(customerRequest)
-    .returning(customer);
-  return user;
+    .returning(customerValues);
+  return customer;
 };
 
 const getCustomerDetails = async (customerEmail: string) => {
@@ -39,48 +39,48 @@ const getCustomerDetails = async (customerEmail: string) => {
 };
 
 const listCustomer = async () => {
-  const users = await ctx.db.select(customer).from(customerTable);
-  return users || [];
+  const customers = await ctx.db.select(customerValues).from(customerTable)
+  return customers || [];
 };
 
 const deleteCustomer = async (customerRequest: CustomerDeleteRequest) => {
-  const [deletedUser] = await ctx.db
+  const [customer] = await ctx.db
     .delete(customerTable)
-    .where(eq(customer.email, customerRequest.email))
-    .returning(customer);
-  return deletedUser;
+    .where(eq(customerValues.email, customerRequest.email))
+    .returning(customerValues);
+  return customer;
 };
 
 const updateCustomer = async (customerRequest: CustomerUpdateRequest) => {
   const { email, ...request } = customerRequest;
-  const [updatedCustomer] = await ctx.db
+  const [customer] = await ctx.db
     .update(customerTable)
     .set(request)
     .where(eq(customerTable.email, email))
-    .returning(customer);
-  return updatedCustomer;
+    .returning(customerValues);
+  return customer;
 };
 
 const updateCustomerEmail = async (
   customerRequest: CustomerUpdateEmailRequest
 ) => {
-  const [updatedCustomer] = await ctx.db
+  const [customer] = await ctx.db
     .update(customerTable)
     .set({ email: customerRequest.newEmail })
     .where(eq(customerTable.email, customerRequest.email))
-    .returning(customer);
-  return updatedCustomer;
+    .returning(customerValues);
+  return customer;
 };
 
 const updateCustomerPassword = async (
   customerRequest: CustomerUpdatePasswordRequest
 ) => {
-  const [updatedCustomer] = await ctx.db
+  const [customer] = await ctx.db
     .update(customerTable)
     .set({ password: customerRequest.newPassword })
     .where(eq(customerTable.email, customerRequest.email))
-    .returning(customer);
-  return updatedCustomer;
+    .returning(customerValues);
+  return customer;
 };
 
 const getCustomerPassword = async (email: string) => {
@@ -90,7 +90,6 @@ const getCustomerPassword = async (email: string) => {
   });
   return customerPassword?.password || "";
 };
-
 
 export const customerRepository = {
   register,
