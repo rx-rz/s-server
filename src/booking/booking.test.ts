@@ -21,7 +21,7 @@ async function getTestBooking() {
   );
   const availableCustomer = customerResponse.body.customers[0];
   const availableRooms = roomsResponse.body.rooms
-    .filter((room: Room) => room.isAvailable === true)
+    .filter((room: Room) => room.status === "available")
     .map((room: Room) => room.roomNo);
   return {
     roomNos: [availableRooms[0]],
@@ -45,10 +45,10 @@ async function getRooms({
   unavailableRooms?: boolean;
 }) {
   const roomsResponse = await request(app).get("/api/v1/rooms/listRooms");
-  const unavailableRoom = roomsResponse.body.rooms.find((room: Room) =>
-    room.isAvailable === unavailableRooms ? false : true
+  const rooms = roomsResponse.body.rooms.find(
+    (room: Room) => unavailableRooms ? room.status !== "available" : room.status === "available"
   );
-  return unavailableRoom.roomNo;
+  return rooms.roomNo;
 }
 
 describe("/POST /bookings/createBooking", () => {

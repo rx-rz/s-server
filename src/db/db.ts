@@ -5,19 +5,29 @@ import { Client } from "pg";
 import { ENV_VARS } from "../../env";
 import { dbSchema } from "./schema";
 
-export const client = ENV_VARS.NODE_ENV === "development" ? new Client({
-  host: ENV_VARS.HOST,
-  port: parseInt(ENV_VARS.DB_PORT!),
-  user: ENV_VARS.USER,
-  database: ENV_VARS.DATABASE,
-  password: ENV_VARS.PASSWORD,
-}) : new Client({
-  host: ENV_VARS.HOST,
-  port: parseInt(ENV_VARS.DB_PORT!),
-  user: ENV_VARS.USER,
-  database: ENV_VARS.TEST_DATABASE,
-  password: ENV_VARS.PASSWORD,
-});
+export const client =
+  ENV_VARS.NODE_ENV === "development"
+    ? new Client({
+        host: ENV_VARS.HOST,
+        port: parseInt(ENV_VARS.DB_PORT!),
+        user: ENV_VARS.USER,
+        database: ENV_VARS.DATABASE,
+        password: ENV_VARS.PASSWORD,
+      })
+    : ENV_VARS.NODE_ENV === "production"
+    ? new Client({
+        connectionString: ENV_VARS.PRODUCTION_CONNECTION_STRING,
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      })
+    : new Client({
+        host: ENV_VARS.HOST,
+        port: parseInt(ENV_VARS.DB_PORT!),
+        user: ENV_VARS.USER,
+        database: ENV_VARS.TEST_DATABASE,
+        password: ENV_VARS.PASSWORD,
+      });
 export async function connectToDb() {
   client.connect((err) => {
     if (err) {
@@ -40,8 +50,6 @@ export async function endDBConnection() {
     });
 }
 
-
 export const db = drizzle(client, { schema: dbSchema });
-
 
 export const dbType = typeof db;

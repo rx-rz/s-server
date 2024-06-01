@@ -4,6 +4,7 @@ import { roomRepository } from "./room.repository";
 import { httpstatus } from "../ctx";
 import { roomTypeRepository } from "../room_types/roomtype.repository";
 import { NotFoundError } from "../errors";
+
 const createRoom: Handler = async (req, res, next) => {
   try {
     const { noOfRooms, typeId } = v.roomCreationValidator.parse(req.body);
@@ -20,7 +21,6 @@ const createRoom: Handler = async (req, res, next) => {
 const getRoomDetails: Handler = async (req, res, next) => {
   try {
     const { roomNo } = v.roomNoValidator.parse(req.query);
-
     const room = await roomRepository.getRoomDetails(roomNo);
     if (!room) {
       throw new NotFoundError(

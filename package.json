@@ -17,6 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/express": "^4.17.21",
+    "@xata.io/client": "^0.29.5",
     "axios": "^1.7.2",
     "browser-image-compression": "^2.0.2",
     "cors": "^2.8.5",

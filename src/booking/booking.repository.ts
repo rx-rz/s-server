@@ -138,7 +138,14 @@ const getBookingDetails = async (bookingID: string) => {
   const booking = await ctx.db.query.booking.findFirst({
     where: eq(bookingTable.id, bookingID),
     with: {
-      customers: true,
+      customers: {
+        columns: {
+          email: true,
+          firstName: true,
+          lastName: true,
+          id: true
+        }
+      },
       roomsToBooking: true,
     },
   });

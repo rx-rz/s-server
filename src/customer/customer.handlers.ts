@@ -22,8 +22,10 @@ const registerCustomer: Handler = async (req, res, next) => {
         `Customer with email ${body.email} already exists.`
       );
     }
-    const user = await customerRepository.register(body);
-    return res.status(httpstatus.CREATED).send({ user, isSuccess: true });
+    await customerRepository.register(body);
+    return res
+      .status(httpstatus.CREATED)
+      .send({ message: "Account created.", isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -44,11 +46,14 @@ const loginCustomer: Handler = async (req, res, next) => {
     const token = generateAccessToken({
       email: customerDetails.email,
       id: customerDetails.id,
+      is_verified: customerDetails.isVerified,
       role: "CUSTOMER",
+      hasCreatedPasswordForAccount:
+        customerDetails.hasCreatedPasswordForAccount,
+      firstName: customerDetails.firstName,
+      lastName: customerDetails.lastName,
     });
-    return res
-      .status(httpstatus.OK)
-      .send({ customerDetails, token, isSuccess: true });
+    return res.status(httpstatus.OK).send({ token, isSuccess: true });
   } catch (err) {
     next(err);
   }

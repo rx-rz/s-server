@@ -2,7 +2,11 @@ import { Handler } from "express";
 import { v } from "./booking.validators";
 import { bookingRepository } from "./booking.repository";
 import { httpstatus } from "../ctx";
-import { checkBookingPrice, checkIfRoomsAreAvailable } from "./booking.helpers";
+import {
+  checkBookingPrice,
+  checkIfRoomsAreAvailable,
+  getNoOfDays,
+} from "./booking.helpers";
 import {
   DuplicateEntryError,
   InvalidInputError,
@@ -11,7 +15,6 @@ import {
 import { createHmac } from "node:crypto";
 import { ENV_VARS } from "../../env";
 import { paymentRepository } from "../payment/payment.repository";
-import { schedule } from "node-cron";
 
 const createBooking: Handler = async (req, res, next) => {
   try {
@@ -26,7 +29,16 @@ const createBooking: Handler = async (req, res, next) => {
         )} are already booked.`
       );
     }
-    const bookingPrice = await checkBookingPrice(bookingRequest.roomNos);
+    const noOfDays = getNoOfDays({
+      startDate: bookingRequest.startDate,
+      endDate: bookingRequest.endDate,
+    });
+    console.log({noOfDays})
+    const bookingPrice = await checkBookingPrice(
+      bookingRequest.roomNos,
+      noOfDays
+    );
+    
     if (bookingPrice !== Number(bookingRequest.amount))
       throw new InvalidInputError(
         `Booking price is incorrect. The correct booking price is ${bookingPrice}`

@@ -22,7 +22,7 @@ export const admin = pgTable("admins", {
   lastName: varchar("last_name", { length: 30 }).notNull(),
   email: varchar("email", { length: 255 }).unique().notNull(),
   password: text("password"),
-  createdAt: timestamp("created_at", {mode: "string"}).defaultNow(),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
 });
 
 export const customer = pgTable(
@@ -33,7 +33,7 @@ export const customer = pgTable(
     lastName: varchar("last_name", { length: 30 }).notNull(),
     email: varchar("email", { length: 255 }).unique().notNull(),
     password: text("password"),
-    createdAt: timestamp("created_at", {mode: "string"}).defaultNow(),
+    createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
     hasCreatedPasswordForAccount: boolean(
       "has_created_password_for_account"
     ).default(false),
@@ -68,7 +68,7 @@ export const room = pgTable(
       .references(() => roomType.id, { onDelete: "cascade" }),
     status: roomStatusEnum("status").default("available"),
     noOfTimesBooked: integer("no_of_times_booked").default(0),
-    createdAt: timestamp("created_at", {mode: "string"}).defaultNow(),
+    createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
   },
   (table) => {
     return {
@@ -101,7 +101,7 @@ export const roomType = pgTable(
     description: text("description"),
     features: text("features").array(),
     imageFileNames: text("room_image_name").array(),
-    createdAt: timestamp("created_at", {mode: "string"}).defaultNow(),
+    createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
   },
   (table) => {
     return {
@@ -126,7 +126,7 @@ export const payment = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-    createdAt: timestamp("created_at", {mode: "string"}).defaultNow(),
+    createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
     payedAt: timestamp("payed_at", { mode: "string" }),
     customerId: uuid("customer_id")
       .references(() => customer.id, {
@@ -231,6 +231,7 @@ export const roomsToBookingRelation = relations(roomsToBooking, ({ one }) => ({
     references: [booking.id],
   }),
 }));
+
 
 export const dbSchema = {
   customer,

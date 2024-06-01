@@ -59,7 +59,9 @@ const updateRoom = async (request: UpdateRoomRequest) => {
 const listRooms = async (request: ListRoomRequest) => {
   const rooms = await ctx.db.query.room.findMany({
     with: {
-      roomType: true,
+      roomType: {
+        columns: { name: true, price: true, id: true },
+      },
     },
   });
   return rooms;

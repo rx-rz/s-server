@@ -6,6 +6,10 @@ type User = {
   id: string;
   role: "ADMIN" | "CUSTOMER";
   email: string;
+  is_verified: boolean | null;
+  hasCreatedPasswordForAccount: boolean | null;
+  firstName: string | null;
+  lastName: string | null;
 };
 
 interface AuthenticatedRequest extends Request {

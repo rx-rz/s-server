@@ -19,6 +19,9 @@ const ENV = z.object({
   PAYMENT_PUBLIC_KEY: z.literal(process.env.PAYMENT_PUBLIC_KEY),
   PAYMENT_SECRET_KEY: z.literal(process.env.PAYMENT_SECRET_KEY).default(""),
   NODE_ENV: z.literal(process.env.NODE_ENV).default("development"),
+  PRODUCTION_CONNECTION_STRING: z
+    .literal(process.env.PRODUCTION_CONNECTION_STRING)
+    .default(""),
 });
 
 export const ENV_VARS = ENV.parse(process.env);

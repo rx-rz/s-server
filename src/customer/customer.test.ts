@@ -50,8 +50,7 @@ describe("/POST /customers/registerCustomer", () => {
   const route = "/api/v1/customers/registerCustomer";
   it("should register a new customer", async () => {
     const response = await request(app).post(route).send(newCustomer);
-    expect(response.body.user.email).toBe(newCustomer.email);
-    expect(response.body.user.isVerified).toBe(false);
+    expect(response.body.message).toBe("Account created.");
     expect(response.body.isSuccess).toBe(true);
   });
 

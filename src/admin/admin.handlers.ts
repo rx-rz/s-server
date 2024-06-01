@@ -29,14 +29,17 @@ const loginAdmin: Handler = async (req, res, next) => {
       throw new NotFoundError("User with provided credentials not found.");
     }
     const adminDetails = await adminRepository.getAdminDetails(email);
-    const token = generateAccessToken({
-      email: adminDetails.email,
-      id: adminDetails.id,
-      role: "ADMIN",
-    });
+    // const token = generateAccessToken({
+    //   email: adminDetails.email,
+    //   id: adminDetails.id,
+    //   role: "ADMIN",
+    //   firstName: adminDetails.firstName,
+    //   lastName: adminDetails.lastName,
+
+    // });
     return res
       .status(httpstatus.OK)
-      .send({ adminDetails, token, isSuccess: true });
+      .send({ adminDetails, isSuccess: true });
   } catch (err) {
     next(err);
   }
