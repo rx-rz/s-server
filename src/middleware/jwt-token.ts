@@ -2,6 +2,7 @@ import { sign, verify } from "jsonwebtoken";
 import { ENV_VARS } from "../../env";
 import { NextFunction, Request, Response } from "express";
 import { httpstatus } from "../ctx";
+
 type User = {
   id: string;
   role: "ADMIN" | "CUSTOMER";
@@ -12,19 +13,17 @@ type User = {
   lastName: string | null;
 };
 
-interface AuthenticatedRequest extends Request {
-  user_info?: string;
-}
 export function generateAccessToken(user: User) {
-  const token = sign(user, ENV_VARS.JWT_SECRET!);
+  const token = sign(user, ENV_VARS.JWT_SECRET!, {expiresIn: "1d"});
   return token;
 }
 
-export function verifyToken(
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) {
+export function generateRefreshToken(user: User) {
+  const refreshToken = sign({ userId: user.id }, ENV_VARS.JWT_REFRESH_SECRET!, { expiresIn: "7d" });
+  return refreshToken;
+}
+
+export function verifyToken(req: Request, res: Response, next: NextFunction) {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) {
     return res.status(httpstatus.FORBIDDEN).json({
@@ -37,8 +36,6 @@ export function verifyToken(
     if (err) {
       return res.status(403).json({ message: "Failed to authenticate token" });
     }
-
-    req.user_info = JSON.stringify(decoded);
     next();
   });
 }

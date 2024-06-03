@@ -22,6 +22,7 @@ export const admin = pgTable("admins", {
   lastName: varchar("last_name", { length: 30 }).notNull(),
   email: varchar("email", { length: 255 }).unique().notNull(),
   password: text("password"),
+  refreshToken: text("refreshToken"),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
 });
 
@@ -33,6 +34,7 @@ export const customer = pgTable(
     lastName: varchar("last_name", { length: 30 }).notNull(),
     email: varchar("email", { length: 255 }).unique().notNull(),
     password: text("password"),
+    refreshToken: text("refreshToken"),
     createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
     hasCreatedPasswordForAccount: boolean(
       "has_created_password_for_account"
@@ -165,6 +167,7 @@ export const bookingstatusEnum = pgEnum("booking_status", [
   "done",
   "pending",
 ]);
+
 export const booking = pgTable(
   "bookings",
   {
@@ -232,7 +235,6 @@ export const roomsToBookingRelation = relations(roomsToBooking, ({ one }) => ({
   }),
 }));
 
-
 export const dbSchema = {
   customer,
   customerRelation,
@@ -250,4 +252,5 @@ export const dbSchema = {
   admin,
   userOtps,
 };
+
 export type dbSchemaType = typeof dbSchema;

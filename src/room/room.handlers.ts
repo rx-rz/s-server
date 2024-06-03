@@ -36,6 +36,18 @@ const getRoomDetails: Handler = async (req, res, next) => {
   }
 };
 
+const getAvailableRooms: Handler = async (req, res, next) => {
+  try {
+    const availableRooms = await roomRepository.getAvailableRooms();
+    return res.status(httpstatus.OK).json({
+      availableRooms,
+      isSuccess: true,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const listRooms: Handler = async (req, res, next) => {
   try {
     const queries = v.listRoomValidator.parse(req.query);
@@ -107,6 +119,7 @@ export const roomHandlers = {
   createRoom,
   deleteRoom,
   getRoomDetails,
+  getAvailableRooms,
   updateRoom,
   listRooms,
 };

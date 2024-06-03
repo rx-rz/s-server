@@ -22,6 +22,7 @@ const ENV = z.object({
   PRODUCTION_CONNECTION_STRING: z
     .literal(process.env.PRODUCTION_CONNECTION_STRING)
     .default(""),
+  JWT_REFRESH_SECRET: z.literal(process.env.JWT_REFRESH_SECRET).default(""),
 });
 
 export const ENV_VARS = ENV.parse(process.env);

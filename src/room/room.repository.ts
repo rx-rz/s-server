@@ -7,6 +7,7 @@ import {
   UpdateRoomRequest,
 } from "./room.types";
 import { db } from "../db/db";
+import { roomTypeRepository } from "../room_types/roomtype.repository";
 
 const roomTable = ctx.schema.room;
 
@@ -67,6 +68,14 @@ const listRooms = async (request: ListRoomRequest) => {
   return rooms;
 };
 
+const getAvailableRooms = async () => {
+  const rooms = await ctx.db
+    .selectDistinctOn([roomTable.typeId])
+    .from(roomTable)
+    .where(eq(roomTable.status, "available"));
+  return rooms;
+};
+
 const deleteRoom = async (roomNo: number) => {
   await getRoomDetails(roomNo);
   const [deletedRoom] = await ctx.db
@@ -109,4 +118,5 @@ export const roomRepository = {
   getRoomDetails,
   getTotalNoOfRooms,
   fetchRoomsByProvidedRoomNumbers,
+  getAvailableRooms,
 };

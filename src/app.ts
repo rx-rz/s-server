@@ -1,5 +1,4 @@
 import cors from "cors";
-import morgan from "morgan";
 import express, { Express, NextFunction, Request, Response } from "express";
 
 import { config } from "dotenv";
@@ -16,6 +15,7 @@ import { bookingRouter } from "./booking/booking.routes";
 import { paymentRouter } from "./payment/payment.routes";
 import { Server } from "socket.io";
 import { createServer } from "http";
+import morgan from "morgan";
 
 config({ path: ".env" });
 export const app: Express = express();
@@ -23,8 +23,7 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
 app.use(express.urlencoded({ extended: false }));
-app.use(morgan("tiny"));
-
+app.use(morgan("dev"));
 app.use("/api/v1/customers", customerRouter);
 app.use("/api/v1/otp", otpRouter);
 app.use("/api/v1/admin", adminRouter);

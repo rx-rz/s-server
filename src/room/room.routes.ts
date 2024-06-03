@@ -8,3 +8,4 @@ roomRouter.patch(roomRoutes.update_rooms, roomHandlers.updateRoom);
 roomRouter.get(roomRoutes.list_rooms, roomHandlers.listRooms);
 roomRouter.get(roomRoutes.room_details, roomHandlers.getRoomDetails);
 roomRouter.delete(roomRoutes.delete_room, roomHandlers.deleteRoom);
+roomRouter.get("/getAvailableRooms", roomHandlers.getAvailableRooms);
