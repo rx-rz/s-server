@@ -2,11 +2,7 @@ import { Handler } from "express";
 import { v } from "./booking.validators";
 import { bookingRepository } from "./booking.repository";
 import { httpstatus } from "../ctx";
-import {
-  checkBookingPrice,
-  checkIfRoomsAreAvailable,
-  getNoOfDays,
-} from "./booking.helpers";
+import { checkIfRoomIsAvailable, getNoOfDays } from "./booking.helpers";
 import {
   DuplicateEntryError,
   InvalidInputError,
@@ -15,46 +11,38 @@ import {
 import { createHmac } from "node:crypto";
 import { ENV_VARS } from "../../env";
 import { paymentRepository } from "../payment/payment.repository";
+import { roomRepository } from "../room/room.repository";
 
 const createBooking: Handler = async (req, res, next) => {
   try {
     const bookingRequest = v.createBookingValidator.parse(req.body);
-    const unavailableRoomsNo = await checkIfRoomsAreAvailable(
-      bookingRequest.roomNos
-    );
-    if (unavailableRoomsNo.length > 0) {
+    const room = await checkIfRoomIsAvailable(bookingRequest.roomNo);
+    if (!room) {
       throw new DuplicateEntryError(
-        `Room(s) with Room Number ${unavailableRoomsNo.join(
-          ", "
-        )} are already booked.`
+        `Room(s) with Room Number ${bookingRequest.roomNo} is already booked.`
       );
     }
     const noOfDays = getNoOfDays({
       startDate: bookingRequest.startDate,
       endDate: bookingRequest.endDate,
     });
-    console.log({noOfDays})
-    const bookingPrice = await checkBookingPrice(
-      bookingRequest.roomNos,
-      noOfDays
-    );
-    
+    const bookingPrice = Number(room.roomType.price) * noOfDays;
     if (bookingPrice !== Number(bookingRequest.amount))
       throw new InvalidInputError(
         `Booking price is incorrect. The correct booking price is ${bookingPrice}`
       );
-    const createdBookings = await bookingRepository.createBooking(
-      bookingRequest
-    );
-    return res
-      .status(httpstatus.CREATED)
-      .json({ createdBookings, isSuccess: true });
+    const booking = await bookingRepository.createBooking(bookingRequest);
+    await roomRepository.updateRoom({
+      roomNo: bookingRequest.roomNo,
+      status: "pending",
+    });
+    return res.status(httpstatus.CREATED).json({ ...booking, isSuccess: true });
   } catch (err) {
     next(err);
   }
 };
 
-const updateBookingStatus: Handler = async (req, res, next) => {
+const updateBookingAndBookingPaymentStatus: Handler = async (req, res, next) => {
   try {
     const hash = createHmac("sha512", ENV_VARS.PAYMENT_SECRET_KEY)
       .update(JSON.stringify(req.body))
@@ -65,12 +53,25 @@ const updateBookingStatus: Handler = async (req, res, next) => {
         const payment = await paymentRepository.getPaymentDetailsByReference(
           body.data.reference
         );
-        if (payment && payment.booking) {
-          await bookingRepository.updateBooking({
-            id: payment.booking.id,
-            paymentStatus: "confirmed",
-          });
-        }
+        if (!payment)
+          throw new NotFoundError(
+            `Payment with reference ${body.data.reference} does not exist.`
+          );
+        const booking = await bookingRepository.getBookingDetails(
+          payment.bookingId
+        );
+        if (!booking)
+          throw new NotFoundError(
+            `Booking with ID ${payment.bookingId} does not exist.`
+          );
+        await bookingRepository.updateBooking({
+          id: booking.id,
+          paymentStatus: "confirmed",
+        });
+        await roomRepository.updateRoom({
+          roomNo: Number(booking.roomNo),
+          status: "booked",
+        });
       }
     }
   } catch (err) {
@@ -128,7 +129,8 @@ const checkExpiredBookings: Handler = async (req, res, next) => {
   try {
     const bookings = await bookingRepository.getExpiredBookings();
     if (bookings) {
-      await bookingRepository.updateBookingStatusesToDone(bookings);
+      
+      // await bookingRepository.updateBookingStatusesToDone(bookings);
     }
     return res.json({ bookings });
   } catch (err) {
@@ -152,5 +154,5 @@ export const bookingHandlers = {
   getBookingDetails,
   listBookings,
   checkExpiredBookings,
-  updateBookingStatus,
+  updateBookingAndBookingPaymentStatus,
 };

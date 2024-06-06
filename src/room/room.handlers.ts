@@ -40,7 +40,7 @@ const getAvailableRooms: Handler = async (req, res, next) => {
   try {
     const availableRooms = await roomRepository.getAvailableRooms();
     return res.status(httpstatus.OK).json({
-      availableRooms,
+      rooms: availableRooms,
       isSuccess: true,
     });
   } catch (err) {
@@ -51,7 +51,7 @@ const getAvailableRooms: Handler = async (req, res, next) => {
 const listRooms: Handler = async (req, res, next) => {
   try {
     const queries = v.listRoomValidator.parse(req.query);
-    const rooms = await roomRepository.listRooms(queries);
+    const rooms = await roomRepository.listRooms();
     const noOfRoomsInDB = await roomRepository.getTotalNoOfRooms();
     return res.status(httpstatus.OK).json({
       rooms,
@@ -65,9 +65,7 @@ const listRooms: Handler = async (req, res, next) => {
 
 const updateRoom: Handler = async (req, res, next) => {
   try {
-    const { typeId, roomNo, isAvailable } = v.roomUpdateValidator.parse(
-      req.body
-    );
+    const { typeId, roomNo, status } = v.roomUpdateValidator.parse(req.body);
     const roomTypes = await roomTypeRepository.getRoomTypes();
     const roomExists = await roomRepository.getRoomDetails(roomNo);
     const roomTypeExists = typeId
@@ -85,7 +83,7 @@ const updateRoom: Handler = async (req, res, next) => {
     const updatedRoom = await roomRepository.updateRoom({
       roomNo,
       typeId,
-      isAvailable,
+      status,
     });
     return res.status(httpstatus.OK).json({
       updatedRoom,

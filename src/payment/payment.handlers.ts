@@ -32,6 +32,7 @@ export const createPayment: Handler = async (req, res, next) => {
       bookingId,
       customerId: customer.id,
       reference: data.reference,
+      roomNo: booking.roomNo,
     });
     return res.json({
       payment: { ...payment, payment_url: data.authorization_url },

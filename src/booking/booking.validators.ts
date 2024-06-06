@@ -4,7 +4,7 @@ const currentTimestamp = new Date().toISOString();
 
 const createBookingValidator = z
   .object({
-    roomNos: z.array(z.number().int().positive()),
+    roomNo: z.number(),
     startDate: z.coerce.string().refine((date) => date > currentTimestamp, {
       message: "Start date must be greater than the current date.",
     }),

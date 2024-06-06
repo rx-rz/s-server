@@ -19,7 +19,7 @@ bookingRouter.get(
 bookingRouter.get(bookingRoutes.list_bookings, bookingHandlers.listBookings);
 bookingRouter.post(
   "/updateBookingPaymentStatus",
-  bookingHandlers.updateBookingStatus
+  bookingHandlers.updateBookingAndBookingPaymentStatus
 );
 bookingRouter.get(
   "/checkExpiredBookings",

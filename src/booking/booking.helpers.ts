@@ -11,32 +11,15 @@ export const getNoOfDays = ({
 }) => {
   const date1 = new Date(startDate);
   const date2 = new Date(endDate);
-  const diffInMilliseconds = Math.abs(
-    date2.getTime() - date1.getTime()
-  );
+  const diffInMilliseconds = Math.abs(date2.getTime() - date1.getTime());
   const diffInDays = Math.ceil(diffInMilliseconds / (1000 * 3600 * 24));
   return diffInDays;
 };
 
-export const checkIfRoomsAreAvailable = async (roomNos: number[]) => {
-  let unavailableRooms: number[] = [];
-  const rooms = await roomRepository.fetchRoomsByProvidedRoomNumbers(roomNos);
-  for (let i = 0; i < rooms.length; i++) {
-    if (rooms[i].status !== "available") {
-      unavailableRooms.push(rooms[i].roomNo);
-    }
+export const checkIfRoomIsAvailable = async (roomNo: number) => {
+  const room = await roomRepository.getRoomDetails(roomNo);
+  if (room && room.status !== "available") {
+    return false;
   }
-  return unavailableRooms;
-};
-
-export const checkBookingPrice = async (
-  roomNos: number[],
-  noOfDays: number
-) => {
-  let price = 0;
-  const rooms = await roomRepository.fetchRoomsByProvidedRoomNumbers(roomNos);
-  for (let i = 0; i < rooms.length; i++) {
-    price += (Number(rooms[i].roomType.price) * noOfDays);
-  }
-  return price;
+  return room;
 };

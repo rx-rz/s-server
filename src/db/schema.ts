@@ -86,7 +86,8 @@ export const roomRelation = relations(room, ({ one, many }) => {
       references: [roomType.id],
       relationName: "roomType",
     }),
-    roomsToBooking: many(roomsToBooking),
+    bookings: many(booking),
+    payments: many(payment),
   };
 });
 
@@ -130,16 +131,21 @@ export const payment = pgTable(
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
     createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
     payedAt: timestamp("payed_at", { mode: "string" }),
+    roomNo: integer("roomNo")
+      .references(() => room.roomNo)
+      .notNull(),
     customerId: uuid("customer_id")
       .references(() => customer.id, {
         onDelete: "cascade",
       })
       .notNull(),
     reference: text("reference").notNull().unique(),
-    bookingId: uuid("booking_id").references(() => booking.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
+    bookingId: uuid("booking_id")
+      .references(() => booking.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      })
+      .notNull(),
   },
   (table) => {
     return {
@@ -157,6 +163,10 @@ export const paymentRelation = relations(payment, ({ one, many }) => {
     booking: one(booking, {
       fields: [payment.bookingId],
       references: [booking.id],
+    }),
+    room: one(room, {
+      fields: [payment.roomNo],
+      references: [room.roomNo],
     }),
   };
 });
@@ -176,6 +186,10 @@ export const booking = pgTable(
       .references(() => customer.id, { onDelete: "no action" })
       .notNull(),
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+    roomNo: integer("roomNo").references(() => room.roomNo, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }).notNull(),
     startDate: timestamp("start_date", { mode: "string" }).notNull(),
     endDate: timestamp("end_date", { mode: "string" }).notNull(),
     status: bookingstatusEnum("booking_status").notNull().default("pending"),
@@ -193,7 +207,11 @@ export const booking = pgTable(
 
 export const bookingRelation = relations(booking, ({ one, many }) => {
   return {
-    roomsToBooking: many(roomsToBooking),
+    room: one(room, {
+      fields: [booking.roomNo],
+      references: [room.roomNo],
+      relationName: "room",
+    }),
     customers: one(customer, {
       fields: [booking.customerId],
       references: [customer.id],
@@ -209,32 +227,6 @@ export const userOtps = pgTable("user_otps", {
   expiresAt: bigint("expires_at", { mode: "number" }).notNull(),
 });
 
-export const roomsToBooking = pgTable(
-  "rooms_to_booking",
-  {
-    roomNo: integer("room_no")
-      .notNull()
-      .references(() => room.roomNo, { onDelete: "cascade" }),
-    bookingId: uuid("booking_id")
-      .notNull()
-      .references(() => booking.id, { onDelete: "cascade" }),
-  },
-  (t) => ({
-    pk: primaryKey({ columns: [t.roomNo, t.bookingId] }),
-  })
-);
-
-export const roomsToBookingRelation = relations(roomsToBooking, ({ one }) => ({
-  room: one(room, {
-    fields: [roomsToBooking.roomNo],
-    references: [room.roomNo],
-  }),
-  booking: one(booking, {
-    fields: [roomsToBooking.bookingId],
-    references: [booking.id],
-  }),
-}));
-
 export const dbSchema = {
   customer,
   customerRelation,
@@ -246,8 +238,6 @@ export const dbSchema = {
   paymentRelation,
   booking,
   bookingRelation,
-  roomsToBooking,
-  roomsToBookingRelation,
   bookingstatusEnum,
   admin,
   userOtps,

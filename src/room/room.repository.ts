@@ -7,9 +7,9 @@ import {
   UpdateRoomRequest,
 } from "./room.types";
 import { db } from "../db/db";
-import { roomTypeRepository } from "../room_types/roomtype.repository";
 
 const roomTable = ctx.schema.room;
+const roomTypeTable = ctx.schema.roomType;
 
 const roomValues = {
   typeId: roomTable.typeId,
@@ -40,7 +40,7 @@ const getRoomDetails = async (roomNo: number) => {
   const roomDetails = await ctx.db.query.room.findFirst({
     where: eq(roomTable.roomNo, roomNo),
     with: {
-      roomsToBooking: true,
+      bookings: true,
       roomType: true,
     },
   });
@@ -57,7 +57,7 @@ const updateRoom = async (request: UpdateRoomRequest) => {
   return updatedRoom;
 };
 
-const listRooms = async (request: ListRoomRequest) => {
+const listRooms = async () => {
   const rooms = await ctx.db.query.room.findMany({
     with: {
       roomType: {
@@ -72,6 +72,7 @@ const getAvailableRooms = async () => {
   const rooms = await ctx.db
     .selectDistinctOn([roomTable.typeId])
     .from(roomTable)
+    .leftJoin(roomTypeTable, eq(roomTable.typeId, roomTypeTable.id))
     .where(eq(roomTable.status, "available"));
   return rooms;
 };
@@ -90,25 +91,6 @@ const getTotalNoOfRooms = async () => {
   return rooms.length;
 };
 
-const fetchRoomsByProvidedRoomNumbers = async (roomNos: number[]) => {
-  let rooms: Room[] | null = [];
-  await db.transaction(async (tx) => {
-    try {
-      for (let i = 0; i < roomNos.length; i++) {
-        const room = await tx.query.room.findFirst({
-          where: eq(roomTable.roomNo, roomNos[i]),
-          with: {
-            roomType: true,
-          },
-        });
-        if (room) rooms.push(room);
-      }
-    } catch (err) {
-      tx.rollback();
-    }
-  });
-  return rooms;
-};
 
 export const roomRepository = {
   createRoom,
@@ -117,6 +99,5 @@ export const roomRepository = {
   listRooms,
   getRoomDetails,
   getTotalNoOfRooms,
-  fetchRoomsByProvidedRoomNumbers,
   getAvailableRooms,
 };

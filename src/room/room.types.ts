@@ -25,7 +25,8 @@ export type CreateRoomRequest = {
 export type UpdateRoomRequest = {
   roomNo: number;
   typeId?: number;
-  isAvailable?: boolean;
+  status?: "available" | "pending" | "booked" 
+  noOfTimesBooked?: number;
 };
 
 export type ListRoomRequest = {
@@ -34,6 +35,6 @@ export type ListRoomRequest = {
   pageNo?: number;
   noOfEntries?: number;
   noOfTimesBooked?: number;
-  isAvailable?: boolean;
+  status: "available" | "pending" | "booked" | null;
   createdAt?: string;
 };

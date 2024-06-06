@@ -1,5 +1,5 @@
 export type CreateBookingRequest = {
-  roomNos: number[];
+  roomNo: number;
   startDate: string;
   endDate: string;
   customerId: string;
@@ -21,8 +21,5 @@ export type Bookings = {
   endDate: string;
   status: "active" | "cancelled" | "done" | "pending";
   paymentStatus: "pending" | "confirmed";
-  roomsToBooking: {
-    bookingId: string;
-    roomNo: number;
-  }[];
+  roomNo: number;
 }[];

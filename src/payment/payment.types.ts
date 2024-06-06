@@ -3,6 +3,7 @@ export type CreatePaymentRequest = {
   reference: string;
   customerId: string;
   bookingId: string;
+  roomNo: number;
 };
 
 export type UpdatePaymentStatus = {
