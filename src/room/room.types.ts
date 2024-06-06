@@ -17,6 +17,16 @@ export type Room = {
   };
 };
 
+export type RoomListObject = {
+  createdAt: string | null;
+  roomNo: number;
+  typeId: number;
+  status: "available" | "pending" | "booked" | null;
+  noOfTimesBooked: number | null;
+  name: string;
+  price: string;
+};
+
 export type CreateRoomRequest = {
   typeId: number;
   noOfRooms: number;
@@ -25,16 +35,20 @@ export type CreateRoomRequest = {
 export type UpdateRoomRequest = {
   roomNo: number;
   typeId?: number;
-  status?: "available" | "pending" | "booked" 
+  status?: "available" | "pending" | "booked";
   noOfTimesBooked?: number;
 };
 
-export type ListRoomRequest = {
-  roomNo?: number;
-  typeId?: number;
-  pageNo?: number;
-  noOfEntries?: number;
-  noOfTimesBooked?: number;
-  status: "available" | "pending" | "booked" | null;
-  createdAt?: string;
+
+export type Search = {
+  key: keyof RoomListObject;
+  value: number | string;
+}[];
+
+export type ListRoomParams = {
+  limit: number;
+  pageNo: number;
+  orderBy: keyof RoomListObject;
+  searchBy?: Search;
+  ascOrDesc: "asc" | "desc"
 };

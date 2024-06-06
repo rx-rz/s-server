@@ -1,4 +1,4 @@
-import { asc, eq, gte, ilike, or } from "drizzle-orm";
+import { SQLWrapper, and, asc, desc, eq, ilike } from "drizzle-orm";
 import { ctx } from "../ctx";
 import {
   CustomerDeleteRequest,
@@ -6,6 +6,8 @@ import {
   CustomerUpdateEmailRequest,
   CustomerUpdatePasswordRequest,
   CustomerUpdateRequest,
+  ListCustomerParams,
+  Search,
 } from "./customer.types";
 
 const customerTable = ctx.schema.customer;
@@ -38,8 +40,44 @@ const getCustomerDetails = async (customerEmail: string) => {
   return customerDetails;
 };
 
-const listCustomer = async () => {
-  const customers = await ctx.db.select(customerValues).from(customerTable)
+const customerListSearch = (search: Search): SQLWrapper[] => {
+  let filterQueries = [];
+  for (let i of search) {
+    switch (i.key) {
+      case "isVerified":
+        if (typeof i.value === "boolean")
+          filterQueries.push(eq(customerTable.isVerified, i.value));
+      default:
+        filterQueries.push(ilike(customerTable[i.key], `%${i.value}%`));
+    }
+  }
+  return filterQueries;
+};
+
+const listCustomer = async ({
+  limit,
+  orderBy,
+  pageNo,
+  searchBy,
+  ascOrDesc,
+}: ListCustomerParams) => {
+  let customers;
+  const dbQuery = ctx.db
+    .select(customerValues)
+    .from(customerTable)
+    .limit(limit)
+    .offset((pageNo - 1) * limit)
+    .orderBy(
+      ascOrDesc === "asc"
+        ? asc(customerTable[`${orderBy}`])
+        : desc(customerTable[`${orderBy}`])
+    );
+  if (searchBy) {
+    const filterQueries = customerListSearch(searchBy);
+    customers = await dbQuery.where(and(...filterQueries));
+  } else {
+    customers = await dbQuery;
+  }
   return customers || [];
 };
 

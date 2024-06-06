@@ -8,9 +8,14 @@ const roomCreationValidator = z.object({
 });
 
 const roomUpdateValidator = z.object({
-  typeId: z.coerce.number({ required_error: "Room type must be provided" }).optional(),
+  typeId: z.coerce
+    .number({ required_error: "Room type must be provided" })
+    .optional(),
   roomNo: z.coerce.number({ required_error: "Room number must be provided" }),
-  status: z.enum(["pending", "booked", "available"]).default("pending").optional(),
+  status: z
+    .enum(["pending", "booked", "available"])
+    .default("pending")
+    .optional(),
 });
 
 const roomNoValidator = z.object({
@@ -18,13 +23,36 @@ const roomNoValidator = z.object({
 });
 
 const listRoomValidator = z.object({
-  roomNo: z.coerce.number().optional(),
-  typeId: z.coerce.number().optional(),
-  pageNo: z.coerce.number().optional(),
-  noOfEntries: z.coerce.number().optional(),
-  noOfTimesBooked: z.coerce.number().optional(),
-  isAvailable: z.boolean().optional(),
-  createdAt: z.string().optional(),
+  pageNo: z.coerce.number().default(1),
+  limit: z.coerce.number().default(10),
+  searchBy: z
+    .array(
+      z.object({
+        key: z.enum([
+          "createdAt",
+          "roomNo",
+          "typeId",
+          "status",
+          "noOfTimesBooked",
+          "name",
+          "price",
+        ]),
+        value: z.union([z.number(), z.string()]),
+      })
+    )
+    .optional(),
+  orderBy: z
+    .enum([
+      "createdAt",
+      "roomNo",
+      "typeId",
+      "status",
+      "noOfTimesBooked",
+      "name",
+      "price",
+    ])
+    .default("roomNo"),
+  ascOrDesc: z.enum(["asc", "desc"]).default("asc"),
 });
 export const v = {
   roomCreationValidator,

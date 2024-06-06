@@ -1,9 +1,19 @@
-import { eq } from "drizzle-orm";
+import {
+  SQLWrapper,
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  or,
+} from "drizzle-orm";
 import { ctx } from "../ctx";
 import {
   CreateRoomRequest,
-  ListRoomRequest,
-  Room,
+  ListRoomParams,
+  Search,
   UpdateRoomRequest,
 } from "./room.types";
 import { db } from "../db/db";
@@ -17,6 +27,16 @@ const roomValues = {
   status: roomTable.status,
   noOfTimesBooked: roomTable.noOfTimesBooked,
   createdAt: roomTable.createdAt,
+};
+
+const roomListValues = {
+  typeId: roomTable.typeId,
+  roomNo: roomTable.roomNo,
+  status: roomTable.status,
+  noOfTimesBooked: roomTable.noOfTimesBooked,
+  createdAt: roomTable.createdAt,
+  name: roomTypeTable.name,
+  price: roomTypeTable.price,
 };
 
 const createRoom = async (request: CreateRoomRequest) => {
@@ -57,14 +77,56 @@ const updateRoom = async (request: UpdateRoomRequest) => {
   return updatedRoom;
 };
 
-const listRooms = async () => {
-  const rooms = await ctx.db.query.room.findMany({
-    with: {
-      roomType: {
-        columns: { name: true, price: true, id: true },
-      },
-    },
-  });
+const roomListSearch = (search: Search) => {
+  let filterQueries: SQLWrapper[] = [];
+
+  for (let i of search) {
+    switch (i.key) {
+      case "createdAt":
+        filterQueries.push(gte(roomTable.createdAt, i.value.toString()));
+      case "status":
+        filterQueries.push(
+          eq(roomTable.status, i.value as "available" | "pending" | "booked")
+        );
+      default:
+        if (i.key !== "price" && i.key !== "name") {
+          filterQueries.push(eq(roomTable[i.key], Number(i.value)));
+        }
+        if (i.key === "price" || i.key === "name") {
+          filterQueries.push(eq(roomTypeTable[i.key], i.value.toString()));
+        }
+    }
+  }
+  return filterQueries;
+};
+
+const listRooms = async ({
+  limit,
+  pageNo,
+  orderBy,
+  searchBy,
+  ascOrDesc,
+}: ListRoomParams) => {
+  const [noOfRooms] = await ctx.db.select({ count: count() }).from(roomTable);
+  let rooms;
+  const dbQuery = ctx.db
+    .select({ roomListValues })
+    .from(roomTable)
+    .leftJoin(roomTypeTable, eq(roomTypeTable.id, roomTable.typeId))
+    .limit(limit)
+    .offset((pageNo - 1) * limit);
+  // .orderBy(
+  //   ascOrDesc === "asc"
+  //     ? asc(roomTable[`${orderBy}`])
+  //     : desc(roomTable[`${orderBy}`])
+  // );
+  if (searchBy) {
+    const filterQueries = roomListSearch(searchBy);
+    console.log({ filterQueries });
+    rooms = await dbQuery.where(and(...filterQueries));
+  } else {
+    rooms = await dbQuery;
+  }
   return rooms;
 };
 
@@ -86,18 +148,11 @@ const deleteRoom = async (roomNo: number) => {
   return deletedRoom;
 };
 
-const getTotalNoOfRooms = async () => {
-  const rooms = await ctx.db.select().from(roomTable);
-  return rooms.length;
-};
-
-
 export const roomRepository = {
   createRoom,
   deleteRoom,
   updateRoom,
   listRooms,
   getRoomDetails,
-  getTotalNoOfRooms,
   getAvailableRooms,
 };

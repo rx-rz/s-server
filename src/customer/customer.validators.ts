@@ -22,8 +22,6 @@ const registrationValidator = z.object({
     .optional(),
 });
 
-
-
 const emailValidator = z.object({
   email: z.string({ required_error: "Email is required!" }).email({
     message: "Email input is not a valid email. Please correct and try again.",
@@ -87,6 +85,29 @@ const updateEmailValidator = z.object({
   }),
 });
 
+const listCustomerValidator = z.object({
+  pageNo: z.coerce.number().default(1),
+  limit: z.coerce.number().default(10),
+  searchBy: z
+    .array(
+      z.object({
+        key: z.enum([
+          "firstName",
+          "lastName",
+          "email",
+          "isVerified",
+          "createdAt",
+        ]),
+        value: z.union([z.number(), z.string(), z.boolean()]),
+      })
+    )
+    .optional(),
+  orderBy: z
+    .enum(["firstName", "lastName", "email", "isVerified", "createdAt"])
+    .default("createdAt"),
+  ascOrDesc: z.enum(["asc", "desc"]).default("asc"),
+});
+
 export const v = {
   registrationValidator,
   emailValidator,
@@ -94,4 +115,5 @@ export const v = {
   updatePasswordValidator,
   updateValidator,
   loginValidator,
+  listCustomerValidator,
 };

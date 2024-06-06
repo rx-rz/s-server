@@ -7,6 +7,14 @@ export type CustomerRegisterRequest = {
   password?: string;
 };
 
+export type CustomerListObject = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  createdAt: string;
+  id: string;
+  isVerified: boolean;
+};
 export type CustomerRegisterResponse = {
   firstName: string;
   lastName: string;
@@ -42,3 +50,16 @@ export type CustomerUpdateEmailRequest = {
   newEmail: string;
   password: string;
 };
+
+export type ListCustomerParams = {
+  limit: number;
+  pageNo: number;
+  orderBy: keyof Omit<CustomerListObject, "id">;
+  searchBy?: Search;
+  ascOrDesc: "asc" | "desc";
+};
+
+export type Search = {
+  key: keyof Omit<CustomerListObject, "id">;
+  value: number | string | boolean;
+}[];

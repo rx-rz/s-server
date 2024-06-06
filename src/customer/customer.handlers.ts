@@ -5,7 +5,6 @@ import { checkIfPasswordIsCorrect, hashUserPassword } from "./customer.helpers";
 import { customerRepository } from "./customer.repository";
 import { v } from "./customer.validators";
 import { Handler } from "express";
-
 const { httpstatus } = ctx;
 
 const registerCustomer: Handler = async (req, res, next) => {
@@ -61,7 +60,8 @@ const loginCustomer: Handler = async (req, res, next) => {
 
 const listCustomers: Handler = async (req, res, next) => {
   try {
-    const customers = await customerRepository.listCustomer();
+    const queries = v.listCustomerValidator.parse(req.body);
+    const customers = await customerRepository.listCustomer(queries);
     return res.status(httpstatus.OK).send({ customers, isSuccess: true });
   } catch (err) {
     next(err);
