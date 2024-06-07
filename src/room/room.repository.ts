@@ -79,7 +79,6 @@ const updateRoom = async (request: UpdateRoomRequest) => {
 
 const roomListSearch = (search: Search) => {
   let filterQueries: SQLWrapper[] = [];
-
   for (let i of search) {
     switch (i.key) {
       case "createdAt":
@@ -93,7 +92,12 @@ const roomListSearch = (search: Search) => {
           filterQueries.push(eq(roomTable[i.key], Number(i.value)));
         }
         if (i.key === "price" || i.key === "name") {
-          filterQueries.push(eq(roomTypeTable[i.key], i.value.toString()));
+          switch (i.key) {
+            case "name":
+              filterQueries.push(eq(roomTypeTable.name, i.value.toString()));
+            case "price":
+              filterQueries.push(eq(roomTypeTable.price, i.value.toString()));
+          }
         }
     }
   }
@@ -110,24 +114,19 @@ const listRooms = async ({
   const [noOfRooms] = await ctx.db.select({ count: count() }).from(roomTable);
   let rooms;
   const dbQuery = ctx.db
-    .select({ roomListValues })
+    .select(roomListValues)
     .from(roomTable)
     .leftJoin(roomTypeTable, eq(roomTypeTable.id, roomTable.typeId))
     .limit(limit)
     .offset((pageNo - 1) * limit);
-  // .orderBy(
-  //   ascOrDesc === "asc"
-  //     ? asc(roomTable[`${orderBy}`])
-  //     : desc(roomTable[`${orderBy}`])
-  // );
+
   if (searchBy) {
     const filterQueries = roomListSearch(searchBy);
-    console.log({ filterQueries });
     rooms = await dbQuery.where(and(...filterQueries));
   } else {
     rooms = await dbQuery;
   }
-  return rooms;
+  return { rooms, noOfRooms };
 };
 
 const getAvailableRooms = async () => {
