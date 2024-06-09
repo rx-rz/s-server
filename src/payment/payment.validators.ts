@@ -6,7 +6,6 @@ const updateBookingPaymentStatusValidator = z.object({
 });
 
 const makePaymentValidator = z.object({
-  amount: z.coerce.string(),
   bookingId: z.string(),
   email: z.string().email(),
 });

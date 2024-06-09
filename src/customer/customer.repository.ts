@@ -48,7 +48,9 @@ const customerListSearch = (search: Search): SQLWrapper[] => {
         if (typeof i.value === "boolean")
           filterQueries.push(eq(customerTable.isVerified, i.value));
       default:
-        filterQueries.push(ilike(customerTable[i.key], `%${i.value}%`));
+        filterQueries.push(
+          ilike(customerTable[i.key], `%${i.value.toString()}%`)
+        );
     }
   }
   return filterQueries;
@@ -62,9 +64,15 @@ const listCustomer = async ({
   ascOrDesc,
 }: ListCustomerParams) => {
   let customers;
-  const dbQuery = ctx.db
-    .select(customerValues)
-    .from(customerTable)
+  const dbQuery = ctx.db.select(customerValues).from(customerTable);
+  if (searchBy) {
+    const filterQueries = customerListSearch(searchBy);
+    customers = await dbQuery.where(and(...filterQueries));
+  } else {
+    customers = await dbQuery;
+  }
+  const customerList = await dbQuery;
+  customers = await dbQuery
     .limit(limit)
     .offset((pageNo - 1) * limit)
     .orderBy(
@@ -72,13 +80,7 @@ const listCustomer = async ({
         ? asc(customerTable[`${orderBy}`])
         : desc(customerTable[`${orderBy}`])
     );
-  if (searchBy) {
-    const filterQueries = customerListSearch(searchBy);
-    customers = await dbQuery.where(and(...filterQueries));
-  } else {
-    customers = await dbQuery;
-  }
-  return customers || [];
+  return { customers, noOfCustomers: customerList.length };
 };
 
 const deleteCustomer = async (customerRequest: CustomerDeleteRequest) => {
@@ -129,6 +131,15 @@ const getCustomerPassword = async (email: string) => {
   return customerPassword?.password || "";
 };
 
+const getLastFiveCustomers = async () => {
+  const customers = await ctx.db
+    .select(customerValues)
+    .from(customerTable)
+    .orderBy(desc(customerTable.createdAt))
+    .limit(5);
+  return customers;
+};
+
 export const customerRepository = {
   register,
   listCustomer,
@@ -138,4 +149,5 @@ export const customerRepository = {
   updateCustomerEmail,
   updateCustomerPassword,
   getCustomerDetails,
+  getLastFiveCustomers,
 };

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { desc, eq, sum } from "drizzle-orm";
 import { ctx } from "../ctx";
 import { CreatePaymentRequest, UpdatePaymentStatus } from "./payment.types";
 
@@ -38,6 +38,31 @@ const getPaymentDetails = async (id: string) => {
   return paymentDetails;
 };
 
+const getPaymentDetailsByBookingID = async (bookingId: string) => {
+  const paymentDetails = await ctx.db.query.payment.findFirst({
+    where: eq(paymentTable.bookingId, bookingId),
+    with: {
+      booking: true,
+      customer: true,
+    },
+  });
+  return paymentDetails;
+};
+
+const updatePayment = async ({
+  reference,
+  payedAt,
+  status,
+}: UpdatePaymentStatus) => {
+  const payment = await ctx.db
+    .update(paymentTable)
+    .set({
+      status,
+      payedAt,
+    })
+    .where(eq(paymentTable.reference, reference));
+  return payment;
+};
 const getPaymentDetailsByReference = async (reference: string) => {
   const paymentDetails = await ctx.db.query.payment.findFirst({
     where: eq(paymentTable.reference, reference),
@@ -47,9 +72,32 @@ const getPaymentDetailsByReference = async (reference: string) => {
   });
   return paymentDetails;
 };
+
+const getLastFivePayments = async () => {
+  const payments = await ctx.db
+    .select(paymentValues)
+    .from(paymentTable)
+    .orderBy(desc(paymentTable.createdAt))
+    .limit(5);
+  return payments;
+};
+
+
+
+const getTotalProfit = async () => {
+  const [sumOfPayments] = await ctx.db
+    .select({ profit: sum(paymentTable.amount) })
+    .from(paymentTable);
+  return sumOfPayments.profit;
+};
+
 export const paymentRepository = {
   createPayment,
   deletePayment,
   getPaymentDetailsByReference,
+  getPaymentDetailsByBookingID,
   getPaymentDetails,
+  getLastFivePayments,
+  updatePayment,
+  getTotalProfit,
 };

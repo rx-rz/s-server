@@ -61,9 +61,13 @@ const loginCustomer: Handler = async (req, res, next) => {
 const listCustomers: Handler = async (req, res, next) => {
   try {
     const queries = v.listCustomerValidator.parse(req.query);
-    console.log({ queries: queries, params: req.params });
-    const customers = await customerRepository.listCustomer(queries);
-    return res.status(httpstatus.OK).send({ customers, isSuccess: true });
+    const { customers, noOfCustomers } = await customerRepository.listCustomer(
+      queries
+    );
+    const maxPageNo = Math.ceil(noOfCustomers / queries.limit);
+    return res
+      .status(httpstatus.OK)
+      .send({ customers, noOfCustomers, maxPageNo, isSuccess: true });
   } catch (err) {
     next(err);
   }

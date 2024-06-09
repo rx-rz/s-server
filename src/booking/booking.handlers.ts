@@ -42,7 +42,11 @@ const createBooking: Handler = async (req, res, next) => {
   }
 };
 
-const updateBookingAndBookingPaymentStatus: Handler = async (req, res, next) => {
+const updateBookingAndBookingPaymentStatus: Handler = async (
+  req,
+  res,
+  next
+) => {
   try {
     const hash = createHmac("sha512", ENV_VARS.PAYMENT_SECRET_KEY)
       .update(JSON.stringify(req.body))
@@ -64,14 +68,20 @@ const updateBookingAndBookingPaymentStatus: Handler = async (req, res, next) => 
           throw new NotFoundError(
             `Booking with ID ${payment.bookingId} does not exist.`
           );
-        await bookingRepository.updateBooking({
-          id: booking.id,
-          paymentStatus: "confirmed",
-        });
-        await roomRepository.updateRoom({
-          roomNo: Number(booking.roomNo),
-          status: "booked",
-        });
+        await Promise.all([
+          bookingRepository.updateBooking({
+            id: booking.id,
+            status: "active",
+          }),
+          roomRepository.updateRoom({
+            roomNo: Number(booking.roomNo),
+            status: "booked",
+          }),
+          await paymentRepository.updatePayment({
+            reference: body.data.reference,
+            status: "confirmed",
+          }),
+        ]);
       }
     }
   } catch (err) {
@@ -129,7 +139,6 @@ const checkExpiredBookings: Handler = async (req, res, next) => {
   try {
     const bookings = await bookingRepository.getExpiredBookings();
     if (bookings) {
-      
       // await bookingRepository.updateBookingStatusesToDone(bookings);
     }
     return res.json({ bookings });
@@ -140,8 +149,14 @@ const checkExpiredBookings: Handler = async (req, res, next) => {
 
 const listBookings: Handler = async (req, res, next) => {
   try {
-    const bookings = await bookingRepository.listBookings();
-    return res.status(httpstatus.OK).json({ bookings, isSuccess: true });
+    const queries = v.listBookingValidator.parse(req.query);
+    const { bookings, noOfBookings } = await bookingRepository.listBookings(
+      queries
+    );
+    const maxPageNo = Math.ceil(noOfBookings / queries.limit);
+    return res
+      .status(httpstatus.OK)
+      .json({ bookings, maxPageNo, isSuccess: true });
   } catch (err) {
     next(err);
   }

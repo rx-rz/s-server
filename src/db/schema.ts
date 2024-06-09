@@ -122,6 +122,7 @@ export const roomTypeRelation = relations(roomType, ({ many }) => {
 export const paymentStatusEnum = pgEnum("payment_status", [
   "pending",
   "confirmed",
+  "failed",
 ]);
 
 export const payment = pgTable(
@@ -131,6 +132,7 @@ export const payment = pgTable(
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
     createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
     payedAt: timestamp("payed_at", { mode: "string" }),
+    status: paymentStatusEnum("payment_status").notNull().default("pending"),
     roomNo: integer("roomNo")
       .references(() => room.roomNo)
       .notNull(),
@@ -145,6 +147,7 @@ export const payment = pgTable(
         onDelete: "cascade",
         onUpdate: "cascade",
       })
+      .unique()
       .notNull(),
   },
   (table) => {
@@ -186,16 +189,15 @@ export const booking = pgTable(
       .references(() => customer.id, { onDelete: "no action" })
       .notNull(),
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-    roomNo: integer("roomNo").references(() => room.roomNo, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }).notNull(),
+    roomNo: integer("roomNo")
+      .references(() => room.roomNo, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      })
+      .notNull(),
     startDate: timestamp("start_date", { mode: "string" }).notNull(),
     endDate: timestamp("end_date", { mode: "string" }).notNull(),
     status: bookingstatusEnum("booking_status").notNull().default("pending"),
-    paymentStatus: paymentStatusEnum("payment_status")
-      .notNull()
-      .default("pending"),
     createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
   },
   (table) => {

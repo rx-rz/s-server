@@ -51,12 +51,10 @@ const getAvailableRooms: Handler = async (req, res, next) => {
 const listRooms: Handler = async (req, res, next) => {
   try {
     const queries = v.listRoomValidator.parse(req.query);
-
     const { rooms, noOfRooms } = await roomRepository.listRooms(queries);
-    const maxPageNo = Math.ceil(noOfRooms.count / queries.limit);
+    const maxPageNo = Math.ceil(noOfRooms / queries.limit);
     return res.status(httpstatus.OK).json({
       rooms,
-      noOfRooms: rooms.length,
       maxPageNo,
       isSuccess: true,
     });

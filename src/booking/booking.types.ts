@@ -8,11 +8,10 @@ export type CreateBookingRequest = {
 
 export type UpdateBookingRequest = {
   id: string;
-  paymentStatus?: "confirmed" | "pending";
   status?: "active" | "cancelled" | "done" | "pending";
 } & Partial<CreateBookingRequest>;
 
-export type Bookings = {
+export type Booking = {
   id: string;
   createdAt: string | null;
   customerId: string;
@@ -20,6 +19,20 @@ export type Bookings = {
   startDate: string;
   endDate: string;
   status: "active" | "cancelled" | "done" | "pending";
-  paymentStatus: "pending" | "confirmed";
   roomNo: number;
+};
+
+export type Bookings = Bookings[];
+
+export type Search = {
+  key: keyof Booking;
+  value: number | string;
 }[];
+
+export type ListBookingParams = {
+  limit: number;
+  pageNo: number;
+  searchBy?: Search;
+  ascOrDesc: "asc" | "desc";
+  orderBy: keyof Booking;
+};

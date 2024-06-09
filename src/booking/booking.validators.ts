@@ -36,8 +36,55 @@ const updateBookingValidator = z.object({
   customerId: z.string().optional(),
 });
 
+const listBookingValidator = z.object({
+  pageNo: z.coerce.number().default(1),
+  limit: z.coerce.number().default(10),
+  ascOrDesc: z.enum(["asc", "desc"]).default("desc"),
+  searchBy: z
+    .array(
+      z.object({
+        key: z.enum([
+          "customerId",
+          "id",
+          "createdAt",
+          "amount",
+          "startDate",
+          "endDate",
+          "status",
+          "roomNo",
+        ]),
+        value: z.union([z.number(), z.string()]),
+      })
+    )
+    .optional(),
+  orderBy: z
+    .enum([
+      "customerId",
+      "id",
+      "createdAt",
+      "amount",
+      "startDate",
+      "endDate",
+      "status",
+      "roomNo",
+    ])
+    .default("createdAt"),
+});
+
+export type Booking = {
+  id: string;
+  createdAt: string | null;
+  customerId: string;
+  amount: string;
+  startDate: string;
+  endDate: string;
+  status: "active" | "cancelled" | "done" | "pending";
+  paymentStatus: "pending" | "confirmed";
+  roomNo: number;
+};
 export const v = {
   createBookingValidator,
   bookingIDValidator,
+  listBookingValidator,
   updateBookingValidator,
 };

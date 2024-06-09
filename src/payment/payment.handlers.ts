@@ -3,13 +3,22 @@ import { initializePaystackTransaction } from "./payment.helpers";
 import { paymentRepository } from "./payment.repository";
 import { v } from "./payment.validators";
 import { customerRepository } from "../customer/customer.repository";
-import { NotFoundError } from "../errors";
+import { DuplicateEntryError, NotFoundError } from "../errors";
 import { httpstatus } from "../ctx";
 
 export const createPayment: Handler = async (req, res, next) => {
   try {
     const { bookingId, email } = v.makePaymentValidator.parse(req.body);
     const customer = await customerRepository.getCustomerDetails(email);
+    const existingPaymentForBooking =
+      await paymentRepository.getPaymentDetailsByBookingID(bookingId);
+    if (
+      existingPaymentForBooking &&
+      existingPaymentForBooking.status === "pending"
+    )
+      throw new DuplicateEntryError(
+        `A payment is already ${existingPaymentForBooking.status} for this booking.`
+      );
     if (!customer)
       throw new NotFoundError(`Customer with email ${email} does not exist.`);
     const booking = customer.bookings.find(
@@ -19,6 +28,7 @@ export const createPayment: Handler = async (req, res, next) => {
       throw new NotFoundError(
         `Customer has not made a booking with ID ${bookingId}`
       );
+
     const { data, noError } = await initializePaystackTransaction({
       amount: (Number(booking.amount) * 100).toString(),
       email,

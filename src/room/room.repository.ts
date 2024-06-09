@@ -1,14 +1,4 @@
-import {
-  SQLWrapper,
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  gte,
-  ilike,
-  or,
-} from "drizzle-orm";
+import { SQLWrapper, and, asc, count, desc, eq, gte } from "drizzle-orm";
 import { ctx } from "../ctx";
 import {
   CreateRoomRequest,
@@ -69,12 +59,12 @@ const getRoomDetails = async (roomNo: number) => {
 
 const updateRoom = async (request: UpdateRoomRequest) => {
   await getRoomDetails(request.roomNo);
-  const [updatedRoom] = await ctx.db
+  const [room] = await ctx.db
     .update(roomTable)
     .set(request)
     .where(eq(roomTable.roomNo, request.roomNo))
     .returning(roomValues);
-  return updatedRoom;
+  return room;
 };
 
 const roomListSearch = (search: Search) => {
@@ -111,22 +101,18 @@ const listRooms = async ({
   searchBy,
   ascOrDesc,
 }: ListRoomParams) => {
-  const [noOfRooms] = await ctx.db.select({ count: count() }).from(roomTable);
   let rooms;
   const dbQuery = ctx.db
     .select(roomListValues)
     .from(roomTable)
-    .leftJoin(roomTypeTable, eq(roomTypeTable.id, roomTable.typeId))
-    .limit(limit)
-    .offset((pageNo - 1) * limit);
-
+    .leftJoin(roomTypeTable, eq(roomTypeTable.id, roomTable.typeId));
   if (searchBy) {
     const filterQueries = roomListSearch(searchBy);
     rooms = await dbQuery.where(and(...filterQueries));
-  } else {
-    rooms = await dbQuery;
   }
-  return { rooms, noOfRooms };
+  const roomList = await dbQuery;
+  rooms = await dbQuery.limit(limit).offset((pageNo - 1) * limit);
+  return { rooms, noOfRooms: roomList.length };
 };
 
 const getAvailableRooms = async () => {
@@ -136,6 +122,14 @@ const getAvailableRooms = async () => {
     .leftJoin(roomTypeTable, eq(roomTable.typeId, roomTypeTable.id))
     .where(eq(roomTable.status, "available"));
   return rooms;
+};
+
+const getNoOfAvailableRooms = async () => {
+  const [rooms] = await ctx.db
+    .select({ count: count() })
+    .from(roomTable)
+    .where(eq(roomTable.status, "available"));
+  return rooms.count;
 };
 
 const deleteRoom = async (roomNo: number) => {
@@ -153,5 +147,6 @@ export const roomRepository = {
   updateRoom,
   listRooms,
   getRoomDetails,
+  getNoOfAvailableRooms,
   getAvailableRooms,
 };

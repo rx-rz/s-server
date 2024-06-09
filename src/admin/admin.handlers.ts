@@ -1,6 +1,10 @@
+import { bookingRepository } from "../booking/booking.repository";
 import { ctx } from "../ctx";
+import { customerRepository } from "../customer/customer.repository";
 import { NotFoundError } from "../errors";
 import { generateAccessToken } from "../middleware/jwt-token";
+import { paymentRepository } from "../payment/payment.repository";
+import { roomRepository } from "../room/room.repository";
 import { checkIfPasswordIsCorrect, hashUserPassword } from "./admin.helpers";
 import { adminRepository } from "./admin.repository";
 import { v } from "./admin.validators";
@@ -37,9 +41,7 @@ const loginAdmin: Handler = async (req, res, next) => {
     //   lastName: adminDetails.lastName,
 
     // });
-    return res
-      .status(httpstatus.OK)
-      .send({ adminDetails, isSuccess: true });
+    return res.status(httpstatus.OK).send({ adminDetails, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -123,11 +125,32 @@ const updateAdminPassword: Handler = async (req, res, next) => {
   }
 };
 
+const getAdminDashboardOverviewDetails: Handler = async (req, res, next) => {
+  try {
+    const bookingsPerMonth =
+      await bookingRepository.getBookingsForAdminDashboard();
+    const lastFiveCustomers = await customerRepository.getLastFiveCustomers();
+    const lastFivePayments = await paymentRepository.getLastFivePayments();
+    const totalProfit = await paymentRepository.getTotalProfit();
+    const noOfAvailableRooms = await roomRepository.getNoOfAvailableRooms();
+    return res.status(httpstatus.OK).json({
+      bookingsPerMonth,
+      lastFiveCustomers,
+      lastFivePayments,
+      noOfAvailableRooms,
+      totalProfit,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const adminHandlers = {
   registerAdmin,
   deleteAdmin,
   updateAdmin,
   updateAdminEmail,
   updateAdminPassword,
+  getAdminDashboardOverviewDetails,
   loginAdmin,
 };

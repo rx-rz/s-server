@@ -1,8 +1,11 @@
-import { eq, lte } from "drizzle-orm";
+import { SQLWrapper, and, asc, desc, eq, gte, ilike, lte } from "drizzle-orm";
 import { ctx } from "../ctx";
 import {
+  Booking,
   Bookings,
   CreateBookingRequest,
+  ListBookingParams,
+  Search,
   UpdateBookingRequest,
 } from "./booking.types";
 const bookingTable = ctx.schema.booking;
@@ -13,7 +16,6 @@ const bookingValues = {
   startDate: bookingTable.startDate,
   endDate: bookingTable.endDate,
   status: bookingTable.status,
-  paymentStatus: bookingTable.paymentStatus,
   createdAt: bookingTable.createdAt,
   roomNo: bookingTable.roomNo,
   amount: bookingTable.amount,
@@ -54,6 +56,49 @@ const getExpiredBookings = async () => {
   return bookings;
 };
 
+function getBookingsForEachMonth(bookings: Booking[]) {
+  const monthArray = [];
+  const monthCounts: { [key: string]: number } = {
+    Jan: 0,
+    Feb: 0,
+    Mar: 0,
+    Apr: 0,
+    May: 0,
+    Jun: 0,
+    Jul: 0,
+    Aug: 0,
+    Sep: 0,
+    Oct: 0,
+    Nov: 0,
+    Dec: 0,
+  };
+
+  for (const booking of bookings) {
+    const bookingDate = new Date(booking.createdAt!);
+    const monthName = bookingDate.toLocaleString("default", { month: "short" });
+    monthCounts[monthName]++;
+  }
+
+  for (let i = 0; i < Object.keys(monthCounts).length; i++) {
+    monthArray.push({
+      name: Object.keys(monthCounts)[i],
+      value: Object.values(monthCounts)[i],
+    });
+  }
+
+  return monthArray;
+}
+const getBookingsForAdminDashboard = async () => {
+  let date = new Date(Date.now());
+  date.setFullYear(date.getFullYear() - 1);
+  const bookings = await ctx.db
+    .select(bookingValues)
+    .from(bookingTable)
+    .where(gte(bookingTable.createdAt, date.toISOString()));
+  const bookingsPerMonth = getBookingsForEachMonth(bookings);
+  return bookingsPerMonth;
+};
+
 const getBookingDetails = async (bookingID: string) => {
   const booking = await ctx.db.query.booking.findFirst({
     where: eq(bookingTable.id, bookingID),
@@ -77,10 +122,56 @@ const deleteBooking = async (bookingID: string) => {
     .delete(bookingTable)
     .where(eq(bookingTable.id, bookingID));
 };
-
-const listBookings = async () => {
-  const bookings = await ctx.db.select(bookingValues).from(bookingTable);
-  return bookings;
+const bookingListSearch = (search: Search) => {
+  let filterQueries: SQLWrapper[] = [];
+  for (let i of search) {
+    switch (i.key) {
+      case "roomNo":
+        filterQueries.push(eq(bookingTable.roomNo, Number(i.value)));
+      case "status":
+        filterQueries.push(
+          eq(
+            bookingTable.status,
+            i.value as "pending" | "active" | "cancelled" | "done"
+          )
+        );
+      case "customerId":
+        filterQueries.push(eq(bookingTable.customerId, i.value.toString()));
+      case "amount":
+        filterQueries.push(eq(bookingTable.amount, i.value.toString()));
+      case "id":
+        filterQueries.push(ilike(bookingTable.id, `%${i.value.toString()}%`));
+      case "endDate":
+        filterQueries.push(lte(bookingTable.endDate, i.value.toString()));
+      default:
+        filterQueries.push(gte(bookingTable[i.key], i.value));
+    }
+  }
+  return filterQueries;
+};
+const listBookings = async ({
+  limit,
+  pageNo,
+  orderBy,
+  ascOrDesc,
+  searchBy,
+}: ListBookingParams) => {
+  let bookings;
+  const dbQuery = ctx.db.select(bookingValues).from(bookingTable);
+  if (searchBy) {
+    const filterQueries = bookingListSearch(searchBy);
+    bookings = await dbQuery.where(and(...filterQueries));
+  }
+  const bookingList = await dbQuery;
+  bookings = await dbQuery
+    .limit(limit)
+    .offset((pageNo - 1) * limit)
+    .orderBy(
+      ascOrDesc === "asc"
+        ? asc(bookingTable[`${orderBy}`])
+        : desc(bookingTable[`${orderBy}`])
+    );
+  return { bookings, noOfBookings: bookingList.length };
 };
 
 export const bookingRepository = {
@@ -90,4 +181,5 @@ export const bookingRepository = {
   getBookingDetails,
   listBookings,
   getExpiredBookings,
+  getBookingsForAdminDashboard,
 };
