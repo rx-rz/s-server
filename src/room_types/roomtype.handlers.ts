@@ -66,7 +66,6 @@ const getRoomTypeDetails: Handler = async (req, res, next) => {
   }
 };
 
-
 const getRoomsForRoomType: Handler = async (req, res, next) => {
   try {
     const { name } = v.roomTypeNameValidator.parse(req.query);
@@ -94,8 +93,6 @@ const deleteRoomType: Handler = async (req, res, next) => {
     next(err);
   }
 };
-
-
 
 export const roomTypeHandlers = {
   createRoomType,

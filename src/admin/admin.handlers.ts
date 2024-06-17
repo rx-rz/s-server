@@ -1,7 +1,7 @@
 import { bookingRepository } from "../booking/booking.repository";
 import { ctx } from "../ctx";
 import { customerRepository } from "../customer/customer.repository";
-import { NotFoundError } from "../errors";
+import { DuplicateEntryError, NotFoundError } from "../errors";
 import { generateAccessToken } from "../middleware/jwt-token";
 import { paymentRepository } from "../payment/payment.repository";
 import { roomRepository } from "../room/room.repository";
@@ -12,9 +12,21 @@ import { Handler } from "express";
 
 const { httpstatus } = ctx;
 
+async function checkIfAdminExists(email: string) {
+  const existingAdmin = await adminRepository.getAdminDetails(email);
+  if (!existingAdmin)
+    throw new NotFoundError(`Admin with email ${email} does not exist.`);
+  return existingAdmin;
+}
+
 const registerAdmin: Handler = async (req, res, next) => {
   try {
     const body = v.registrationValidator.parse(req.body);
+    const existingAdmin = await adminRepository.getAdminDetails(body.email);
+    if (existingAdmin)
+      throw new DuplicateEntryError(
+        `Admin with email ${body.email} already exists.`
+      );
     if (body.password) {
       body.password = hashUserPassword(body.password);
     }
@@ -28,20 +40,23 @@ const registerAdmin: Handler = async (req, res, next) => {
 const loginAdmin: Handler = async (req, res, next) => {
   try {
     const { email, password } = v.loginValidator.parse(req.body);
+    const existingAdmin = await checkIfAdminExists(email);
+
     const passwordIsCorrect = await checkIfPasswordIsCorrect(password, email);
     if (!passwordIsCorrect) {
       throw new NotFoundError("User with provided credentials not found.");
     }
-    const adminDetails = await adminRepository.getAdminDetails(email);
-    // const token = generateAccessToken({
-    //   email: adminDetails.email,
-    //   id: adminDetails.id,
-    //   role: "ADMIN",
-    //   firstName: adminDetails.firstName,
-    //   lastName: adminDetails.lastName,
 
-    // });
-    return res.status(httpstatus.OK).send({ adminDetails, isSuccess: true });
+    const token = generateAccessToken({
+      email: existingAdmin.email,
+      id: existingAdmin.id,
+      role: "ADMIN",
+      firstName: existingAdmin.firstName,
+      lastName: existingAdmin.lastName,
+      hasCreatedPasswordForAccount: true,
+      is_verified: true,
+    });
+    return res.status(httpstatus.OK).send({ token, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -50,14 +65,10 @@ const loginAdmin: Handler = async (req, res, next) => {
 const deleteAdmin: Handler = async (req, res, next) => {
   try {
     const { email } = v.deletionValidator.parse(req.query);
-    const adminExists = await adminRepository.getAdminDetails(email);
-    if (adminExists) {
-      const deletedAdmin = await adminRepository.deleteAdmin(email);
-      if (deletedAdmin) {
-        return res
-          .status(httpstatus.OK)
-          .send({ deletedAdmin, isSuccess: true });
-      }
+    const existingAdmin = await checkIfAdminExists(email);
+    const deletedAdmin = await adminRepository.deleteAdmin(existingAdmin.email);
+    if (deletedAdmin) {
+      return res.status(httpstatus.OK).send({ deletedAdmin, isSuccess: true });
     }
   } catch (err) {
     next(err);
@@ -67,11 +78,9 @@ const deleteAdmin: Handler = async (req, res, next) => {
 const updateAdmin: Handler = async (req, res, next) => {
   try {
     const body = v.updateValidator.parse(req.body);
-    const adminExists = await adminRepository.getAdminDetails(body.email);
-    if (adminExists) {
-      const updatedAdmin = await adminRepository.updateAdminDetails(body);
-      return res.status(httpstatus.OK).send({ updatedAdmin, isSuccess: true });
-    }
+    await checkIfAdminExists(body.email);
+    const updatedAdmin = await adminRepository.updateAdminDetails(body);
+    return res.status(httpstatus.OK).send({ updatedAdmin, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -80,20 +89,18 @@ const updateAdmin: Handler = async (req, res, next) => {
 const updateAdminEmail: Handler = async (req, res, next) => {
   try {
     const body = v.updateEmailValidator.parse(req.body);
-    const adminExists = await adminRepository.getAdminDetails(body.email);
-    if (adminExists) {
-      const passwordIsCorrect = await checkIfPasswordIsCorrect(
-        body.password,
-        body.email
+    await checkIfAdminExists(body.email);
+    const passwordIsCorrect = await checkIfPasswordIsCorrect(
+      body.password,
+      body.email
+    );
+    if (!passwordIsCorrect) {
+      throw new NotFoundError(
+        `User with the provided credentials could not be found.`
       );
-      if (!passwordIsCorrect) {
-        throw new NotFoundError(
-          `User with the provided credentials could not be found.`
-        );
-      }
-      const updatedAdmin = await adminRepository.changeAdminEmail(body);
-      return res.status(httpstatus.OK).send({ updatedAdmin, isSuccess: true });
     }
+    const updatedAdmin = await adminRepository.changeAdminEmail(body);
+    return res.status(httpstatus.OK).send({ updatedAdmin, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -102,24 +109,22 @@ const updateAdminEmail: Handler = async (req, res, next) => {
 const updateAdminPassword: Handler = async (req, res, next) => {
   try {
     const body = v.updatePasswordValidator.parse(req.body);
-    const adminExists = await adminRepository.getAdminDetails(body.email);
-    if (adminExists) {
-      const passwordIsCorrect = await checkIfPasswordIsCorrect(
-        body.currentPassword,
-        body.email
+    await checkIfAdminExists(body.email);
+    const passwordIsCorrect = await checkIfPasswordIsCorrect(
+      body.currentPassword,
+      body.email
+    );
+    if (!passwordIsCorrect) {
+      throw new NotFoundError(
+        `User with the provided credentials could not be found.`
       );
-      if (!passwordIsCorrect) {
-        throw new NotFoundError(
-          `User with the provided credentials could not be found.`
-        );
-      }
-      const newPassword = hashUserPassword(body.newPassword);
-      const updatedAdmin = await adminRepository.changeAdminPassword({
-        email: body.email,
-        newPassword,
-      });
-      return res.status(httpstatus.OK).send({ updatedAdmin, isSuccess: true });
     }
+    const newPasswordHash = hashUserPassword(body.newPassword);
+    const updatedAdmin = await adminRepository.changeAdminPassword({
+      email: body.email,
+      newPassword: newPasswordHash,
+    });
+    return res.status(httpstatus.OK).send({ updatedAdmin, isSuccess: true });
   } catch (err) {
     next(err);
   }

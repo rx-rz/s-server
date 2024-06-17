@@ -4,7 +4,6 @@ import { dbSchema, dbSchemaType } from "./db/schema";
 import { StatusCodes } from "http-status-codes";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
 import { ENV_VARS } from "../env";
-import { RequestOptions } from "https";
 import { Paystack } from "paystack-sdk";
 
 export interface Context {
@@ -27,6 +26,7 @@ const transporter = createTransport({
 });
 
 export const httpstatus = StatusCodes;
+
 const createContext = (): Context => {
   return {
     db: db,
@@ -37,4 +37,6 @@ const createContext = (): Context => {
   };
 };
 
+//application wide context object to
+//prevent having to initialize objects everywhere.
 export const ctx = createContext();

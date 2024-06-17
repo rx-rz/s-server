@@ -5,6 +5,7 @@ export const adminRoutes = {
   update_admin: "/updateAdmin",
   update_admin_email: "/updateAdminEmail",
   update_admin_password: "/updateAdminPassword",
+  get_dashboard_details: "/getDashboardDetails",
 };
 
 export const otpRoutes = {

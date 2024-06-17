@@ -1,10 +1,10 @@
-import { ZodError, ZodIssue } from "zod";
+import { ZodError } from "zod";
 import { httpstatus } from "./ctx";
 
 export class NotFoundError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "NotFoundError";
+    this.name = "Not Found Error";
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 }
@@ -12,7 +12,7 @@ export class NotFoundError extends Error {
 export class InvalidInputError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "InvalidInputError";
+    this.name = "Invalid Input Error";
     Object.setPrototypeOf(this, InvalidInputError.prototype);
   }
 }
@@ -20,10 +20,15 @@ export class InvalidInputError extends Error {
 export class DuplicateEntryError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "DuplicateEntryError";
+    this.name = "Duplicate Entry Error";
     Object.setPrototypeOf(this, DuplicateEntryError.prototype);
   }
 }
+
+/* error formatter function to handle all
+thrown error classes. ZodError is an error class
+imported from Zod. It is thrown when there are
+validation errors.*/
 
 export const handleErrors = (err: Error) => {
   if (err instanceof InvalidInputError) {

@@ -3,11 +3,9 @@ import { ENV_VARS } from "../env";
 import { app } from "./app";
 import { Express } from "express";
 import { connectToDb, endDBConnection } from "./db/db";
-
 let server: Server<typeof IncomingMessage, typeof ServerResponse>;
 
-export const startTestServer = (portNo= 3892): Promise<ReturnType<Express["listen"]>> => {
-  
+export const startTestServer = (portNo= 3892): Promise<ReturnType<Express["listen"]>> => {  
   return new Promise((resolve, reject) => {
     server = app.listen(portNo, ENV_VARS.HOST, async () => {
       try {

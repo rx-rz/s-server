@@ -1,11 +1,15 @@
 import cors from "cors";
-import express, { Express, NextFunction, Request, Response } from "express";
-
+import express, {
+  Express,
+  NextFunction,
+  Request,
+  Response,
+  Router,
+} from "express";
 import { config } from "dotenv";
 import { handleErrors } from "./errors";
 import { ENV_VARS } from "../env";
-import { connectToDb, db } from "./db/db";
-
+import { connectToDb } from "./db/db";
 import { customerRouter } from "./customer/customer.routes";
 import { otpRouter } from "./otp/otp.routes";
 import { adminRouter } from "./admin/admin.routes";
@@ -17,36 +21,56 @@ import { Server } from "socket.io";
 import { createServer } from "http";
 import morgan from "morgan";
 
+// Load environment variables from .env file
 config({ path: ".env" });
+
 export const app: Express = express();
+
+// Middleware to enable CORS
 app.use(cors());
+
+// Middleware to parse JSON requests with a size limit of 50mb
 app.use(express.json({ limit: "50mb" }));
 
+// Middleware to parse URL-encoded data
 app.use(express.urlencoded({ extended: false }));
-app.use(morgan("dev"));
-app.use("/api/v1/customers", customerRouter);
-app.use("/api/v1/otp", otpRouter);
-app.use("/api/v1/admin", adminRouter);
-app.use("/api/v1/roomtypes", roomTypeRouter);
-app.use("/api/v1/rooms", roomRouter);
-app.use("/api/v1/bookings", bookingRouter);
-app.use("/api/v1/payments", paymentRouter);
 
+// Middleware to log HTTP requests
+app.use(morgan("dev"));
+
+// Create a new Router instance for API routes
+const api = Router();
+
+// Define API routes
+app.use("/api/v1", api);
+app.use("/customers", customerRouter);
+app.use("/otp", otpRouter);
+app.use("/admin", adminRouter);
+app.use("/roomtypes", roomTypeRouter);
+app.use("/rooms", roomRouter);
+app.use("/bookings", bookingRouter);
+app.use("/payments", paymentRouter);
+
+// Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   const errors = handleErrors(err);
-  console.trace(errors);
-  console.log({ err: errors.error });
+  console.trace(errors); // Log the error stack trace
+  console.log({ err: errors.error }); // Log the error
   return res
     .status(errors.status)
     .json({ error_type: errors.type, error: errors.error, isSuccess: false });
 });
 
+// Create an HTTP server with the express app
 const server = createServer(app);
+
+// Initialize Socket.io with the created server
 const io = new Server(server);
 
+// Start the server only in development mode. Production mode will be handled soon.
 if (process.env.NODE_ENV === "development") {
   server.listen(ENV_VARS.PORT, ENV_VARS.HOST, () => {
-    connectToDb();
+    connectToDb(); // Connect to the database
     io.on("connection", (socket) => {
       console.log("a user connected!");
     });

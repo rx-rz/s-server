@@ -121,6 +121,7 @@ const deleteBooking = async (bookingID: string) => {
   const deletedBooking = await ctx.db
     .delete(bookingTable)
     .where(eq(bookingTable.id, bookingID));
+  return deletedBooking
 };
 const bookingListSearch = (search: Search) => {
   let filterQueries: SQLWrapper[] = [];

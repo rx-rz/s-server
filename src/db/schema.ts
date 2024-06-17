@@ -21,7 +21,7 @@ export const admin = pgTable("admins", {
   firstName: varchar("first_name", { length: 30 }).notNull(),
   lastName: varchar("last_name", { length: 30 }).notNull(),
   email: varchar("email", { length: 255 }).unique().notNull(),
-  password: text("password"),
+  password: text("password").notNull(),
   refreshToken: text("refreshToken"),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
 });

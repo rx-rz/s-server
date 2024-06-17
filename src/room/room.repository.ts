@@ -74,9 +74,7 @@ const roomListSearch = (search: Search) => {
       case "createdAt":
         filterQueries.push(gte(roomTable.createdAt, i.value.toString()));
       case "status":
-        filterQueries.push(
-          eq(roomTable.status, i.value as "available" | "pending" | "booked")
-        );
+        filterQueries.push(eq(roomTable.status, "available"));
       default:
         if (i.key !== "price" && i.key !== "name") {
           filterQueries.push(eq(roomTable[i.key], Number(i.value)));

@@ -117,6 +117,10 @@ const deleteBooking: Handler = async (req, res, next) => {
     if (!bookingExists)
       throw new NotFoundError(`Booking with ID ${id} does not exist.`);
     const deletedBooking = await bookingRepository.deleteBooking(id);
+    const makeRoomAvailable = await roomRepository.updateRoom({
+      status: "available",
+      roomNo: bookingExists.roomNo,
+    });
     return res.status(httpstatus.OK).json({ deletedBooking, isSuccess: true });
   } catch (err) {
     next(err);

@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm";
 import { ctx } from "../ctx";
-import { DuplicateEntryError, NotFoundError } from "../errors";
 import {
   AdminCreationRequest,
   AdminUpdateRequest,
@@ -10,7 +9,7 @@ import {
 
 const adminTable = ctx.schema.admin;
 
-const admin = {
+const adminValues = {
   firstName: adminTable.firstName,
   lastName: adminTable.lastName,
   email: adminTable.email,
@@ -18,85 +17,61 @@ const admin = {
 };
 
 const register = async (adminRequest: AdminCreationRequest) => {
-  const adminExists = await getAdminDetails(adminRequest.email, false);
-  if (adminExists)
-    throw new DuplicateEntryError(
-      `Admin with email ${adminRequest.email} has already been created.`
-    );
-  const [user] = await ctx.db
+  const [admin] = await ctx.db
     .insert(adminTable)
     .values(adminRequest)
-    .returning(admin);
-  return user;
+    .returning(adminValues);
+  return admin;
 };
 
 const getAdminDetails = async (email: string, isRequired = true) => {
   const [adminDetails] = await ctx.db
-    .select(admin)
+    .select(adminValues)
     .from(adminTable)
     .where(eq(adminTable.email, email));
-  if (!adminDetails && isRequired)
-    throw new NotFoundError(`Admin with email ${email} could not be found.`);
   return adminDetails;
 };
 
 const deleteAdmin = async (email: string) => {
-  const adminExists = await getAdminDetails(email);
-  if (!adminExists)
-    throw new NotFoundError(`Admin with email ${email} could not be found.`);
   const [deletedAdmin] = await ctx.db
     .delete(adminTable)
-    .where(eq(adminTable.email, email)).returning(admin);
+    .where(eq(adminTable.email, email))
+    .returning(adminValues);
   return deletedAdmin;
 };
 
 const updateAdminDetails = async (adminRequest: AdminUpdateRequest) => {
-  const adminExists = await getAdminDetails(adminRequest.email);
-  if (!adminExists)
-    throw new NotFoundError(
-      `Admin with email ${adminRequest.email} could not be found.`
-    );
   const updatedAdmin = await ctx.db
     .update(adminTable)
     .set(adminRequest)
-    .returning(admin);
+    .returning(adminValues);
   return updatedAdmin;
 };
 
 const changeAdminEmail = async (adminRequest: ChangeAdminEmailRequest) => {
-  const adminExists = await getAdminDetails(adminRequest.email);
-  if (!adminExists)
-    throw new NotFoundError(
-      `Admin with email ${adminRequest.email} could not be found.`
-    );
   const updatedAdmin = await ctx.db
     .update(adminTable)
     .set({ email: adminRequest.newEmail })
-    .returning(admin);
+    .returning(adminValues);
   return updatedAdmin;
 };
 
 const changeAdminPassword = async (
   adminRequest: ChangeAdminPasswordRequest
 ) => {
-  const adminExists = await getAdminDetails(adminRequest.email);
-  if (!adminExists)
-    throw new NotFoundError(
-      `Admin with email ${adminRequest.email} could not be found.`
-    );
   const updatedAdmin = await ctx.db
     .update(adminTable)
     .set({ password: adminRequest.newPassword })
-    .returning(admin);
+    .returning(adminValues);
   return updatedAdmin;
 };
 
 const getAdminPassword = async (email: string) => {
-  const adminPassword = await ctx.db.query.admin.findFirst({
-    where: eq(adminTable.email, email),
-    columns: { password: true },
-  });
-  return adminPassword?.password || "";
+  const [admin] = await ctx.db
+    .select({ password: adminTable.password })
+    .from(adminTable)
+    .where(eq(adminTable.email, email));
+  return admin.password || "";
 };
 
 export const adminRepository = {

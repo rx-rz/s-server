@@ -40,6 +40,7 @@ export type UpdateRoomRequest = {
 };
 
 
+
 export type Search = {
   key: keyof RoomListObject;
   value: number | string;

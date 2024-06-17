@@ -57,11 +57,11 @@ const updatePasswordValidator = z.object({
 
 const updateValidator = z.object({
   firstName: z
-    .string()
+    .string({ required_error: "First name is required!" })
     .max(30, { message: "First name should be a maximum of 30 characters." })
     .optional(),
   lastName: z
-    .string()
+    .string({ required_error: "Last name is required!" })
     .max(30, { message: "Last name should be a maximum of 30 characters." })
     .optional(),
   email: z.string({ required_error: "Email is required!" }).email({
