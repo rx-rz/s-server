@@ -8,6 +8,16 @@ export const adminRoutes = {
   get_dashboard_details: "/getDashboardDetails",
 };
 
+export const customerRoutes = {
+  register_customer: "/registerCustomer",
+  login_customer: "/loginCustomer",
+  list_customers: "/listCustomers",
+  delete_customer: "/deleteCustomer",
+  update_customer: "/updateCustomer",
+  update_customer_email: "/updateCustomerEmail",
+  update_customer_password: "/updateCustomerPassword"
+};
+
 export const otpRoutes = {
   send_otp: "/sendOTP",
   verify_otp: "/verifyOTP",

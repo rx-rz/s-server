@@ -18,6 +18,7 @@ export const customerValues = {
   email: customerTable.email,
   id: customerTable.id,
   isVerified: customerTable.isVerified,
+  hasCreatedPasswordForAccount: customerTable.hasCreatedPasswordForAccount,
   createdAt: customerTable.createdAt,
 };
 
@@ -29,14 +30,11 @@ const register = async (customerRequest: CustomerRegisterRequest) => {
   return customer;
 };
 
-const getCustomerDetails = async (customerEmail: string) => {
-  const customerDetails = await ctx.db.query.customer.findFirst({
-    where: eq(customerTable.email, customerEmail),
-    columns: { password: false },
-    with: {
-      bookings: true,
-    },
-  });
+const getCustomerDetails = async (email: string) => {
+  const [customerDetails] = await ctx.db
+    .select(customerValues)
+    .from(customerTable)
+    .where(eq(customerTable.email, email));
   return customerDetails;
 };
 
@@ -84,51 +82,51 @@ const listCustomer = async ({
 };
 
 const deleteCustomer = async (customerRequest: CustomerDeleteRequest) => {
-  const [customer] = await ctx.db
+  const [deletedCustomer] = await ctx.db
     .delete(customerTable)
     .where(eq(customerValues.email, customerRequest.email))
     .returning(customerValues);
-  return customer;
+  return deletedCustomer;
 };
 
 const updateCustomer = async (customerRequest: CustomerUpdateRequest) => {
   const { email, ...request } = customerRequest;
-  const [customer] = await ctx.db
+  const [updatedCustomer] = await ctx.db
     .update(customerTable)
     .set(request)
     .where(eq(customerTable.email, email))
     .returning(customerValues);
-  return customer;
+  return updatedCustomer;
 };
 
 const updateCustomerEmail = async (
   customerRequest: CustomerUpdateEmailRequest
 ) => {
-  const [customer] = await ctx.db
+  const [updatedCustomer] = await ctx.db
     .update(customerTable)
     .set({ email: customerRequest.newEmail })
     .where(eq(customerTable.email, customerRequest.email))
     .returning(customerValues);
-  return customer;
+  return updatedCustomer;
 };
 
 const updateCustomerPassword = async (
   customerRequest: CustomerUpdatePasswordRequest
 ) => {
-  const [customer] = await ctx.db
+  const [updatedCustomer] = await ctx.db
     .update(customerTable)
     .set({ password: customerRequest.newPassword })
     .where(eq(customerTable.email, customerRequest.email))
     .returning(customerValues);
-  return customer;
+  return updatedCustomer;
 };
 
 const getCustomerPassword = async (email: string) => {
-  const customerPassword = await ctx.db.query.customer.findFirst({
-    where: eq(customerTable.email, email),
-    columns: { password: true },
-  });
-  return customerPassword?.password || "";
+  const [customer] = await ctx.db
+    .select({ password: customerTable.password })
+    .from(customerTable)
+    .where(eq(customerTable.email, email));
+  return customer.password || "";
 };
 
 const getLastFiveCustomers = async () => {

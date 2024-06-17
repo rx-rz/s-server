@@ -7,6 +7,13 @@ import { v } from "./customer.validators";
 import { Handler } from "express";
 const { httpstatus } = ctx;
 
+async function checkIfCustomerExists(email: string) {
+  const existingCustomer = await customerRepository.getCustomerDetails(email);
+  if (!existingCustomer)
+    throw new NotFoundError(`Customer with email ${email} does not exist.`);
+  return existingCustomer;
+}
+
 const registerCustomer: Handler = async (req, res, next) => {
   try {
     const body = v.registrationValidator.parse(req.body);
@@ -33,24 +40,20 @@ const registerCustomer: Handler = async (req, res, next) => {
 const loginCustomer: Handler = async (req, res, next) => {
   try {
     const { email, password } = v.loginValidator.parse(req.body);
-    const customerDetails = await customerRepository.getCustomerDetails(email);
-    if (!customerDetails)
-      throw new NotFoundError(
-        `An account with the provided email does not exist.`
-      );
+    const existingCustomer = await checkIfCustomerExists(email);
     const passwordIsCorrect = await checkIfPasswordIsCorrect(password, email);
     if (!passwordIsCorrect) {
       throw new NotFoundError("Incorrect email or password.");
     }
     const token = generateAccessToken({
-      email: customerDetails.email,
-      id: customerDetails.id,
-      is_verified: customerDetails.isVerified,
+      email: existingCustomer.email,
+      id: existingCustomer.id,
+      is_verified: existingCustomer.isVerified,
       role: "CUSTOMER",
       hasCreatedPasswordForAccount:
-        customerDetails.hasCreatedPasswordForAccount,
-      firstName: customerDetails.firstName,
-      lastName: customerDetails.lastName,
+        existingCustomer.hasCreatedPasswordForAccount,
+      firstName: existingCustomer.firstName,
+      lastName: existingCustomer.lastName,
     });
     return res.status(httpstatus.OK).send({ token, isSuccess: true });
   } catch (err) {
@@ -76,9 +79,7 @@ const listCustomers: Handler = async (req, res, next) => {
 const deleteCustomer: Handler = async (req, res, next) => {
   try {
     const { email } = v.emailValidator.parse(req.query);
-    const customerDetails = await customerRepository.getCustomerDetails(email);
-    if (!customerDetails)
-      throw new NotFoundError(`Customer with email ${email} does not exist.`);
+    await checkIfCustomerExists(email);
     const deletedCustomer = await customerRepository.deleteCustomer({
       email,
     });
@@ -91,14 +92,7 @@ const deleteCustomer: Handler = async (req, res, next) => {
 const updateCustomer: Handler = async (req, res, next) => {
   try {
     const body = v.updateValidator.parse(req.body);
-    const customerDetails = await customerRepository.getCustomerDetails(
-      body.email
-    );
-    if (!customerDetails) {
-      throw new NotFoundError(
-        `Customer with email ${body.email} does not exist.`
-      );
-    }
+    await checkIfCustomerExists(body.email);
     const updatedCustomer = await customerRepository.updateCustomer(body);
     return res.status(httpstatus.OK).send({ updatedCustomer, isSuccess: true });
   } catch (err) {
@@ -109,13 +103,7 @@ const updateCustomer: Handler = async (req, res, next) => {
 const updateCustomerEmail: Handler = async (req, res, next) => {
   try {
     const body = v.updateEmailValidator.parse(req.body);
-    const customerDetails = await customerRepository.getCustomerDetails(
-      body.email
-    );
-    if (!customerDetails)
-      throw new NotFoundError(
-        `Customer with email ${body.email} does not exist.`
-      );
+    await checkIfCustomerExists(body.email);
     const passwordIsCorrect = await checkIfPasswordIsCorrect(
       body.password,
       body.email
@@ -135,13 +123,7 @@ const updateCustomerEmail: Handler = async (req, res, next) => {
 const updateCustomerPassword: Handler = async (req, res, next) => {
   try {
     const body = v.updatePasswordValidator.parse(req.body);
-    const customerDetails = await customerRepository.getCustomerDetails(
-      body.email
-    );
-    if (!customerDetails)
-      throw new NotFoundError(
-        `Customer with email ${body.email} does not exist.`
-      );
+    await checkIfCustomerExists(body.email);
     const passwordIsCorrect = await checkIfPasswordIsCorrect(
       body.currentPassword,
       body.email
@@ -149,10 +131,10 @@ const updateCustomerPassword: Handler = async (req, res, next) => {
     if (!passwordIsCorrect) {
       throw new NotFoundError(`Invalid email or password.`);
     }
-    const newPassword = hashUserPassword(body.newPassword);
+    const newPasswordHash = hashUserPassword(body.newPassword);
     const updatedCustomer = await customerRepository.updateCustomerPassword({
       ...body,
-      newPassword,
+      newPassword: newPasswordHash,
     });
     return res.status(httpstatus.OK).send({ updatedCustomer, isSuccess: true });
   } catch (err) {

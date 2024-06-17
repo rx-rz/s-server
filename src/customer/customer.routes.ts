@@ -1,31 +1,34 @@
 import { Router } from "express";
 import { customerHandlers } from "./customer.handlers";
-import { verifyToken } from "../middleware/jwt-token";
+import { customerRoutes } from "../routes";
 
 export const customerRouter = Router();
 
-customerRouter.post("/registerCustomer", customerHandlers.registerCustomer);
-customerRouter.post("/loginCustomer", customerHandlers.loginCustomer);
+customerRouter.post(
+  customerRoutes.register_customer,
+  customerHandlers.registerCustomer
+);
+customerRouter.post(
+  customerRoutes.login_customer,
+  customerHandlers.loginCustomer
+);
 customerRouter.get(
-  "/listCustomers",
-  // verifyToken,
+  customerRoutes.list_customers,
   customerHandlers.listCustomers
 );
 customerRouter.delete(
-  "/deleteCustomer",
-  verifyToken,
+  customerRoutes.delete_customer,
   customerHandlers.deleteCustomer
 );
 customerRouter.patch(
-  "/updateCustomer",
-  verifyToken,
+  customerRoutes.update_customer,
   customerHandlers.updateCustomer
 );
 customerRouter.patch(
-  "/updateCustomerEmail",
+  customerRoutes.update_customer_email,
   customerHandlers.updateCustomerEmail
 );
 customerRouter.patch(
-  "/updateCustomerPassword",
+  customerRoutes.update_customer_password,
   customerHandlers.updateCustomerPassword
 );

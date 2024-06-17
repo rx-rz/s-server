@@ -12,7 +12,6 @@ import {
   text,
   serial,
   bigint,
-  primaryKey,
   pgEnum,
 } from "drizzle-orm/pg-core";
 

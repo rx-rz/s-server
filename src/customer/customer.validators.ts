@@ -86,8 +86,14 @@ const updateEmailValidator = z.object({
 });
 
 const listCustomerValidator = z.object({
-  pageNo: z.coerce.number().default(1),
-  limit: z.coerce.number().default(10),
+  pageNo: z.coerce
+    .number()
+    .min(1, { message: "Page number cannot be less than 1" })
+    .default(1),
+  limit: z.coerce
+    .number()
+    .min(1, { message: "Limit cannot be less than 1" })
+    .default(10),
   searchBy: z
     .array(
       z.object({
@@ -103,9 +109,19 @@ const listCustomerValidator = z.object({
     )
     .optional(),
   orderBy: z
-    .enum(["firstName", "lastName", "email", "isVerified", "createdAt"])
+    .enum(["firstName", "lastName", "email", "isVerified", "createdAt"], {
+      message:
+        'Order By fields can only be "firstName", "lastName", "email", "isVerified" and "createdAt"',
+      required_error:
+        'Order By fields can only be "firstName", "lastName", "email", "isVerified" and "createdAt"',
+    })
     .default("createdAt"),
-  ascOrDesc: z.enum(["asc", "desc"]).default("asc"),
+  ascOrDesc: z
+    .enum(["asc", "desc"], {
+      message: 'can only be of values "asc" or "desc"',
+      required_error: 'can only be of values "asc" or "desc"',
+    })
+    .default("asc"),
 });
 
 export const v = {
