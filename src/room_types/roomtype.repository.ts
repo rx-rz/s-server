@@ -29,6 +29,13 @@ const getRoomTypeDetails = async (name: string) => {
   return roomDetails;
 };
 
+const getRoomTypeDetailsByID = async (id: number) => {
+  const [roomDetails] = await ctx.db
+    .select(roomTypeValues)
+    .from(roomTypeTable)
+    .where(eq(roomTypeTable.id, id));
+  return roomDetails;
+}
 const deleteRoomType = async (name: string) => {
   const [deletedRoomType] = await ctx.db
     .delete(roomTypeTable)
@@ -65,6 +72,7 @@ export const roomTypeRepository = {
   updateRoomType,
   deleteRoomType,
   getRoomTypeDetails,
+  getRoomTypeDetailsByID,
   createRoomType,
   getRoomTypes,
   getRoomsForRoomType,

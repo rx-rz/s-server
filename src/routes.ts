@@ -34,6 +34,7 @@ export const roomRoutes = {
   list_rooms: "/listRooms",
   room_details: "/roomDetails",
   delete_room: "/deleteRoom",
+  get_available_rooms: "/getAvailableRooms",
 };
 
 export const bookingRoutes = {

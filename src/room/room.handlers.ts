@@ -5,6 +5,16 @@ import { httpstatus } from "../ctx";
 import { roomTypeRepository } from "../room_types/roomtype.repository";
 import { NotFoundError } from "../errors";
 
+async function checkIfRoomExists(roomNo: number) {
+  const room = await roomRepository.getRoomDetails(roomNo);
+  if (!room) {
+    throw new NotFoundError(
+      `Room with a room number of ${roomNo} does not exist.`
+    );
+  }
+  return room;
+}
+
 const createRoom: Handler = async (req, res, next) => {
   try {
     const { noOfRooms, typeId } = v.roomCreationValidator.parse(req.body);
@@ -21,12 +31,7 @@ const createRoom: Handler = async (req, res, next) => {
 const getRoomDetails: Handler = async (req, res, next) => {
   try {
     const { roomNo } = v.roomNoValidator.parse(req.query);
-    const room = await roomRepository.getRoomDetails(roomNo);
-    if (!room) {
-      throw new NotFoundError(
-        `Room with a room number of ${roomNo} does not exist.`
-      );
-    }
+    const room = checkIfRoomExists(roomNo);
     return res.status(httpstatus.OK).json({
       room,
       isSuccess: true,
@@ -66,20 +71,16 @@ const listRooms: Handler = async (req, res, next) => {
 const updateRoom: Handler = async (req, res, next) => {
   try {
     const { typeId, roomNo, status } = v.roomUpdateValidator.parse(req.body);
-    const roomTypes = await roomTypeRepository.getRoomTypes();
-    const roomExists = await roomRepository.getRoomDetails(roomNo);
-    const roomTypeExists = typeId
-      ? roomTypes.find((room) => room.id === typeId)
-      : true;
-    if (!roomTypeExists)
-      throw new NotFoundError(
-        `Room Type with an ID of ${typeId} does not exist.`
+    if (typeId) {
+      const existingRoomType = await roomTypeRepository.getRoomTypeDetailsByID(
+        typeId
       );
-    if (!roomExists) {
-      throw new NotFoundError(
-        `Room with a room number of ${roomNo} does not exist.`
-      );
+      if (!existingRoomType)
+        throw new NotFoundError(
+          `Room Type with an ID of ${typeId} does not exist.`
+        );
     }
+    await checkIfRoomExists(roomNo);
     const updatedRoom = await roomRepository.updateRoom({
       roomNo,
       typeId,
@@ -97,12 +98,7 @@ const updateRoom: Handler = async (req, res, next) => {
 const deleteRoom: Handler = async (req, res, next) => {
   try {
     const { roomNo } = v.roomNoValidator.parse(req.query);
-    const roomExists = await roomRepository.getRoomDetails(roomNo);
-    if (!roomExists) {
-      throw new NotFoundError(
-        `Room with a room number of ${roomNo} does not exist.`
-      );
-    }
+    await checkIfRoomExists(roomNo);
     const deletedRoom = await roomRepository.deleteRoom(roomNo);
     return res.status(httpstatus.OK).json({
       deletedRoom,

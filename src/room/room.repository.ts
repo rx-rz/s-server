@@ -105,12 +105,32 @@ const listRooms = async ({
     .from(roomTable)
     .leftJoin(roomTypeTable, eq(roomTypeTable.id, roomTable.typeId));
   if (searchBy) {
+    let searchByQuery;
     const filterQueries = roomListSearch(searchBy);
-    rooms = await dbQuery.where(and(...filterQueries));
+    searchByQuery = dbQuery.where(and(...filterQueries));
+    rooms = searchByQuery;
   }
-  const roomList = await dbQuery;
-  rooms = await dbQuery.limit(limit).offset((pageNo - 1) * limit);
-  return { rooms, noOfRooms: roomList.length };
+
+  if (orderBy && rooms) {
+    let orderByQuery;
+    if (orderBy !== "name" && orderBy !== "price") {
+      orderByQuery = rooms.orderBy(
+        ascOrDesc === "asc"
+          ? asc(roomTable[`${orderBy}`])
+          : desc(roomTable[`${orderBy}`])
+      );
+      rooms = orderByQuery;
+    } else {
+      orderByQuery = rooms.orderBy(
+        ascOrDesc === "asc"
+          ? asc(roomTypeTable[`${orderBy}`])
+          : desc(roomTypeTable[`${orderBy}`])
+      );
+      rooms = orderByQuery;
+    }
+  }
+  rooms = (await rooms?.limit(limit).offset((pageNo - 1) * limit)) || [];
+  return { rooms, noOfRooms: rooms.length };
 };
 
 const getAvailableRooms = async () => {
