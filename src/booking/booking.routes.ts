@@ -18,10 +18,10 @@ bookingRouter.get(
 );
 bookingRouter.get(bookingRoutes.list_bookings, bookingHandlers.listBookings);
 bookingRouter.post(
-  "/updateBookingPaymentStatus",
+  bookingRoutes.update_booking_payment_status,
   bookingHandlers.updateBookingAndBookingPaymentStatus
 );
 bookingRouter.get(
-  "/checkExpiredBookings",
+  bookingRoutes.check_expired_bookings,
   bookingHandlers.checkExpiredBookings
 );

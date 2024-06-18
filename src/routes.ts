@@ -15,7 +15,7 @@ export const customerRoutes = {
   delete_customer: "/deleteCustomer",
   update_customer: "/updateCustomer",
   update_customer_email: "/updateCustomerEmail",
-  update_customer_password: "/updateCustomerPassword"
+  update_customer_password: "/updateCustomerPassword",
 };
 
 export const otpRoutes = {
@@ -37,4 +37,6 @@ export const bookingRoutes = {
   delete_booking: "/deleteBooking",
   booking_details: "/bookingDetails",
   list_bookings: "/listBookings",
+  update_booking_payment_status: "/updateBookingPaymentStatus",
+  check_expired_bookings: "/checkExpiredBookings",
 };

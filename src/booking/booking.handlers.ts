@@ -13,6 +13,13 @@ import { ENV_VARS } from "../../env";
 import { paymentRepository } from "../payment/payment.repository";
 import { roomRepository } from "../room/room.repository";
 
+async function checkIfBookingExists(id: string) {
+  const booking = await bookingRepository.getBookingDetails(id);
+  if (!booking)
+    throw new NotFoundError(`Booking with ID ${id} does not exist.`);
+  return booking;
+}
+
 const createBooking: Handler = async (req, res, next) => {
   try {
     const bookingRequest = v.createBookingValidator.parse(req.body);
@@ -61,20 +68,14 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
           throw new NotFoundError(
             `Payment with reference ${body.data.reference} does not exist.`
           );
-        const booking = await bookingRepository.getBookingDetails(
-          payment.bookingId
-        );
-        if (!booking)
-          throw new NotFoundError(
-            `Booking with ID ${payment.bookingId} does not exist.`
-          );
+        const existingBooking = await checkIfBookingExists(payment.bookingId);
         await Promise.all([
           bookingRepository.updateBooking({
-            id: booking.id,
+            id: existingBooking.id,
             status: "active",
           }),
           roomRepository.updateRoom({
-            roomNo: Number(booking.roomNo),
+            roomNo: Number(existingBooking.roomNo),
             status: "booked",
           }),
           await paymentRepository.updatePayment({
@@ -83,6 +84,7 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
           }),
         ]);
       }
+      //find for charge failure? docs don't mention that
     }
   } catch (err) {
     next(err);
@@ -91,17 +93,9 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
 
 const updateBooking: Handler = async (req, res, next) => {
   try {
-    const bookingRequest = v.updateBookingValidator.parse(req.body);
-    const bookingExists = await bookingRepository.getBookingDetails(
-      bookingRequest.id
-    );
-    if (!bookingExists)
-      throw new NotFoundError(
-        `Booking with ID ${bookingRequest.id} does not exist.`
-      );
-    const updatedBooking = await bookingRepository.updateBooking(
-      bookingRequest
-    );
+    const body = v.updateBookingValidator.parse(req.body);
+    await checkIfBookingExists(body.id);
+    const updatedBooking = await bookingRepository.updateBooking(body);
     return res
       .status(httpstatus.ACCEPTED)
       .json({ updatedBooking, isSuccess: true });
@@ -113,13 +107,11 @@ const updateBooking: Handler = async (req, res, next) => {
 const deleteBooking: Handler = async (req, res, next) => {
   try {
     const { id } = v.bookingIDValidator.parse(req.query);
-    const bookingExists = await bookingRepository.getBookingDetails(id);
-    if (!bookingExists)
-      throw new NotFoundError(`Booking with ID ${id} does not exist.`);
+    const existingBooking = await checkIfBookingExists(id);
     const deletedBooking = await bookingRepository.deleteBooking(id);
-    const makeRoomAvailable = await roomRepository.updateRoom({
+    await roomRepository.updateRoom({
       status: "available",
-      roomNo: bookingExists.roomNo,
+      roomNo: existingBooking.roomNo,
     });
     return res.status(httpstatus.OK).json({ deletedBooking, isSuccess: true });
   } catch (err) {
@@ -143,7 +135,7 @@ const checkExpiredBookings: Handler = async (req, res, next) => {
   try {
     const bookings = await bookingRepository.getExpiredBookings();
     if (bookings) {
-      // await bookingRepository.updateBookingStatusesToDone(bookings);
+      await bookingRepository.updateBookingStatusesToDone(bookings);
     }
     return res.json({ bookings });
   } catch (err) {

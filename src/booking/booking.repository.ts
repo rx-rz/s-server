@@ -9,6 +9,7 @@ import {
   UpdateBookingRequest,
 } from "./booking.types";
 const bookingTable = ctx.schema.booking;
+const roomTable = ctx.schema.room;
 
 const bookingValues = {
   id: bookingTable.id,
@@ -47,12 +48,10 @@ const updateBooking = async (request: UpdateBookingRequest) => {
 
 const getExpiredBookings = async () => {
   const date = new Date();
-  const bookings = await ctx.db.query.booking.findMany({
-    where: lte(bookingTable.endDate, date.toISOString()),
-    with: {
-      room: true,
-    },
-  });
+  const bookings = await ctx.db
+    .select()
+    .from(bookingTable)
+    .where(lte(bookingTable.endDate, date.toISOString()));
   return bookings;
 };
 
@@ -121,8 +120,9 @@ const deleteBooking = async (bookingID: string) => {
   const deletedBooking = await ctx.db
     .delete(bookingTable)
     .where(eq(bookingTable.id, bookingID));
-  return deletedBooking
+  return deletedBooking;
 };
+
 const bookingListSearch = (search: Search) => {
   let filterQueries: SQLWrapper[] = [];
   for (let i of search) {
@@ -150,6 +150,7 @@ const bookingListSearch = (search: Search) => {
   }
   return filterQueries;
 };
+
 const listBookings = async ({
   limit,
   pageNo,
@@ -175,6 +176,20 @@ const listBookings = async ({
   return { bookings, noOfBookings: bookingList.length };
 };
 
+const updateBookingStatusesToDone = async (bookingsToUpdate: Booking[]) => {
+  await ctx.db.transaction(async (tx) => {
+    for (let i = 0; i < bookingsToUpdate.length; i++) {
+      await Promise.all([
+        await tx.update(bookingTable).set({ status: "done" }),
+        await tx
+          .update(roomTable)
+          .set({ status: "available" })
+          .where(eq(roomTable.roomNo, bookingsToUpdate[i].roomNo)),
+      ]);
+    }
+  });
+};
+
 export const bookingRepository = {
   deleteBooking,
   updateBooking,
@@ -183,4 +198,5 @@ export const bookingRepository = {
   listBookings,
   getExpiredBookings,
   getBookingsForAdminDashboard,
+  updateBookingStatusesToDone,
 };
