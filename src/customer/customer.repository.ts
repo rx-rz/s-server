@@ -11,6 +11,8 @@ import {
 } from "./customer.types";
 
 const customerTable = ctx.schema.customer;
+const bookingTable = ctx.schema.booking;
+const paymentsTable = ctx.schema.payment;
 
 export const customerValues = {
   firstName: customerTable.firstName,
@@ -35,6 +37,18 @@ const getCustomerDetails = async (email: string) => {
     .select(customerValues)
     .from(customerTable)
     .where(eq(customerTable.email, email));
+  return customerDetails;
+};
+
+const getCustomerWithBookingAndPaymentDetails = async (email: string) => {
+  const customerDetails = await ctx.db.query.customer.findFirst({
+    where: eq(customerTable.email, email),
+    columns: { password: false },
+    with: {
+      bookings: true,
+      payments: true,
+    },
+  });
   return customerDetails;
 };
 
@@ -146,6 +160,7 @@ export const customerRepository = {
   updateCustomer,
   updateCustomerEmail,
   updateCustomerPassword,
+  getCustomerWithBookingAndPaymentDetails,
   getCustomerDetails,
   getLastFiveCustomers,
 };

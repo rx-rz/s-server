@@ -9,9 +9,23 @@ import { httpstatus } from "../ctx";
 export const createPayment: Handler = async (req, res, next) => {
   try {
     const { bookingId, email } = v.makePaymentValidator.parse(req.body);
-    const customer = await customerRepository.getCustomerDetails(email);
-    const existingPaymentForBooking =
-      await paymentRepository.getPaymentDetailsByBookingID(bookingId);
+
+    const customer =
+      await customerRepository.getCustomerWithBookingAndPaymentDetails(email);
+    if (!customer)
+      throw new NotFoundError(`Customer with email ${email} does not exist.`);
+
+    const existingPaymentForBooking = customer.payments.find(
+      (payment) => payment.bookingId === bookingId
+    );
+    const existingBooking = customer.bookings.find(
+      (booking) => booking.id === bookingId
+    );
+    if (!existingBooking)
+      throw new NotFoundError(
+        `Customer has not made a booking with ID ${bookingId}`
+      );
+
     if (
       existingPaymentForBooking &&
       existingPaymentForBooking.status === "pending"
@@ -19,18 +33,9 @@ export const createPayment: Handler = async (req, res, next) => {
       throw new DuplicateEntryError(
         `A payment is already ${existingPaymentForBooking.status} for this booking.`
       );
-    if (!customer)
-      throw new NotFoundError(`Customer with email ${email} does not exist.`);
-    const booking = customer.bookings.find(
-      (booking) => booking.id === bookingId
-    );
-    if (!booking)
-      throw new NotFoundError(
-        `Customer has not made a booking with ID ${bookingId}`
-      );
 
     const { data, noError } = await initializePaystackTransaction({
-      amount: (Number(booking.amount) * 100).toString(),
+      amount: (Number(existingBooking.amount) * 100).toString(),
       email,
     });
     if (!noError || !data)
@@ -38,15 +43,15 @@ export const createPayment: Handler = async (req, res, next) => {
         `Error occured when processing payment. Please try again.`
       );
     const payment = await paymentRepository.createPayment({
-      amount: booking.amount,
+      amount: existingBooking.amount,
       bookingId,
       customerId: customer.id,
       reference: data.reference,
-      roomNo: booking.roomNo,
+      roomNo: existingBooking.roomNo,
     });
     return res.json({
       payment: { ...payment, payment_url: data.authorization_url },
-      isSucess: true,
+      isSuccess: true,
     });
   } catch (err) {
     next(err);

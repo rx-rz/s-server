@@ -3,6 +3,7 @@ import { ctx } from "../ctx";
 import { CreatePaymentRequest, UpdatePaymentStatus } from "./payment.types";
 
 const paymentTable = ctx.schema.payment;
+
 const paymentValues = {
   id: paymentTable.id,
   paymentReference: paymentTable.reference,
@@ -11,6 +12,7 @@ const paymentValues = {
   createdAt: paymentTable.createdAt,
   bookingId: paymentTable.bookingId,
 };
+
 const createPayment = async (request: CreatePaymentRequest) => {
   const [payment] = await ctx.db
     .insert(paymentTable)
@@ -38,16 +40,16 @@ const getPaymentDetails = async (id: string) => {
   return paymentDetails;
 };
 
-const getPaymentDetailsByBookingID = async (bookingId: string) => {
-  const paymentDetails = await ctx.db.query.payment.findFirst({
-    where: eq(paymentTable.bookingId, bookingId),
-    with: {
-      booking: true,
-      customer: true,
-    },
-  });
-  return paymentDetails;
-};
+// const getPaymentDetailsByBookingID = async (bookingId: string) => {
+//   const paymentDetails = await ctx.db.query.payment.findFirst({
+//     where: eq(paymentTable.bookingId, bookingId),
+//     with: {
+//       booking: true,
+//       customer: true,
+//     },
+//   });
+//   return paymentDetails;
+// };
 
 const updatePayment = async ({
   reference,
@@ -82,8 +84,6 @@ const getLastFivePayments = async () => {
   return payments;
 };
 
-
-
 const getTotalProfit = async () => {
   const [sumOfPayments] = await ctx.db
     .select({ profit: sum(paymentTable.amount) })
@@ -95,7 +95,7 @@ export const paymentRepository = {
   createPayment,
   deletePayment,
   getPaymentDetailsByReference,
-  getPaymentDetailsByBookingID,
+  // getPaymentDetailsByBookingID,
   getPaymentDetails,
   getLastFivePayments,
   updatePayment,

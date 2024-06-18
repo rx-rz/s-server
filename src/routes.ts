@@ -18,6 +18,11 @@ export const customerRoutes = {
   update_customer_password: "/updateCustomerPassword",
 };
 
+export const paymentRoutes = {
+  create_payment: "/createPayment",
+  get_payment_details: "/getPaymentDetails",
+};
+
 export const otpRoutes = {
   send_otp: "/sendOTP",
   verify_otp: "/verifyOTP",

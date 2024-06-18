@@ -22,6 +22,8 @@ const bookingValues = {
   amount: bookingTable.amount,
 };
 
+
+
 const createBooking = async ({
   customerId,
   endDate,
