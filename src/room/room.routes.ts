@@ -1,8 +1,10 @@
 import { Router } from "express";
 import { roomHandlers } from "./room.handlers";
 import { roomRoutes } from "../routes";
+import { adminAccessOnly } from "../middleware/determine-user-role";
 
 export const roomRouter = Router();
+
 roomRouter.post(roomRoutes.create_rooms, roomHandlers.createRoom);
 roomRouter.patch(roomRoutes.update_rooms, roomHandlers.updateRoom);
 roomRouter.get(roomRoutes.list_rooms, roomHandlers.listRooms);

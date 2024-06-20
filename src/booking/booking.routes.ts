@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { bookingHandlers } from "./booking.handlers";
 import { bookingRoutes } from "../routes";
+import { adminAccessOnly } from "../middleware/determine-user-role";
 
 export const bookingRouter = Router();
 bookingRouter.post(bookingRoutes.create_booking, bookingHandlers.createBooking);

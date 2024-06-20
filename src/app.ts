@@ -20,6 +20,11 @@ import { paymentRouter } from "./payment/payment.routes";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import morgan from "morgan";
+import { verifyToken } from "./middleware/jwt-token";
+import {
+  adminAccessOnly,
+  customerAccessOnly,
+} from "./middleware/determine-user-role";
 
 // Load environment variables from .env file
 config({ path: ".env" });
@@ -43,13 +48,16 @@ const api = Router();
 
 // Define API routes
 app.use("/api/v1", api);
-app.use("/customers", customerRouter);
-app.use("/otp", otpRouter);
-app.use("/admin", adminRouter);
-app.use("/roomtypes", roomTypeRouter);
-app.use("/rooms", roomRouter);
-app.use("/bookings", bookingRouter);
-app.use("/payments", paymentRouter);
+api.use(verifyToken);
+api.use(adminAccessOnly);
+// api.use(customerAccessOnly);
+api.use("/customers", customerRouter);
+api.use("/otp", otpRouter);
+api.use("/admin", adminRouter);
+api.use("/roomtypes", roomTypeRouter);
+api.use("/rooms", roomRouter);
+api.use("/bookings", bookingRouter);
+api.use("/payments", paymentRouter);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
