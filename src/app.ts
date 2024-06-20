@@ -48,9 +48,11 @@ const api = Router();
 
 // Define API routes
 app.use("/api/v1", api);
+
 api.use(verifyToken);
 api.use(adminAccessOnly);
-// api.use(customerAccessOnly);
+api.use(customerAccessOnly);
+
 api.use("/customers", customerRouter);
 api.use("/otp", otpRouter);
 api.use("/admin", adminRouter);

@@ -1,6 +1,0 @@
-{
-  "databaseURL": "https://abdurrazaq-s-workspace-5nf8uj.us-east-1.xata.sh/db/shifukuhotel",
-  "codegen": {
-    "output": "src/xata.ts"
-  }
-}

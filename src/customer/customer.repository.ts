@@ -18,6 +18,7 @@ export const customerValues = {
   email: customerTable.email,
   id: customerTable.id,
   isVerified: customerTable.isVerified,
+  refreshToken: customerTable.refreshToken,
   hasCreatedPasswordForAccount: customerTable.hasCreatedPasswordForAccount,
   createdAt: customerTable.createdAt,
 };
@@ -41,7 +42,7 @@ const getCustomerDetails = async (email: string) => {
 const getCustomerWithBookingAndPaymentDetails = async (email: string) => {
   const customerDetails = await ctx.db.query.customer.findFirst({
     where: eq(customerTable.email, email),
-    columns: { password: false },
+    columns: { password: false, refreshToken: false },
     with: {
       bookings: true,
       payments: true,
