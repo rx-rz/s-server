@@ -5,6 +5,7 @@ export type CustomerRegisterRequest = {
   lastName: string;
   email: string;
   password?: string;
+  refreshToken: string;
 };
 
 export type CustomerListObject = {

@@ -1,3 +1,4 @@
+import { generateRefreshToken } from "../admin/admin.helpers";
 import { ctx } from "../ctx";
 import { DuplicateEntryError, NotFoundError } from "../errors";
 import { generateAccessToken } from "../middleware/jwt-token";
@@ -28,7 +29,8 @@ const registerCustomer: Handler = async (req, res, next) => {
         `Customer with email ${body.email} already exists.`
       );
     }
-    await customerRepository.register(body);
+    const refreshToken = generateRefreshToken();
+    await customerRepository.register({ ...body, refreshToken });
     return res
       .status(httpstatus.CREATED)
       .send({ message: "Account created.", isSuccess: true });

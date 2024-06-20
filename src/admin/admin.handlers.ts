@@ -5,7 +5,11 @@ import { DuplicateEntryError, NotFoundError } from "../errors";
 import { generateAccessToken } from "../middleware/jwt-token";
 import { paymentRepository } from "../payment/payment.repository";
 import { roomRepository } from "../room/room.repository";
-import { checkIfPasswordIsCorrect, hashUserPassword } from "./admin.helpers";
+import {
+  checkIfPasswordIsCorrect,
+  generateRefreshToken,
+  hashUserPassword,
+} from "./admin.helpers";
 import { adminRepository } from "./admin.repository";
 import { v } from "./admin.validators";
 import { Handler } from "express";
@@ -30,7 +34,8 @@ const registerAdmin: Handler = async (req, res, next) => {
     if (body.password) {
       body.password = hashUserPassword(body.password);
     }
-    const admin = await adminRepository.register(body);
+    const refreshToken = generateRefreshToken();
+    const admin = await adminRepository.register({ ...body, refreshToken });
     return res.status(httpstatus.CREATED).send({ admin, isSuccess: true });
   } catch (err) {
     next(err);

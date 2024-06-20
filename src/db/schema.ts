@@ -21,7 +21,7 @@ export const admin = pgTable("admins", {
   lastName: varchar("last_name", { length: 30 }).notNull(),
   email: varchar("email", { length: 255 }).unique().notNull(),
   password: text("password").notNull(),
-  refreshToken: text("refreshToken"),
+  refreshToken: text("refresh_token").unique().notNull(),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
 });
 
@@ -33,7 +33,7 @@ export const customer = pgTable(
     lastName: varchar("last_name", { length: 30 }).notNull(),
     email: varchar("email", { length: 255 }).unique().notNull(),
     password: text("password"),
-    refreshToken: text("refreshToken"),
+    refreshToken: text("refresh_token").unique().notNull(),
     createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
     hasCreatedPasswordForAccount: boolean(
       "has_created_password_for_account"

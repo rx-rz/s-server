@@ -19,13 +19,6 @@ export function generateAccessToken(user: User) {
   return token;
 }
 
-export function generateRefreshToken(user: User) {
-  const refreshToken = sign({ userId: user.id }, ENV_VARS.JWT_REFRESH_SECRET!, {
-    expiresIn: "7d",
-  });
-  return refreshToken;
-}
-
 export function verifyToken(req: Request, res: Response, next: NextFunction) {
   const token = req.headers.authorization?.split(" ")[1];
   if (routesThatDontRequireAuthentication.includes(req.path)) next();

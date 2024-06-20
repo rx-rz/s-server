@@ -3,6 +3,7 @@ export type AdminCreationRequest = {
   lastName: string;
   email: string;
   password: string;
+  refreshToken: string;
 };
 
 export type AdminUpdateRequest = {

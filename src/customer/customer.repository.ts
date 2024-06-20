@@ -11,8 +11,6 @@ import {
 } from "./customer.types";
 
 const customerTable = ctx.schema.customer;
-const bookingTable = ctx.schema.booking;
-const paymentsTable = ctx.schema.payment;
 
 export const customerValues = {
   firstName: customerTable.firstName,
