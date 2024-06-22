@@ -13,10 +13,8 @@ export type User = {
   firstName: string | null;
   lastName: string | null;
 };
-function decodeUserToken(token: string | undefined) {
-  //the verify token function should already handle token edge cases
-  //so there's no need for bells and whistles here.
-  if (!token) throw new Error(`No token provided.`);
+function decodeUserToken(token: string) {
+
   const userToken = JSON.parse(
     Buffer.from(token.split(".")[1], "base64").toString()
   );
@@ -42,8 +40,6 @@ export function verifyRequest(req: Request, res: Response, next: NextFunction) {
   if (routesThatDontRequireAuthentication.includes(req.path)) next();
   else {
     const token = req.headers.authorization?.split(" ")[1];
-    const user = decodeUserToken(token);
-    const refreshToken = req.cookies.refreshToken;
     if (!token) {
       return res.status(httpstatus.UNAUTHORIZED).json({
         error_type: "JWT Error",
@@ -51,12 +47,8 @@ export function verifyRequest(req: Request, res: Response, next: NextFunction) {
         isSuccess: false,
       });
     }
-    if(user.isVerified === false){
-      return res.status(httpstatus.UNAUTHORIZED).json({
-        error_type: "Verification Error",
-        error: "Unauthorized request. Please verify your account details"
-      })
-    }
+    const user = decodeUserToken(token);
+    const refreshToken = req.cookies?.refreshToken || "";
     verify(token, ENV_VARS.JWT_SECRET!, async (err) => {
       if (err) {
         if (err.name === "TokenExpiredError") {

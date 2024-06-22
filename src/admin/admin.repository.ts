@@ -59,9 +59,10 @@ const deleteAdmin = async (email: string) => {
 };
 
 const updateAdminDetails = async (adminRequest: AdminUpdateRequest) => {
-  const adminUpdated = await ctx.db
+  const {email, ...request} = adminRequest;
+  const [adminUpdated] = await ctx.db
     .update(adminTable)
-    .set(adminRequest)
+    .set(request).where(eq(adminTable.email, email))
     .returning(adminValues);
   return adminUpdated;
 };

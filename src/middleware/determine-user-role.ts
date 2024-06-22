@@ -3,10 +3,7 @@ import { User } from "./jwt-token";
 import { httpstatus } from "../ctx";
 import { adminOnlyRoutes, customerOnlyRoutes } from "../routes";
 
-function decodeUserToken(token: string | undefined) {
-  //the verify token middleware should already handle token edge cases
-  //so there's no need for bells and whistles here.
-  if (!token) throw new Error(`No token provided.`);
+function decodeUserToken(token: string) {
   const userToken = JSON.parse(
     Buffer.from(token.split(".")[1], "base64").toString()
   );
@@ -16,6 +13,13 @@ function decodeUserToken(token: string | undefined) {
 export const adminAccessOnly: Handler = (req, res, next) => {
   if (adminOnlyRoutes.includes(req.path)) {
     const userToken = req.headers.authorization?.split(" ")[1];
+    if (!userToken) {
+      return res.status(httpstatus.UNAUTHORIZED).json({
+        error_type: "JWT Error",
+        error: "Unauthorized request. No token provided.",
+        isSuccess: false,
+      });
+    }
     const user: User = decodeUserToken(userToken);
     if (user.role !== "ADMIN") {
       return res.status(httpstatus.FORBIDDEN).json({
@@ -30,7 +34,7 @@ export const adminAccessOnly: Handler = (req, res, next) => {
 
 export const customerAccessOnly: Handler = (req, res, next) => {
   if (customerOnlyRoutes.includes(req.path)) {
-    const userToken = req.headers.authorization?.split(" ")[1];
+    const userToken = req.cookies.token;
     const user: User = decodeUserToken(userToken);
     if (user.role !== "CUSTOMER") {
       return res.status(httpstatus.FORBIDDEN).json({
