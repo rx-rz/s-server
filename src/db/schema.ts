@@ -20,7 +20,7 @@ export const admin = pgTable("admins", {
   firstName: varchar("first_name", { length: 30 }).notNull(),
   lastName: varchar("last_name", { length: 30 }).notNull(),
   email: varchar("email", { length: 255 }).unique().notNull(),
-  password: text("password").notNull(),
+  password: varchar("password", { length: 50 }).notNull(),
   refreshToken: text("refresh_token").unique().notNull(),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
 });
@@ -32,7 +32,7 @@ export const customer = pgTable(
     firstName: varchar("first_name", { length: 30 }).notNull(),
     lastName: varchar("last_name", { length: 30 }).notNull(),
     email: varchar("email", { length: 255 }).unique().notNull(),
-    password: text("password"),
+    password: varchar("password", { length: 50 }),
     refreshToken: text("refresh_token").unique().notNull(),
     createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
     hasCreatedPasswordForAccount: boolean(

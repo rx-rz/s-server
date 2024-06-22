@@ -10,7 +10,8 @@
     "coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate:pg",
     "db:migrate": "ts-node ./src/db/migrate.ts",
-    "testdb:migrate": "cross-env NODE_ENV=test ts-node ./src/db/migrate.ts"
+    "testdb:migrate": "cross-env NODE_ENV=test ts-node ./src/db/migrate.ts",
+    "proddb:migrate": "cross-env NODE_ENV=production ts-node ./src/db/migrate.ts"
   },
   "keywords": [],
   "author": "",

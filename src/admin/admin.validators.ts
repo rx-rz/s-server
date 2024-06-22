@@ -13,24 +13,34 @@ const registrationValidator = z.object({
       invalid_type_error: "Last name can only be a string!",
     })
     .max(30, { message: "Last name should be a maximum of 30 characters." }),
-  email: z.string({ required_error: "Email is required!" }).email({
-    message: "Email input is not a valid email. Please correct and try again",
-  }),
+  email: z
+    .string({ required_error: "Email is required!" })
+    .email({
+      message: "Email input is not a valid email. Please correct and try again",
+    })
+    .max(255, { message: "Email cannot be more than 255 characters." }),
   password: z
     .string({ invalid_type_error: "Password must be a string" })
     .min(6, { message: "Minimum of 6 characters are allowed" }),
 });
 
 const deletionValidator = z.object({
-  email: z.string({ required_error: "Email is required!" }).email({
-    message: "Email input is not a valid email. Please correct and try again.",
-  }),
+  email: z
+    .string({ required_error: "Email is required!" })
+    .email({
+      message:
+        "Email input is not a valid email. Please correct and try again.",
+    })
+    .max(255, { message: "Email cannot be more than 255 characters." }),
 });
 
 const loginValidator = z.object({
-  email: z.string({ required_error: "Email is required!" }).email({
-    message: "Email input is not a valid email. Please correct and try again",
-  }),
+  email: z
+    .string({ required_error: "Email is required!" })
+    .email({
+      message: "Email input is not a valid email. Please correct and try again",
+    })
+    .max(255, { message: "Email cannot be more than 255 characters." }),
   password: z
     .string({
       invalid_type_error: "Password must be a string",
@@ -40,9 +50,13 @@ const loginValidator = z.object({
 });
 
 const updatePasswordValidator = z.object({
-  email: z.string({ required_error: "Email is required!" }).email({
-    message: "Email input is not a valid email. Please correct and try again.",
-  }),
+  email: z
+    .string({ required_error: "Email is required!" })
+    .email({
+      message:
+        "Email input is not a valid email. Please correct and try again.",
+    })
+    .max(255, { message: "Email cannot be more than 255 characters." }),
   currentPassword: z
     .string({ required_error: "Current password is required!" })
     .min(6, {
@@ -64,19 +78,30 @@ const updateValidator = z.object({
     .string({ required_error: "Last name is required!" })
     .max(30, { message: "Last name should be a maximum of 30 characters." })
     .optional(),
-  email: z.string({ required_error: "Email is required!" }).email({
-    message: "Email input is not a valid email. Please correct and try again.",
-  }),
+  email: z
+    .string({ required_error: "Email is required!" })
+    .email({
+      message:
+        "Email input is not a valid email. Please correct and try again.",
+    })
+    .max(255, { message: "Email cannot be more than 255 characters." }),
 });
 
 const updateEmailValidator = z.object({
-  email: z.string({ required_error: "Email is required!" }).email({
-    message: "Email input is not a valid email. Please correct and try again.",
-  }),
-  newEmail: z.string({ required_error: "New email is required!" }).email({
-    message:
-      "New email input is not a valid email. Please correct and try again.",
-  }),
+  email: z
+    .string({ required_error: "Email is required!" })
+    .email({
+      message:
+        "Email input is not a valid email. Please correct and try again.",
+    })
+    .max(255, { message: "Email cannot be more than 255 characters." }),
+  newEmail: z
+    .string({ required_error: "New email is required!" })
+    .email({
+      message:
+        "New email input is not a valid email. Please correct and try again.",
+    })
+    .max(255, { message: "Email cannot be more than 255 characters." }),
   password: z.string({ required_error: "Password is required!" }).min(6, {
     message: "Password should be a minimum of 6 characters",
   }),
