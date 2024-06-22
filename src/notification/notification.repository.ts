@@ -4,9 +4,8 @@ import { ctx } from "../ctx";
 type CreateNotificationRequest = {
   type:
     | "booking_made"
-    | "booking_failed"
-    | "payment_made"
-    | "payment_failed"
+    | "booking_cancelled"
+    | "booking_updated"
     | "room_available";
   associatedID: string;
 };

@@ -22,8 +22,6 @@ const bookingValues = {
   amount: bookingTable.amount,
 };
 
-
-
 const createBooking = async ({
   customerId,
   endDate,
@@ -35,7 +33,7 @@ const createBooking = async ({
     .insert(bookingTable)
     .values({ customerId, endDate, startDate, amount, roomNo })
     .returning(bookingValues);
-  return { booking };
+  return booking;
 };
 
 const updateBooking = async (request: UpdateBookingRequest) => {
@@ -45,7 +43,7 @@ const updateBooking = async (request: UpdateBookingRequest) => {
     .set(requestBody)
     .where(eq(bookingTable.id, id))
     .returning(bookingValues);
-  return { booking };
+  return booking;
 };
 
 const getExpiredBookings = async () => {
@@ -119,10 +117,10 @@ const getBookingDetails = async (bookingID: string) => {
 };
 
 const deleteBooking = async (bookingID: string) => {
-  const deletedBooking = await ctx.db
+  const bookingDeleted = await ctx.db
     .delete(bookingTable)
     .where(eq(bookingTable.id, bookingID));
-  return deletedBooking;
+  return bookingDeleted;
 };
 
 const bookingListSearch = (search: Search) => {

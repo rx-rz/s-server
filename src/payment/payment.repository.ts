@@ -56,13 +56,14 @@ const updatePayment = async ({
   payedAt,
   status,
 }: UpdatePaymentStatus) => {
-  const payment = await ctx.db
+  const [payment] = await ctx.db
     .update(paymentTable)
     .set({
       status,
       payedAt,
     })
-    .where(eq(paymentTable.reference, reference));
+    .where(eq(paymentTable.reference, reference))
+    .returning(paymentValues);
   return payment;
 };
 const getPaymentDetailsByReference = async (reference: string) => {

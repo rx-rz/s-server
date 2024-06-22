@@ -230,9 +230,8 @@ export const userOtps = pgTable("user_otps", {
 
 export const notificationEnum = pgEnum("notification_type", [
   "booking_made",
-  "booking_failed",
-  "payment_made",
-  "payment_failed",
+  "booking_cancelled",
+  "booking_updated",
   "room_available",
 ]);
 export const notifications = pgTable("notifications", {

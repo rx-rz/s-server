@@ -12,11 +12,12 @@ import { createHmac } from "node:crypto";
 import { ENV_VARS } from "../../env";
 import { paymentRepository } from "../payment/payment.repository";
 import { roomRepository } from "../room/room.repository";
+import { notificationRepository } from "../notification/notification.repository";
 
 async function checkIfBookingExists(id: string) {
   const booking = await bookingRepository.getBookingDetails(id);
   if (!booking)
-    throw new NotFoundError(`Booking with ID ${id} does not exist.`);
+    throw new NotFoundError(`Booking does not exist.`);
   return booking;
 }
 
@@ -25,9 +26,7 @@ const createBooking: Handler = async (req, res, next) => {
     const bookingRequest = v.createBookingValidator.parse(req.body);
     const room = await checkIfRoomIsAvailable(bookingRequest.roomNo);
     if (!room) {
-      throw new DuplicateEntryError(
-        `Room(s) with Room Number ${bookingRequest.roomNo} is already booked.`
-      );
+      throw new DuplicateEntryError(`Room is already booked.`);
     }
     const noOfDays = getNoOfDays({
       startDate: bookingRequest.startDate,
@@ -38,12 +37,17 @@ const createBooking: Handler = async (req, res, next) => {
       throw new InvalidInputError(
         `Booking price is incorrect. The correct booking price is ${bookingPrice}`
       );
-    const booking = await bookingRepository.createBooking(bookingRequest);
-    await roomRepository.updateRoom({
-      roomNo: bookingRequest.roomNo,
-      status: "pending",
-    });
-    return res.status(httpstatus.CREATED).json({ ...booking, isSuccess: true });
+    const [bookingCreated] = await Promise.all([
+      bookingRepository.createBooking(bookingRequest),
+      roomRepository.updateRoom({
+        roomNo: bookingRequest.roomNo,
+        status: "pending",
+      }),
+    ]);
+
+    return res
+      .status(httpstatus.CREATED)
+      .json({ ...bookingCreated, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -65,14 +69,14 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
       );
       if (!payment)
         throw new NotFoundError(
-          `Payment with reference ${body.data.reference} does not exist.`
+          `Payment with provided reference does not exist.`
         );
       const existingBooking = await checkIfBookingExists(payment.bookingId);
       const roomToBeBooked = await roomRepository.getRoomDetails(
         existingBooking.roomNo
       );
       if (body.event === "charge.success") {
-        await Promise.all([
+        const [bookingUpdated, roomUpdated, paymentMade] = await Promise.all([
           bookingRepository.updateBooking({
             id: existingBooking.id,
             status: "active",
@@ -87,21 +91,30 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
             status: "confirmed",
           }),
         ]);
+        await notificationRepository.createNotification({
+          type: "booking_made",
+          associatedID: paymentMade.id,
+        });
       } else {
-        await Promise.all([
-          bookingRepository.updateBooking({
-            id: existingBooking.id,
-            status: "cancelled",
-          }),
-          paymentRepository.updatePayment({
-            reference: body.data.reference,
-            status: "failed",
-          }),
-          roomRepository.updateRoom({
-            roomNo: Number(existingBooking.roomNo),
-            status: "available",
-          }),
-        ]);
+        const [bookingCancelled, failedPayment, availableRoom] =
+          await Promise.all([
+            bookingRepository.updateBooking({
+              id: existingBooking.id,
+              status: "cancelled",
+            }),
+            paymentRepository.updatePayment({
+              reference: body.data.reference,
+              status: "failed",
+            }),
+            roomRepository.updateRoom({
+              roomNo: Number(existingBooking.roomNo),
+              status: "available",
+            }),
+          ]);
+        notificationRepository.createNotification({
+          associatedID: failedPayment.id,
+          type: "booking_cancelled",
+        });
       }
     }
   } catch (err) {
@@ -113,10 +126,14 @@ const updateBooking: Handler = async (req, res, next) => {
   try {
     const body = v.updateBookingValidator.parse(req.body);
     await checkIfBookingExists(body.id);
-    const updatedBooking = await bookingRepository.updateBooking(body);
+    const bookingUpdated = await bookingRepository.updateBooking(body);
+    await notificationRepository.createNotification({
+      type: "booking_updated",
+      associatedID: bookingUpdated.id,
+    });
     return res
       .status(httpstatus.ACCEPTED)
-      .json({ updatedBooking, isSuccess: true });
+      .json({ bookingUpdated, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -126,10 +143,16 @@ const deleteBooking: Handler = async (req, res, next) => {
   try {
     const { id } = v.bookingIDValidator.parse(req.query);
     const existingBooking = await checkIfBookingExists(id);
-    const deletedBooking = await bookingRepository.deleteBooking(id);
-    await roomRepository.updateRoom({
-      status: "available",
-      roomNo: existingBooking.roomNo,
+    const [deletedBooking, roomUpdated] = await Promise.all([
+      bookingRepository.deleteBooking(id),
+      roomRepository.updateRoom({
+        status: "available",
+        roomNo: existingBooking.roomNo,
+      }),
+    ]);
+    await notificationRepository.createNotification({
+      associatedID: roomUpdated.roomNo.toString(),
+      type: "room_available",
     });
     return res.status(httpstatus.OK).json({ deletedBooking, isSuccess: true });
   } catch (err) {
@@ -140,9 +163,7 @@ const deleteBooking: Handler = async (req, res, next) => {
 const getBookingDetails: Handler = async (req, res, next) => {
   try {
     const { id } = v.bookingIDValidator.parse(req.query);
-    const booking = await bookingRepository.getBookingDetails(id);
-    if (!booking)
-      throw new NotFoundError(`Booking with ID ${id} does not exist.`);
+    const booking = await checkIfBookingExists(id)
     return res.status(httpstatus.OK).json({ booking, isSuccess: true });
   } catch (err) {
     next(err);
