@@ -22,11 +22,11 @@ const createPayment = async (request: CreatePaymentRequest) => {
 };
 
 const deletePayment = async (id: string) => {
-  const [deletedPayment] = await ctx.db
+  const [paymentDeleted] = await ctx.db
     .delete(paymentTable)
     .where(eq(paymentTable.id, id))
     .returning(paymentValues);
-  return deletedPayment;
+  return paymentDeleted;
 };
 
 const getPaymentDetails = async (id: string) => {
@@ -56,7 +56,7 @@ const updatePayment = async ({
   payedAt,
   status,
 }: UpdatePaymentStatus) => {
-  const [payment] = await ctx.db
+  const [paymentUpdated] = await ctx.db
     .update(paymentTable)
     .set({
       status,
@@ -64,7 +64,7 @@ const updatePayment = async ({
     })
     .where(eq(paymentTable.reference, reference))
     .returning(paymentValues);
-  return payment;
+  return paymentUpdated;
 };
 const getPaymentDetailsByReference = async (reference: string) => {
   const paymentDetails = await ctx.db.query.payment.findFirst({

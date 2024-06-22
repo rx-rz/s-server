@@ -1,3 +1,4 @@
+import { ENV_VARS } from "../../env";
 import { generateRefreshToken } from "../admin/admin.helpers";
 import { ctx } from "../ctx";
 import { DuplicateEntryError, NotFoundError } from "../errors";
@@ -11,7 +12,7 @@ const { httpstatus } = ctx;
 async function checkIfCustomerExists(email: string) {
   const existingCustomer = await customerRepository.getCustomerDetails(email);
   if (!existingCustomer)
-    throw new NotFoundError(`Customer with email ${email} does not exist.`);
+    throw new NotFoundError(`Customer with provided email does not exist.`);
   return existingCustomer;
 }
 
@@ -26,7 +27,7 @@ const registerCustomer: Handler = async (req, res, next) => {
     );
     if (customerDetails) {
       throw new DuplicateEntryError(
-        `Customer with email ${body.email} already exists.`
+        `Customer with provided email already exists.`
       );
     }
     const refreshToken = generateRefreshToken();
@@ -57,7 +58,13 @@ const loginCustomer: Handler = async (req, res, next) => {
       firstName: existingCustomer.firstName,
       lastName: existingCustomer.lastName,
     });
-    return res.status(httpstatus.OK).send({ token, isSuccess: true });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: ENV_VARS.NODE_ENV === "production" ? true : false,
+    });
+    return res
+      .status(httpstatus.OK)
+      .send({ message: "Customer logged in", isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -82,10 +89,10 @@ const deleteCustomer: Handler = async (req, res, next) => {
   try {
     const { email } = v.emailValidator.parse(req.query);
     await checkIfCustomerExists(email);
-    const deletedCustomer = await customerRepository.deleteCustomer({
+    const customerDeleted = await customerRepository.deleteCustomer({
       email,
     });
-    return res.status(httpstatus.OK).send({ deletedCustomer, isSuccess: true });
+    return res.status(httpstatus.OK).send({ customerDeleted, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -95,8 +102,8 @@ const updateCustomer: Handler = async (req, res, next) => {
   try {
     const body = v.updateValidator.parse(req.body);
     await checkIfCustomerExists(body.email);
-    const updatedCustomer = await customerRepository.updateCustomer(body);
-    return res.status(httpstatus.OK).send({ updatedCustomer, isSuccess: true });
+    const customerUpdated = await customerRepository.updateCustomer(body);
+    return res.status(httpstatus.OK).send({ customerUpdated, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -115,8 +122,8 @@ const updateCustomerEmail: Handler = async (req, res, next) => {
         `User with the provided credentials could not be found.`
       );
     }
-    const updatedCustomer = await customerRepository.updateCustomerEmail(body);
-    return res.status(httpstatus.OK).send({ updatedCustomer, isSuccess: true });
+    const customerUpdated = await customerRepository.updateCustomerEmail(body);
+    return res.status(httpstatus.OK).send({ customerUpdated, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -134,11 +141,11 @@ const updateCustomerPassword: Handler = async (req, res, next) => {
       throw new NotFoundError(`Invalid email or password.`);
     }
     const newPasswordHash = hashUserPassword(body.newPassword);
-    const updatedCustomer = await customerRepository.updateCustomerPassword({
+    const customerUpdated = await customerRepository.updateCustomerPassword({
       ...body,
       newPassword: newPasswordHash,
     });
-    return res.status(httpstatus.OK).send({ updatedCustomer, isSuccess: true });
+    return res.status(httpstatus.OK).send({ customerUpdated, isSuccess: true });
   } catch (err) {
     next(err);
   }

@@ -13,7 +13,7 @@ export const createPayment: Handler = async (req, res, next) => {
     const customer =
       await customerRepository.getCustomerWithBookingAndPaymentDetails(email);
     if (!customer)
-      throw new NotFoundError(`Customer with email ${email} does not exist.`);
+      throw new NotFoundError(`Customer with provided email does not exist.`);
 
     const existingPaymentForBooking = customer.payments.find(
       (payment) => payment.bookingId === bookingId
@@ -23,7 +23,7 @@ export const createPayment: Handler = async (req, res, next) => {
     );
     if (!existingBooking)
       throw new NotFoundError(
-        `Customer has not made a booking with ID ${bookingId}`
+        `Customer has not made a booking. Please make a booking first.`
       );
 
     if (
@@ -63,7 +63,7 @@ export const getPaymentDetails: Handler = async (req, res, next) => {
     const { id } = v.paymentIDValidator.parse(req.query);
     const paymentDetails = await paymentRepository.getPaymentDetails(id);
     if (!paymentDetails)
-      throw new NotFoundError(`Payment with ID ${id} could not be found.`);
+      throw new NotFoundError(`Payment with provided details could not be found.`);
     return res.status(httpstatus.OK).json({ paymentDetails, isSuccess: true });
   } catch (err) {
     next(err);
