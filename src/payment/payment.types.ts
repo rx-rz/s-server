@@ -7,7 +7,7 @@ export type CreatePaymentRequest = {
 };
 
 export type UpdatePaymentStatus = {
-  status?: "pending" | "confirmed"
+  status?: "pending" | "confirmed" | "failed"
   payedAt?: string;
   reference: string;
 }

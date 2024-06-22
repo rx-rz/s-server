@@ -228,6 +228,19 @@ export const userOtps = pgTable("user_otps", {
   expiresAt: bigint("expires_at", { mode: "number" }).notNull(),
 });
 
+export const notificationEnum = pgEnum("notification_type", [
+  "booking_made",
+  "booking_failed",
+  "payment_made",
+  "payment_failed",
+  "room_available",
+]);
+export const notifications = pgTable("notifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  type: notificationEnum("type").notNull(),
+  associatedID: text("associated_id").notNull(),
+});
+
 export const dbSchema = {
   customer,
   customerRelation,
@@ -242,6 +255,8 @@ export const dbSchema = {
   bookingstatusEnum,
   admin,
   userOtps,
+  notificationEnum,
+  notifications,
 };
 
 export type dbSchemaType = typeof dbSchema;

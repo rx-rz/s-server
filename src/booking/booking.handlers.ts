@@ -60,15 +60,18 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
       .digest("hex");
     if (hash == req.headers["x-paystack-signature"]) {
       const body = req.body;
-      if (body.event === "charge.success") {
-        const payment = await paymentRepository.getPaymentDetailsByReference(
-          body.data.reference
+      const payment = await paymentRepository.getPaymentDetailsByReference(
+        body.data.reference
+      );
+      if (!payment)
+        throw new NotFoundError(
+          `Payment with reference ${body.data.reference} does not exist.`
         );
-        if (!payment)
-          throw new NotFoundError(
-            `Payment with reference ${body.data.reference} does not exist.`
-          );
-        const existingBooking = await checkIfBookingExists(payment.bookingId);
+      const existingBooking = await checkIfBookingExists(payment.bookingId);
+      const roomToBeBooked = await roomRepository.getRoomDetails(
+        existingBooking.roomNo
+      );
+      if (body.event === "charge.success") {
         await Promise.all([
           bookingRepository.updateBooking({
             id: existingBooking.id,
@@ -76,15 +79,30 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
           }),
           roomRepository.updateRoom({
             roomNo: Number(existingBooking.roomNo),
+            noOfTimesBooked: Number(roomToBeBooked?.noOfTimesBooked) + 1,
             status: "booked",
           }),
-          await paymentRepository.updatePayment({
+          paymentRepository.updatePayment({
             reference: body.data.reference,
             status: "confirmed",
           }),
         ]);
+      } else {
+        await Promise.all([
+          bookingRepository.updateBooking({
+            id: existingBooking.id,
+            status: "cancelled",
+          }),
+          paymentRepository.updatePayment({
+            reference: body.data.reference,
+            status: "failed",
+          }),
+          roomRepository.updateRoom({
+            roomNo: Number(existingBooking.roomNo),
+            status: "available",
+          }),
+        ]);
       }
-      //find for charge failure? docs don't mention that
     }
   } catch (err) {
     next(err);
