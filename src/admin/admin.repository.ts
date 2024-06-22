@@ -33,37 +33,37 @@ const getAdminDetails = async (email: string, isRequired = true) => {
 };
 
 const deleteAdmin = async (email: string) => {
-  const [deletedAdmin] = await ctx.db
+  const [adminDeleted] = await ctx.db
     .delete(adminTable)
     .where(eq(adminTable.email, email))
     .returning(adminValues);
-  return deletedAdmin;
+  return adminDeleted;
 };
 
 const updateAdminDetails = async (adminRequest: AdminUpdateRequest) => {
-  const updatedAdmin = await ctx.db
+  const adminUpdated = await ctx.db
     .update(adminTable)
     .set(adminRequest)
     .returning(adminValues);
-  return updatedAdmin;
+  return adminUpdated;
 };
 
 const changeAdminEmail = async (adminRequest: ChangeAdminEmailRequest) => {
-  const updatedAdmin = await ctx.db
+  const adminUpdated = await ctx.db
     .update(adminTable)
     .set({ email: adminRequest.newEmail })
     .returning(adminValues);
-  return updatedAdmin;
+  return adminUpdated;
 };
 
 const changeAdminPassword = async (
   adminRequest: ChangeAdminPasswordRequest
 ) => {
-  const updatedAdmin = await ctx.db
+  const adminUpdated = await ctx.db
     .update(adminTable)
     .set({ password: adminRequest.newPassword })
     .returning(adminValues);
-  return updatedAdmin;
+  return adminUpdated;
 };
 
 const getAdminPassword = async (email: string) => {

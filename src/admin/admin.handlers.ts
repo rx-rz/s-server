@@ -1,3 +1,4 @@
+import { ENV_VARS } from "../../env";
 import { bookingRepository } from "../booking/booking.repository";
 import { ctx } from "../ctx";
 import { customerRepository } from "../customer/customer.repository";
@@ -29,7 +30,7 @@ const registerAdmin: Handler = async (req, res, next) => {
     const existingAdmin = await adminRepository.getAdminDetails(body.email);
     if (existingAdmin)
       throw new DuplicateEntryError(
-        `Admin with email ${body.email} already exists.`
+        `Admin with provided email already exists.`
       );
     if (body.password) {
       body.password = hashUserPassword(body.password);
@@ -60,6 +61,10 @@ const loginAdmin: Handler = async (req, res, next) => {
       lastName: existingAdmin.lastName,
       hasCreatedPasswordForAccount: true,
       is_verified: true,
+    });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: ENV_VARS.NODE_ENV === "production" ? true : false,
     });
     return res.status(httpstatus.OK).send({ token, isSuccess: true });
   } catch (err) {
@@ -137,12 +142,19 @@ const updateAdminPassword: Handler = async (req, res, next) => {
 
 const getAdminDashboardOverviewDetails: Handler = async (req, res, next) => {
   try {
-    const bookingsPerMonth =
-      await bookingRepository.getBookingsForAdminDashboard();
-    const lastFiveCustomers = await customerRepository.getLastFiveCustomers();
-    const lastFivePayments = await paymentRepository.getLastFivePayments();
-    const totalProfit = await paymentRepository.getTotalProfit();
-    const noOfAvailableRooms = await roomRepository.getNoOfAvailableRooms();
+    const [
+      bookingsPerMonth,
+      lastFiveCustomers,
+      lastFivePayments,
+      totalProfit,
+      noOfAvailableRooms,
+    ] = await Promise.all([
+      bookingRepository.getBookingsForAdminDashboard(),
+      customerRepository.getLastFiveCustomers(),
+      paymentRepository.getLastFivePayments(),
+      paymentRepository.getTotalProfit(),
+      roomRepository.getNoOfAvailableRooms(),
+    ]);
     return res.status(httpstatus.OK).json({
       bookingsPerMonth,
       lastFiveCustomers,
