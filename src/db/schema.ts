@@ -23,6 +23,7 @@ export const admin = pgTable("admins", {
   password: varchar("password", { length: 50 }).notNull(),
   refreshToken: text("refresh_token").unique().notNull(),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
+  isVerified: boolean("is_verified").default(false),
 });
 
 export const customer = pgTable(
@@ -221,12 +222,21 @@ export const bookingRelation = relations(booking, ({ one, many }) => {
   };
 });
 
+export const userOtpsEnum = pgEnum("user_role", [
+  "admin",
+  "customer"
+])
+
 export const userOtps = pgTable("user_otps", {
   id: serial("id").primaryKey(),
   email: varchar("email", { length: 100 }).notNull(),
   otp: integer("otp").notNull(),
+  role: userOtpsEnum("role").default("customer"),
   expiresAt: bigint("expires_at", { mode: "number" }).notNull(),
 });
+
+
+
 
 export const notificationEnum = pgEnum("notification_type", [
   "booking_made",
@@ -234,6 +244,8 @@ export const notificationEnum = pgEnum("notification_type", [
   "booking_updated",
   "room_available",
 ]);
+
+
 export const notifications = pgTable("notifications", {
   id: uuid("id").primaryKey().defaultRandom(),
   type: notificationEnum("type").notNull(),

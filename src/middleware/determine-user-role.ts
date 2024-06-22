@@ -15,7 +15,7 @@ function decodeUserToken(token: string | undefined) {
 
 export const adminAccessOnly: Handler = (req, res, next) => {
   if (adminOnlyRoutes.includes(req.path)) {
-    const userToken = req.headers?.authorization?.split(" ")[1];
+    const userToken = req.headers.authorization?.split(" ")[1];
     const user: User = decodeUserToken(userToken);
     if (user.role !== "ADMIN") {
       return res.status(httpstatus.FORBIDDEN).json({
@@ -30,7 +30,7 @@ export const adminAccessOnly: Handler = (req, res, next) => {
 
 export const customerAccessOnly: Handler = (req, res, next) => {
   if (customerOnlyRoutes.includes(req.path)) {
-    const userToken = req.headers?.authorization?.split(" ")[1];
+    const userToken = req.headers.authorization?.split(" ")[1];
     const user: User = decodeUserToken(userToken);
     if (user.role !== "CUSTOMER") {
       return res.status(httpstatus.FORBIDDEN).json({

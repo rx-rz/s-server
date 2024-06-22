@@ -9,14 +9,15 @@ const userOtpValues = {
   expiresAt: otpTable.expiresAt,
   email: otpTable.email,
   otp: otpTable.otp,
+  role: otpTable.role,
 };
-const createOTP = async (email: string) => {
+const createOTP = async (email: string, role: "admin" | "customer") => {
   const otpNo = generateOtp();
   const customerDetails = await customerRepository.getCustomerDetails(email);
   if (customerDetails) {
     const [customerOTP] = await ctx.db
       .insert(otpTable)
-      .values({ email, otp: otpNo, expiresAt: Date.now() + 600000 })
+      .values({ email, otp: otpNo, expiresAt: Date.now() + 600000, role })
       .returning(userOtpValues);
     return customerOTP;
   }

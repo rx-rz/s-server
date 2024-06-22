@@ -1,8 +1,10 @@
 import { ENV_VARS } from "../../env";
-import { generateRefreshToken } from "../admin/admin.helpers";
 import { ctx } from "../ctx";
 import { DuplicateEntryError, NotFoundError } from "../errors";
-import { generateAccessToken } from "../middleware/jwt-token";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../middleware/jwt-token";
 import { checkIfPasswordIsCorrect, hashUserPassword } from "./customer.helpers";
 import { customerRepository } from "./customer.repository";
 import { v } from "./customer.validators";
@@ -30,7 +32,7 @@ const registerCustomer: Handler = async (req, res, next) => {
         `Customer with provided email already exists.`
       );
     }
-    const refreshToken = generateRefreshToken();
+    const refreshToken = generateRefreshToken(body.email);
     await customerRepository.register({ ...body, refreshToken });
     return res
       .status(httpstatus.CREATED)
@@ -58,13 +60,12 @@ const loginCustomer: Handler = async (req, res, next) => {
       firstName: existingCustomer.firstName,
       lastName: existingCustomer.lastName,
     });
-    res.cookie("token", token, {
+    const refreshToken = await customerRepository.getRefreshToken(email);
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: ENV_VARS.NODE_ENV === "production" ? true : false,
     });
-    return res
-      .status(httpstatus.OK)
-      .send({ message: "Customer logged in", isSuccess: true });
+    return res.status(httpstatus.OK).send({ token, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -104,6 +105,30 @@ const updateCustomer: Handler = async (req, res, next) => {
     await checkIfCustomerExists(body.email);
     const customerUpdated = await customerRepository.updateCustomer(body);
     return res.status(httpstatus.OK).send({ customerUpdated, isSuccess: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const updateCustomerRefreshToken: Handler = async (req, res, next) => {
+  const { refreshToken } = req.cookies;
+  const { email } = v.emailValidator.parse(req.body);
+  try {
+    if (!refreshToken) {
+      return res
+        .status(httpstatus.UNAUTHORIZED)
+        .json({ message: "Refresh token required", isSuccess: false });
+    }
+    const customer = await checkIfCustomerExists(email);
+    const newRefreshToken = generateRefreshToken(email);
+    await customerRepository.updateRefreshToken(
+      customer.email,
+      newRefreshToken
+    );
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: ENV_VARS.NODE_ENV === "production" ? true : false,
+    });
   } catch (err) {
     next(err);
   }
@@ -155,6 +180,7 @@ export const customerHandlers = {
   registerCustomer,
   listCustomers,
   deleteCustomer,
+  updateCustomerRefreshToken,
   updateCustomer,
   updateCustomerEmail,
   updateCustomerPassword,

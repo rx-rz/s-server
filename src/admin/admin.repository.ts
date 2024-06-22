@@ -14,22 +14,40 @@ const adminValues = {
   lastName: adminTable.lastName,
   email: adminTable.email,
   id: adminTable.id,
+  isVerified: adminTable.isVerified,
 };
 
 const register = async (adminRequest: AdminCreationRequest) => {
   const [admin] = await ctx.db
     .insert(adminTable)
     .values(adminRequest)
-    .returning(adminValues);
+    .returning({ ...adminValues });
   return admin;
 };
 
-const getAdminDetails = async (email: string, isRequired = true) => {
+const getAdminDetails = async (email: string) => {
   const [adminDetails] = await ctx.db
     .select(adminValues)
     .from(adminTable)
     .where(eq(adminTable.email, email));
   return adminDetails;
+};
+
+const getRefreshToken = async (email: string) => {
+  const [admin] = await ctx.db
+    .select({ refreshToken: adminTable.refreshToken })
+    .from(adminTable)
+    .where(eq(adminTable.email, email));
+  return admin.refreshToken || "";
+};
+
+const updateRefreshToken = async (email: string, refreshToken: string) => {
+  const [admin] = await ctx.db
+    .update(adminTable)
+    .set({ refreshToken })
+    .where(eq(adminTable.email, email))
+    .returning({ refreshToken: adminTable.refreshToken });
+  return admin.refreshToken || "";
 };
 
 const deleteAdmin = async (email: string) => {
@@ -82,4 +100,6 @@ export const adminRepository = {
   register,
   deleteAdmin,
   updateAdminDetails,
+  updateRefreshToken,
+  getRefreshToken,
 };

@@ -1,21 +1,27 @@
 import { Handler } from "express";
-import { sendOTPEmail } from "./otp.helpers";
 import { v } from "./otp.validators";
 import { customerRepository } from "../customer/customer.repository";
 import { otpRepository } from "./otp.repository";
 import { httpstatus } from "../ctx";
 import { NotFoundError } from "../errors";
+import { adminRepository } from "../admin";
 
 const sendOTP: Handler = async (req, res, next) => {
   try {
-    const { email } = v.createOTPValidator.parse(req.query);
-    const customer = await customerRepository.getCustomerDetails(email);
-    if (!customer)
-      throw new NotFoundError(
-        `Customer with email ${email} does not exist in the DB. Please create an account`
-      );
-    const otpDetails = await otpRepository.createOTP(email);
-    //TODO:uncomment later lol
+    const { email, role } = v.createOTPValidator.parse(req.query);
+    let user;
+    if (role === "admin") {
+      user = await adminRepository.getAdminDetails(email);
+      if (!user) {
+        throw new NotFoundError(`Details provided for user does not exist.`);
+      }
+    } else {
+      user = await customerRepository.getCustomerDetails(email);
+      if (!user)
+        throw new NotFoundError(`Details provided for user does not exist.`);
+    }
+    const otpDetails = await otpRepository.createOTP(email, role);
+    //TODO: uncomment later lol
     // if (otpDetails) {
     //   const response = await sendOTPEmail({
     //     otp: otpDetails.otp,
@@ -35,7 +41,6 @@ const verifyOTP: Handler = async (req, res, next) => {
   try {
     const { email, otp } = v.verifyOTPValidator.parse(req.body);
     const dbOTP = await otpRepository.getOTP(email);
-
     if (dbOTP.expiresAt < Date.now()) {
       await otpRepository.deleteOTP(email);
       return res.status(httpstatus.GONE).send({
@@ -45,16 +50,26 @@ const verifyOTP: Handler = async (req, res, next) => {
     }
     if (dbOTP.otp === otp) {
       await otpRepository.deleteOTP(email);
+      if (dbOTP.role === "admin") {
+        await adminRepository.updateAdminDetails({
+          email: email,
+          isVerified: true,
+        });
+        return res.status(httpstatus.OK).send({
+          message: `User  has been verified.`,
+          isSuccess: true,
+        });
+      }
       await customerRepository.updateCustomer({
         email: email,
         isVerified: true,
       });
       return res.status(httpstatus.OK).send({
-        message: `User with email ${email} has been verified.`,
+        message: `User has been verified.`,
         isSuccess: true,
       });
     } else {
-      throw new NotFoundError("Could not fetch a user with this OTP");
+      throw new NotFoundError("Could not fetch user with provided details");
     }
   } catch (err) {
     next(err);

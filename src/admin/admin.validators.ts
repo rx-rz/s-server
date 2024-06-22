@@ -24,15 +24,6 @@ const registrationValidator = z.object({
     .min(6, { message: "Minimum of 6 characters are allowed" }),
 });
 
-const deletionValidator = z.object({
-  email: z
-    .string({ required_error: "Email is required!" })
-    .email({
-      message:
-        "Email input is not a valid email. Please correct and try again.",
-    })
-    .max(255, { message: "Email cannot be more than 255 characters." }),
-});
 
 const loginValidator = z.object({
   email: z
@@ -87,6 +78,12 @@ const updateValidator = z.object({
     .max(255, { message: "Email cannot be more than 255 characters." }),
 });
 
+const emailValidator = z.object({
+  email: z.string({ required_error: "Email is required!" }).email({
+    message: "Email input is not a valid email. Please correct and try again.",
+  }),
+});
+
 const updateEmailValidator = z.object({
   email: z
     .string({ required_error: "Email is required!" })
@@ -109,9 +106,9 @@ const updateEmailValidator = z.object({
 
 export const v = {
   registrationValidator,
-  deletionValidator,
   updateEmailValidator,
   updatePasswordValidator,
   updateValidator,
   loginValidator,
+  emailValidator
 };

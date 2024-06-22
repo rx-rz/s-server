@@ -16,6 +16,7 @@ adminRouter.patch(
   adminRoutes.update_admin_password,
   adminHandlers.updateAdminPassword
 );
+adminRouter.patch(adminRoutes.update_admin_refresh_token, adminHandlers.updateAdminRefreshToken);
 adminRouter.get(
   adminRoutes.get_dashboard_details,
   adminHandlers.getAdminDashboardOverviewDetails

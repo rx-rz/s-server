@@ -3,14 +3,13 @@ import { bookingRepository } from "../booking/booking.repository";
 import { ctx } from "../ctx";
 import { customerRepository } from "../customer/customer.repository";
 import { DuplicateEntryError, NotFoundError } from "../errors";
-import { generateAccessToken } from "../middleware/jwt-token";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../middleware/jwt-token";
 import { paymentRepository } from "../payment/payment.repository";
 import { roomRepository } from "../room/room.repository";
-import {
-  checkIfPasswordIsCorrect,
-  generateRefreshToken,
-  hashUserPassword,
-} from "./admin.helpers";
+import { checkIfPasswordIsCorrect, hashUserPassword } from "./admin.helpers";
 import { adminRepository } from "./admin.repository";
 import { v } from "./admin.validators";
 import { Handler } from "express";
@@ -35,9 +34,11 @@ const registerAdmin: Handler = async (req, res, next) => {
     if (body.password) {
       body.password = hashUserPassword(body.password);
     }
-    const refreshToken = generateRefreshToken();
-    const admin = await adminRepository.register({ ...body, refreshToken });
-    return res.status(httpstatus.CREATED).send({ admin, isSuccess: true });
+    const refreshToken = generateRefreshToken(body.email);
+    await adminRepository.register({ ...body, refreshToken });
+    return res
+      .status(httpstatus.CREATED)
+      .send({ message: "Account created", isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -60,9 +61,10 @@ const loginAdmin: Handler = async (req, res, next) => {
       firstName: existingAdmin.firstName,
       lastName: existingAdmin.lastName,
       hasCreatedPasswordForAccount: true,
-      is_verified: true,
+      is_verified: existingAdmin.isVerified,
     });
-    res.cookie("token", token, {
+    const refreshToken = await adminRepository.getRefreshToken(email);
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: ENV_VARS.NODE_ENV === "production" ? true : false,
     });
@@ -74,7 +76,7 @@ const loginAdmin: Handler = async (req, res, next) => {
 
 const deleteAdmin: Handler = async (req, res, next) => {
   try {
-    const { email } = v.deletionValidator.parse(req.query);
+    const { email } = v.emailValidator.parse(req.query);
     const existingAdmin = await checkIfAdminExists(email);
     const deletedAdmin = await adminRepository.deleteAdmin(existingAdmin.email);
     if (deletedAdmin) {
@@ -111,6 +113,27 @@ const updateAdminEmail: Handler = async (req, res, next) => {
     }
     const updatedAdmin = await adminRepository.changeAdminEmail(body);
     return res.status(httpstatus.OK).send({ updatedAdmin, isSuccess: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const updateAdminRefreshToken: Handler = async (req, res, next) => {
+  const { refreshToken } = req.cookies;
+  const { email } = v.emailValidator.parse(req.body);
+  try {
+    if (!refreshToken) {
+      return res
+        .status(httpstatus.UNAUTHORIZED)
+        .json({ message: "Refresh token required", isSuccess: false });
+    }
+    const admin = await checkIfAdminExists(email);
+    const newRefreshToken = generateRefreshToken(email);
+    await adminRepository.updateRefreshToken(admin.email, newRefreshToken);
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: ENV_VARS.NODE_ENV === "production" ? true : false,
+    });
   } catch (err) {
     next(err);
   }
@@ -174,5 +197,6 @@ export const adminHandlers = {
   updateAdminEmail,
   updateAdminPassword,
   getAdminDashboardOverviewDetails,
+  updateAdminRefreshToken,
   loginAdmin,
 };

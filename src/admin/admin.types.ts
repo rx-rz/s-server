@@ -9,6 +9,7 @@ export type AdminCreationRequest = {
 export type AdminUpdateRequest = {
   firstName?: string;
   lastName?: string;
+  isVerified?: boolean;
   email: string;
 };
 

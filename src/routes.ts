@@ -8,6 +8,7 @@ export const adminRoutes = {
   update_admin_email: "/updateAdminEmail",
   update_admin_password: "/updateAdminPassword",
   get_dashboard_details: "/getDashboardDetails",
+  update_admin_refresh_token: "/updateRefreshToken",
 } as const;
 
 export const customerRoutes = {
@@ -18,6 +19,7 @@ export const customerRoutes = {
   update_customer: "/updateCustomer",
   update_customer_email: "/updateCustomerEmail",
   update_customer_password: "/updateCustomerPassword",
+  update_customer_refresh_token: "/updateRefreshToken",
 } as const;
 
 export const paymentRoutes = {
@@ -87,7 +89,7 @@ export const routeWithBaseURL = ({
   if (returnEntireURL) {
     return `http://${ENV_VARS.HOST}/${ENV_VARS.PORT}/api/v1/${prefix}${route}`;
   }
-  return `/${prefix}${route}`; 
+  return `/${prefix}${route}`;
 };
 
 export const routesThatDontRequireAuthentication = [
@@ -106,6 +108,7 @@ export const routesThatDontRequireAuthentication = [
 export const customerOnlyRoutes = [
   routeWithBaseURL({ prefix: "bookings", route: "/createBooking" }),
   routeWithBaseURL({ prefix: "customers", route: "/deleteCustomer" }),
+  routeWithBaseURL({ prefix: "customers", route: "/updateRefreshToken" }),
   routeWithBaseURL({ prefix: "customers", route: "/updateCustomer" }),
   routeWithBaseURL({ prefix: "customers", route: "/updateCustomerEmail" }),
   routeWithBaseURL({ prefix: "customers", route: "/updateCustomerPassword" }),
@@ -114,6 +117,7 @@ export const customerOnlyRoutes = [
 export const adminOnlyRoutes = [
   routeWithBaseURL({ prefix: "rooms", route: "/createRooms" }),
   routeWithBaseURL({ prefix: "rooms", route: "/updateRoom" }),
+  routeWithBaseURL({ prefix: "admin", route: "/updateRefreshToken" }),
   routeWithBaseURL({ prefix: "rooms", route: "/listRooms" }),
   routeWithBaseURL({ prefix: "rooms", route: "/deleteRoom" }),
   routeWithBaseURL({ prefix: "admin", route: "/deleteAdmin" }),

@@ -39,6 +39,23 @@ const getCustomerDetails = async (email: string) => {
   return customerDetails;
 };
 
+const getRefreshToken = async (email: string) => {
+  const [customer] = await ctx.db
+    .select({ refreshToken: customerTable.refreshToken })
+    .from(customerTable)
+    .where(eq(customerTable.email, email));
+  return customer.refreshToken || "";
+};
+
+const updateRefreshToken = async (email: string, refreshToken: string) => {
+  const [customer] = await ctx.db
+    .update(customerTable)
+    .set({ refreshToken })
+    .where(eq(customerTable.email, email))
+    .returning({ refreshToken: customerTable.refreshToken });
+  return customer.refreshToken || "";
+};
+
 const getCustomerWithBookingAndPaymentDetails = async (email: string) => {
   const customerDetails = await ctx.db.query.customer.findFirst({
     where: eq(customerTable.email, email),
@@ -161,5 +178,7 @@ export const customerRepository = {
   updateCustomerPassword,
   getCustomerWithBookingAndPaymentDetails,
   getCustomerDetails,
+  updateRefreshToken,
   getLastFiveCustomers,
+  getRefreshToken,
 };

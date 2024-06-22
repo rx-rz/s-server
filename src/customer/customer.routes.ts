@@ -29,6 +29,10 @@ customerRouter.patch(
   customerHandlers.updateCustomerEmail
 );
 customerRouter.patch(
+  customerRoutes.update_customer_refresh_token,
+  customerHandlers.updateCustomerRefreshToken
+);
+customerRouter.patch(
   customerRoutes.update_customer_password,
   customerHandlers.updateCustomerPassword
 );
