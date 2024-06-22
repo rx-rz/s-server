@@ -7,7 +7,7 @@ import { DuplicateEntryError, NotFoundError } from "../errors";
 async function checkIfRoomTypeExists(name: string) {
   const roomTypeExists = await roomTypeRepository.getRoomTypeDetails(name);
   if (roomTypeExists)
-    throw new NotFoundError(`Room type with name ${name} does not exist.`);
+    throw new NotFoundError(`Room type does not exist.`);
 }
 
 const createRoomType: Handler = async (req, res, next) => {
@@ -18,7 +18,7 @@ const createRoomType: Handler = async (req, res, next) => {
     );
     if (roomTypeExists)
       throw new DuplicateEntryError(
-        `Room type with name ${body.name} already exists.`
+        `Room type already exists.`
       );
     const roomType = await roomTypeRepository.createRoomType(body);
     return res.status(httpstatus.CREATED).send({ roomType, isSuccess: true });

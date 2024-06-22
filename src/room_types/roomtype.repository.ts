@@ -13,6 +13,7 @@ const roomTypeValues = {
   description: roomTypeTable.description,
   rating: roomTypeTable.rating,
 };
+
 const createRoomType = async (request: CreateRoomTypeRequest) => {
   const [roomType] = await ctx.db
     .insert(roomTypeTable)
@@ -35,23 +36,23 @@ const getRoomTypeDetailsByID = async (id: number) => {
     .from(roomTypeTable)
     .where(eq(roomTypeTable.id, id));
   return roomDetails;
-}
+};
 const deleteRoomType = async (name: string) => {
-  const [deletedRoomType] = await ctx.db
+  const [roomTypeDeleted] = await ctx.db
     .delete(roomTypeTable)
     .where(eq(roomTypeTable.name, name))
     .returning(roomTypeValues);
-  return deletedRoomType;
+  return roomTypeDeleted;
 };
 
 const updateRoomType = async (request: UpdateRoomTypeRequest) => {
   const { currentName, ...values } = request;
-  const [updatedRoomType] = await ctx.db
+  const [roomTypeUpdated] = await ctx.db
     .update(roomTypeTable)
     .set(values)
     .where(eq(roomTypeTable.name, currentName))
     .returning(roomTypeValues);
-  return updatedRoomType;
+  return roomTypeUpdated;
 };
 
 const getRoomTypes = async () => {
