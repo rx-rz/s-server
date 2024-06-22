@@ -48,7 +48,6 @@ const loginAdmin: Handler = async (req, res, next) => {
   try {
     const { email, password } = v.loginValidator.parse(req.body);
     const existingAdmin = await checkIfAdminExists(email);
-
     const passwordIsCorrect = await checkIfPasswordIsCorrect(password, email);
     if (!passwordIsCorrect) {
       throw new NotFoundError("User with provided credentials not found.");
@@ -61,7 +60,7 @@ const loginAdmin: Handler = async (req, res, next) => {
       firstName: existingAdmin.firstName,
       lastName: existingAdmin.lastName,
       hasCreatedPasswordForAccount: true,
-      is_verified: existingAdmin.isVerified,
+      isVerified: existingAdmin.isVerified,
     });
     const refreshToken = await adminRepository.getRefreshToken(email);
     res.cookie("refreshToken", refreshToken, {

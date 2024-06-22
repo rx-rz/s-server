@@ -20,7 +20,7 @@ import { paymentRouter } from "./payment/payment.routes";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import morgan from "morgan";
-import { verifyToken } from "./middleware/jwt-token";
+import { verifyRequest } from "./middleware/jwt-token";
 import {
   adminAccessOnly,
   customerAccessOnly,
@@ -49,7 +49,7 @@ const api = Router();
 // Define API routes
 app.use("/api/v1", api);
 
-api.use(verifyToken);
+api.use(verifyRequest);
 api.use(adminAccessOnly);
 api.use(customerAccessOnly);
 

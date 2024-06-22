@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express"
 import { beforeEach } from "node:test"
 import { Mock, describe, expect, it, vi } from "vitest"
-import { verifyToken } from "./jwt-token"
+import { verifyRequest } from "./jwt-token"
 import { httpstatus } from "../ctx"
 
 process.env.JWT_SECRET = "secret-key"
@@ -32,7 +32,7 @@ describe("verify token middleware", () => {
     req.headers = {
       'content-type': 'application/json'
     }
-    verifyToken(req as Request, res as Response, next)
+    verifyRequest(req as Request, res as Response, next)
     expect(res.status).toHaveBeenCalledWith(httpstatus.FORBIDDEN)
     expect(res.json).toHaveBeenCalledWith({
       error_type: "JWT Error",

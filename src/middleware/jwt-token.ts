@@ -3,14 +3,12 @@ import { ENV_VARS } from "../../env";
 import { NextFunction, Request, Response } from "express";
 import { httpstatus } from "../ctx";
 import { routesThatDontRequireAuthentication } from "../routes";
-import { adminRepository } from "../admin";
-import { customerRepository } from "../customer/customer.repository";
 
 export type User = {
   id: string;
   role: "ADMIN" | "CUSTOMER";
   email: string;
-  is_verified: boolean | null;
+  isVerified: boolean | null;
   hasCreatedPasswordForAccount: boolean | null;
   firstName: string | null;
   lastName: string | null;
@@ -31,14 +29,20 @@ export function generateAccessToken(user: User) {
 }
 
 export function generateRefreshToken(email: string) {
-  const token = sign(email, ENV_VARS.JWT_REFRESH_SECRET!, { expiresIn: "10d" });
+  if (!ENV_VARS.JWT_REFRESH_SECRET) {
+    throw new Error("JWT_REFRESH_SECRET is not defined");
+  }
+  const token = sign({ email }, ENV_VARS.JWT_REFRESH_SECRET!, {
+    expiresIn: "10d",
+  });
   return token;
 }
 
-export function verifyToken(req: Request, res: Response, next: NextFunction) {
+export function verifyRequest(req: Request, res: Response, next: NextFunction) {
   if (routesThatDontRequireAuthentication.includes(req.path)) next();
   else {
     const token = req.headers.authorization?.split(" ")[1];
+    const user = decodeUserToken(token);
     const refreshToken = req.cookies.refreshToken;
     if (!token) {
       return res.status(httpstatus.UNAUTHORIZED).json({
@@ -47,9 +51,14 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
         isSuccess: false,
       });
     }
+    if(user.isVerified === false){
+      return res.status(httpstatus.UNAUTHORIZED).json({
+        error_type: "Verification Error",
+        error: "Unauthorized request. Please verify your account details"
+      })
+    }
     verify(token, ENV_VARS.JWT_SECRET!, async (err) => {
       if (err) {
-        const user = decodeUserToken(token);
         if (err.name === "TokenExpiredError") {
           const { isExpired } = checkIfRefreshTokenHasExpired(refreshToken);
           if (isExpired === false) {

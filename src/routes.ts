@@ -87,7 +87,7 @@ export const routeWithBaseURL = ({
   returnEntireURL = false,
 }: BaseURLFunctionProps) => {
   if (returnEntireURL) {
-    return `http://${ENV_VARS.HOST}/${ENV_VARS.PORT}/api/v1/${prefix}${route}`;
+    return `/api/v1/${prefix}${route}`;
   }
   return `/${prefix}${route}`;
 };

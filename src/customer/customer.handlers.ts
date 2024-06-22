@@ -53,7 +53,7 @@ const loginCustomer: Handler = async (req, res, next) => {
     const token = generateAccessToken({
       email: existingCustomer.email,
       id: existingCustomer.id,
-      is_verified: existingCustomer.isVerified,
+      isVerified: existingCustomer.isVerified,
       role: "CUSTOMER",
       hasCreatedPasswordForAccount:
         existingCustomer.hasCreatedPasswordForAccount,
