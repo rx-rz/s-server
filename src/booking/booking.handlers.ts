@@ -16,8 +16,7 @@ import { notificationRepository } from "../notification/notification.repository"
 
 async function checkIfBookingExists(id: string) {
   const booking = await bookingRepository.getBookingDetails(id);
-  if (!booking)
-    throw new NotFoundError(`Booking does not exist.`);
+  if (!booking) throw new NotFoundError(`Booking does not exist.`);
   return booking;
 }
 
@@ -111,10 +110,16 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
               status: "available",
             }),
           ]);
-        notificationRepository.createNotification({
-          associatedID: failedPayment.id,
-          type: "booking_cancelled",
-        });
+        await Promise.all([
+          notificationRepository.createNotification({
+            associatedID: failedPayment.id,
+            type: "booking_cancelled",
+          }),
+          notificationRepository.createNotification({
+            associatedID: availableRoom.roomNo.toString(),
+            type: "room_available",
+          }),
+        ]);
       }
     }
   } catch (err) {
@@ -163,7 +168,7 @@ const deleteBooking: Handler = async (req, res, next) => {
 const getBookingDetails: Handler = async (req, res, next) => {
   try {
     const { id } = v.bookingIDValidator.parse(req.query);
-    const booking = await checkIfBookingExists(id)
+    const booking = await checkIfBookingExists(id);
     return res.status(httpstatus.OK).json({ booking, isSuccess: true });
   } catch (err) {
     next(err);
