@@ -8,9 +8,7 @@ import { NotFoundError } from "../errors";
 async function checkIfRoomExists(roomNo: number) {
   const room = await roomRepository.getRoomDetails(roomNo);
   if (!room) {
-    throw new NotFoundError(
-      `Room with a room number of ${roomNo} does not exist.`
-    );
+    throw new NotFoundError(`Room does not exist.`);
   }
   return room;
 }
@@ -76,9 +74,7 @@ const updateRoom: Handler = async (req, res, next) => {
         typeId
       );
       if (!existingRoomType)
-        throw new NotFoundError(
-          `Room Type with an ID of ${typeId} does not exist.`
-        );
+        throw new NotFoundError(`Provided room type does not exist.`);
     }
     await checkIfRoomExists(roomNo);
     const updatedRoom = await roomRepository.updateRoom({

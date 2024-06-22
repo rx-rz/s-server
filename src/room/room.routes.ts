@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { roomHandlers } from "./room.handlers";
 import { roomRoutes } from "../routes";
-import { adminAccessOnly } from "../middleware/determine-user-role";
 
 export const roomRouter = Router();
 

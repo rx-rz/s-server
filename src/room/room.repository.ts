@@ -38,7 +38,7 @@ const createRoom = async (request: CreateRoomRequest) => {
           .values({ ...request })
           .returning(roomValues);
       }
-      return `A total of ${request.noOfRooms} with room type ${request.typeId} has been created.`;
+      return `A total of ${request.noOfRooms} have been created.`;
     } catch (err) {
       await tx.rollback();
       return;
@@ -59,12 +59,12 @@ const getRoomDetails = async (roomNo: number) => {
 
 const updateRoom = async (request: UpdateRoomRequest) => {
   await getRoomDetails(request.roomNo);
-  const [room] = await ctx.db
+  const [roomUpdated] = await ctx.db
     .update(roomTable)
     .set(request)
     .where(eq(roomTable.roomNo, request.roomNo))
     .returning(roomValues);
-  return room;
+  return roomUpdated;
 };
 
 const roomListSearch = (search: Search) => {
@@ -152,11 +152,11 @@ const getNoOfAvailableRooms = async () => {
 
 const deleteRoom = async (roomNo: number) => {
   await getRoomDetails(roomNo);
-  const [deletedRoom] = await ctx.db
+  const [roomDeleted] = await ctx.db
     .delete(roomTable)
     .where(eq(roomTable.roomNo, roomNo))
     .returning(roomValues);
-  return deletedRoom;
+  return roomDeleted;
 };
 
 export const roomRepository = {

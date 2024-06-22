@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import request from "supertest";
 import { app } from "../app";
-import { faker } from "@faker-js/faker";
 import { startTestServer, stopTestServer } from "../setup-tests";
 import { httpstatus } from "../ctx";
 
