@@ -43,7 +43,7 @@ const getAvailableRooms: Handler = async (req, res, next) => {
   try {
     const availableRooms = await roomRepository.getAvailableRooms();
     return res.status(httpstatus.OK).json({
-      rooms: availableRooms,
+      availableRooms,
       isSuccess: true,
     });
   } catch (err) {
@@ -77,13 +77,13 @@ const updateRoom: Handler = async (req, res, next) => {
         throw new NotFoundError(`Provided room type does not exist.`);
     }
     await checkIfRoomExists(roomNo);
-    const updatedRoom = await roomRepository.updateRoom({
+    const roomUpdated = await roomRepository.updateRoom({
       roomNo,
       typeId,
       status,
     });
     return res.status(httpstatus.OK).json({
-      updatedRoom,
+      roomUpdated,
       isSuccess: true,
     });
   } catch (err) {
@@ -95,9 +95,9 @@ const deleteRoom: Handler = async (req, res, next) => {
   try {
     const { roomNo } = v.roomNoValidator.parse(req.query);
     await checkIfRoomExists(roomNo);
-    const deletedRoom = await roomRepository.deleteRoom(roomNo);
+    const roomDeleted = await roomRepository.deleteRoom(roomNo);
     return res.status(httpstatus.OK).json({
-      deletedRoom,
+      roomDeleted,
       isSuccess: true,
     });
   } catch (err) {

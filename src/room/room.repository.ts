@@ -47,14 +47,14 @@ const createRoom = async (request: CreateRoomRequest) => {
 };
 
 const getRoomDetails = async (roomNo: number) => {
-  const roomDetails = await ctx.db.query.room.findFirst({
+  const getRoomDetails = await ctx.db.query.room.findFirst({
     where: eq(roomTable.roomNo, roomNo),
     with: {
       bookings: true,
       roomType: true,
     },
   });
-  return roomDetails;
+  return getRoomDetails;
 };
 
 const updateRoom = async (request: UpdateRoomRequest) => {

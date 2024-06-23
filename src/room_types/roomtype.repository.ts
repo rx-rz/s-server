@@ -23,19 +23,19 @@ const createRoomType = async (request: CreateRoomTypeRequest) => {
 };
 
 const getRoomTypeDetails = async (name: string) => {
-  const [roomDetails] = await ctx.db
+  const [getRoomDetails] = await ctx.db
     .select(roomTypeValues)
     .from(roomTypeTable)
     .where(eq(roomTypeTable.name, name));
-  return roomDetails;
+  return getRoomDetails;
 };
 
 const getRoomTypeDetailsByID = async (id: number) => {
-  const [roomDetails] = await ctx.db
+  const [getRoomDetails] = await ctx.db
     .select(roomTypeValues)
     .from(roomTypeTable)
     .where(eq(roomTypeTable.id, id));
-  return roomDetails;
+  return getRoomDetails;
 };
 const deleteRoomType = async (name: string) => {
   const [roomTypeDeleted] = await ctx.db

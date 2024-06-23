@@ -36,7 +36,7 @@ export const roomRoutes = {
   create_rooms: "/createRooms",
   update_rooms: "/updateRoom",
   list_rooms: "/listRooms",
-  room_details: "/roomDetails",
+  room_details: "/getRoomDetails",
   delete_room: "/deleteRoom",
   get_available_rooms: "/getAvailableRooms",
 } as const;
