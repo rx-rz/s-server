@@ -57,7 +57,7 @@ export const roomTypeRoutes = {
   get_room_types: "/getRoomTypes",
   update_room_type: "/updateRoomType",
   room_type_details: "/roomTypeDetails",
-  rooms_for_room_type: "/roomsForRoomType",
+  rooms_for_room_type: "/getRoomsForRoomType",
 } as const;
 
 type BaseURLFunctionProps = {
@@ -132,5 +132,5 @@ export const adminOnlyRoutes = [
   createRoute({ prefix: "roomtypes", route: "/getRoomTypes" }),
   createRoute({ prefix: "roomtypes", route: "/updateRoomType" }),
   createRoute({ prefix: "roomtypes", route: "/roomTypeDetails" }),
-  createRoute({ prefix: "roomtypes", route: "/roomsForRoomType" }),
+  createRoute({ prefix: "roomtypes", route: "/getRoomsForRoomType" }),
 ];

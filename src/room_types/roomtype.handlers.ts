@@ -6,7 +6,7 @@ import { DuplicateEntryError, NotFoundError } from "../errors";
 
 async function checkIfRoomTypeExists(name: string) {
   const roomTypeExists = await roomTypeRepository.getRoomTypeDetails(name);
-  if (roomTypeExists)
+  if (!roomTypeExists)
     throw new NotFoundError(`Room type does not exist.`);
 }
 
@@ -66,10 +66,10 @@ const getRoomsForRoomType: Handler = async (req, res, next) => {
   try {
     const { name } = v.roomTypeNameValidator.parse(req.query);
     await checkIfRoomTypeExists(name);
-    const roomsForRoomType = await roomTypeRepository.getRoomsForRoomType(name);
+    const getRoomsForRoomType = await roomTypeRepository.getRoomsForRoomType(name);
     return res
       .status(httpstatus.OK)
-      .json({ roomsForRoomType, isSuccess: true });
+      .json({ getRoomsForRoomType, isSuccess: true });
   } catch (err) {
     next(err);
   }

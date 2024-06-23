@@ -34,7 +34,14 @@ export const adminAccessOnly: Handler = (req, res, next) => {
 
 export const customerAccessOnly: Handler = (req, res, next) => {
   if (customerOnlyRoutes.includes(req.path)) {
-    const userToken = req.cookies.token;
+    const userToken = req.headers.authorization?.split(" ")[1];
+    if (!userToken) {
+      return res.status(httpstatus.UNAUTHORIZED).json({
+        error_type: "JWT Error",
+        error: "Unauthorized request. No token provided.",
+        isSuccess: false,
+      });
+    }
     const user: User = decodeUserToken(userToken);
     if (user.role !== "CUSTOMER") {
       return res.status(httpstatus.FORBIDDEN).json({

@@ -1,9 +1,11 @@
 import { z } from "zod";
 
 const roomCreationValidator = z.object({
-  noOfRooms: z.coerce.number({
-    required_error: "No of rooms must be provided",
-  }),
+  noOfRooms: z.coerce
+    .number({
+      required_error: "No of rooms must be provided",
+    })
+    .max(10, { message: "The maximum no of rooms you can create is 10" }),
   typeId: z.coerce.number({ required_error: "Room type must be provided" }),
 });
 

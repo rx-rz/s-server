@@ -14,7 +14,7 @@ import { paymentRepository } from "../payment/payment.repository";
 import { roomRepository } from "../room/room.repository";
 import { notificationRepository } from "../notification/notification.repository";
 
-async function checkIfBookingExists(id: string) {
+export async function checkIfBookingExists(id: string) {
   const booking = await bookingRepository.getBookingDetails(id);
   if (!booking) throw new NotFoundError(`Booking does not exist.`);
   return booking;

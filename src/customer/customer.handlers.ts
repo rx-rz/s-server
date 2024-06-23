@@ -11,7 +11,7 @@ import { v } from "./customer.validators";
 import { Handler } from "express";
 const { httpstatus } = ctx;
 
-async function checkIfCustomerExists(email: string) {
+export async function checkIfCustomerExists(email: string) {
   const existingCustomer = await customerRepository.getCustomerDetails(email);
   if (!existingCustomer)
     throw new NotFoundError(`Customer with provided email does not exist.`);
@@ -36,7 +36,7 @@ const registerCustomer: Handler = async (req, res, next) => {
     await customerRepository.register({ ...body, refreshToken });
     return res
       .status(httpstatus.CREATED)
-      .send({ message: "Account created.", isSuccess: true });
+      .send({ message: "Account created", isSuccess: true });
   } catch (err) {
     next(err);
   }

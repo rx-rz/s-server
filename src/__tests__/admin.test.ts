@@ -1,11 +1,8 @@
 import { faker } from "@faker-js/faker";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { generateRefreshToken } from "../middleware/jwt-token";
-import { startTestServer } from "../setup-tests";
-import { testServerPorts } from "../lib/test-server-ports";
 import { createRoute } from "../routes";
-import request from "supertest";
-import { app } from "../app";
+import { authenticatedTestApi, testApi } from "./setup";
 
 const admin1 = {
   email: faker.internet.email(),
@@ -20,12 +17,6 @@ const admin2 = {
   lastName: faker.person.lastName(),
   password: faker.internet.password(),
 };
-
-beforeAll(async () => {
-  await startTestServer(testServerPorts.admin);
-});
-
-const testApi = request.agent(app);
 
 describe("ADMIN", () => {
   const refreshToken = generateRefreshToken(admin1.email);
@@ -60,9 +51,7 @@ describe("ADMIN", () => {
       const response = await testApi
         .post(route)
         .send({ email: newAdmin.email, password: newAdmin.password });
-      testApi.set("Authorization", `Bearer ${response.body.token}`);
-      console.log({ coookieee: response.headers["set-cookie"] });
-      testApi.set("Cookie", `refreshToken=${refreshToken}`);
+      // testApi.set("Cookie", `refreshToken=${refreshToken}`);
       expect(response.body.isSuccess).toBe(true);
       expect(response.body.token).toBeDefined();
     });
@@ -76,11 +65,12 @@ describe("ADMIN", () => {
     });
 
     it("should update an admin's details- first name and last name in this case", async () => {
-      const response = await testApi.patch(route).send({
+      const response = await authenticatedTestApi("ADMIN").patch(route).send({
         email: newAdmin.email,
         firstName: admin2.firstName,
         lastName: admin2.lastName,
       });
+      console.log({response})
       expect(response.body.isSuccess).toBe(true);
       expect(response.body.updatedAdmin.firstName).toBe(admin2.firstName);
       expect(response.body.updatedAdmin.lastName).toBe(admin2.lastName);
@@ -95,7 +85,7 @@ describe("ADMIN", () => {
     });
 
     it("should update an admin's email", async () => {
-      const response = await testApi.patch(route).send({
+      const response = await authenticatedTestApi("ADMIN").patch(route).send({
         email: admin1.email,
         newEmail: admin2.email,
         password: admin1.password,
@@ -106,7 +96,7 @@ describe("ADMIN", () => {
     });
 
     it("should throw a not found error for invalid password", async () => {
-      const response = await testApi.patch(route).send({
+      const response = await authenticatedTestApi("ADMIN").patch(route).send({
         email: admin2.email,
         newEmail: admin1.email,
         password: "fakepassword@fakepassword",
@@ -125,7 +115,7 @@ describe("ADMIN", () => {
     });
 
     it("should update an admin's password", async () => {
-      const response = await testApi.patch(route).send({
+      const response = await authenticatedTestApi("ADMIN").patch(route).send({
         email: admin2.email,
         //we haven't changed the password yet, just the email so the current password
         //is still that of admin1 👀
@@ -137,7 +127,7 @@ describe("ADMIN", () => {
     });
 
     it("should throw a not found error for invalid password", async () => {
-      const response = await testApi.patch(route).send({
+      const response = await authenticatedTestApi("ADMIN").patch(route).send({
         email: admin2.email,
         newPassword: admin2.password,
         currentPassword: "fakepassword@fakepassword",
@@ -155,7 +145,7 @@ describe("ADMIN", () => {
       includeBaseURL: true,
     });
     it("should fetch dashboard details with all the required values", async () => {
-      const response = await testApi.get(route);
+      const response = await authenticatedTestApi("ADMIN").get(route);
       expect(response.body.isSuccess).toBe(true);
       expect(response.body.bookingsPerMonth).toBeDefined();
       expect(response.body.lastFiveCustomers).toBeDefined();
@@ -172,7 +162,7 @@ describe("ADMIN", () => {
       includeBaseURL: true,
     });
     it.skip("should update the refresh token", async () => {
-      const response = await testApi.patch(route).send({
+      const response = await authenticatedTestApi("ADMIN").patch(route).send({
         email: admin2.email,
       });
       expect(response.body.isSuccess).toBe(true);
@@ -187,11 +177,11 @@ describe("ADMIN", () => {
     });
 
     it("should delete an admin with the provided details", async () => {
-      const response = await testApi
+      const response = await authenticatedTestApi("ADMIN")
         .delete(route)
         .query({ email: admin2.email });
       expect(response.body.isSuccess).toBe(true);
-      expect(response.body.adminDeleted.email).toBe(admin2.email)
+      expect(response.body.adminDeleted.email).toBe(admin2.email);
     });
   });
 });

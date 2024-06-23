@@ -14,7 +14,6 @@ export type User = {
   lastName: string | null;
 };
 function decodeUserToken(token: string) {
-
   const userToken = JSON.parse(
     Buffer.from(token.split(".")[1], "base64").toString()
   );
