@@ -16,10 +16,10 @@ import { Handler } from "express";
 
 const { httpstatus } = ctx;
 
-async function checkIfAdminExists(email: string) {
+export async function checkIfAdminExists(email: string) {
   const existingAdmin = await adminRepository.getAdminDetails(email);
   if (!existingAdmin)
-    throw new NotFoundError(`Admin with email ${email} does not exist.`);
+    throw new NotFoundError(`Admin with provided email does not exist.`);
   return existingAdmin;
 }
 
@@ -32,6 +32,7 @@ const registerAdmin: Handler = async (req, res, next) => {
         `Admin with provided email already exists.`
       );
     if (body.password) {
+      //set the password provided in the body to a hashed one
       body.password = hashUserPassword(body.password);
     }
     const refreshToken = generateRefreshToken(body.email);
@@ -62,10 +63,12 @@ const loginAdmin: Handler = async (req, res, next) => {
       hasCreatedPasswordForAccount: true,
       isVerified: existingAdmin.isVerified,
     });
+
     const refreshToken = await adminRepository.getRefreshToken(email);
+    //set a refresh token
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: ENV_VARS.NODE_ENV === "production" ? true : false,
+      secure: ENV_VARS.NODE_ENV === "production",
     });
     return res.status(httpstatus.OK).send({ token, isSuccess: true });
   } catch (err) {
@@ -77,9 +80,9 @@ const deleteAdmin: Handler = async (req, res, next) => {
   try {
     const { email } = v.emailValidator.parse(req.query);
     const existingAdmin = await checkIfAdminExists(email);
-    const deletedAdmin = await adminRepository.deleteAdmin(existingAdmin.email);
-    if (deletedAdmin) {
-      return res.status(httpstatus.OK).send({ deletedAdmin, isSuccess: true });
+    const adminDeleted = await adminRepository.deleteAdmin(existingAdmin.email);
+    if (adminDeleted) {
+      return res.status(httpstatus.OK).send({ adminDeleted, isSuccess: true });
     }
   } catch (err) {
     next(err);
@@ -110,7 +113,7 @@ const updateAdminEmail: Handler = async (req, res, next) => {
         `User with the provided credentials could not be found.`
       );
     }
-    const updatedAdmin = await adminRepository.changeAdminEmail(body);
+    const updatedAdmin = await adminRepository.updateAdminEmail(body);
     return res.status(httpstatus.OK).send({ updatedAdmin, isSuccess: true });
   } catch (err) {
     next(err);
@@ -133,6 +136,7 @@ const updateAdminRefreshToken: Handler = async (req, res, next) => {
       httpOnly: true,
       secure: ENV_VARS.NODE_ENV === "production" ? true : false,
     });
+    return res.status(httpstatus.OK).json({ isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -152,7 +156,7 @@ const updateAdminPassword: Handler = async (req, res, next) => {
       );
     }
     const newPasswordHash = hashUserPassword(body.newPassword);
-    const updatedAdmin = await adminRepository.changeAdminPassword({
+    const updatedAdmin = await adminRepository.updateAdminPassword({
       email: body.email,
       newPassword: newPasswordHash,
     });
@@ -183,6 +187,7 @@ const getAdminDashboardOverviewDetails: Handler = async (req, res, next) => {
       lastFivePayments,
       noOfAvailableRooms,
       totalProfit,
+      isSuccess: true,
     });
   } catch (err) {
     next(err);

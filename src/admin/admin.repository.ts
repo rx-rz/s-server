@@ -66,21 +66,23 @@ const updateAdminDetails = async (adminRequest: AdminUpdateRequest) => {
     .returning(adminValues);
   return adminUpdated;
 };
-
-const changeAdminEmail = async (adminRequest: ChangeAdminEmailRequest) => {
-  const adminUpdated = await ctx.db
+ 
+const updateAdminEmail = async (adminRequest: ChangeAdminEmailRequest) => {
+  const [adminUpdated] = await ctx.db
     .update(adminTable)
     .set({ email: adminRequest.newEmail })
+    .where(eq(adminTable.email, adminRequest.email))
     .returning(adminValues);
   return adminUpdated;
 };
 
-const changeAdminPassword = async (
+const updateAdminPassword = async (
   adminRequest: ChangeAdminPasswordRequest
 ) => {
-  const adminUpdated = await ctx.db
+  const [adminUpdated] = await ctx.db
     .update(adminTable)
     .set({ password: adminRequest.newPassword })
+    .where(eq(adminTable.email, adminRequest.email))
     .returning(adminValues);
   return adminUpdated;
 };
@@ -94,8 +96,8 @@ const getAdminPassword = async (email: string) => {
 };
 
 export const adminRepository = {
-  changeAdminEmail,
-  changeAdminPassword,
+  updateAdminEmail,
+  updateAdminPassword,
   getAdminPassword,
   getAdminDetails,
   register,
