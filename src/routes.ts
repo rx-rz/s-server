@@ -60,11 +60,6 @@ export const roomTypeRoutes = {
   rooms_for_room_type: "/getRoomsForRoomType",
 } as const;
 
-export const notificationRoutes = {
-  list_notifications: "/listNotifications",
-  delete_notification: "/deleteNotification",
-} as const;
-
 type BaseURLFunctionProps = {
   route:
     | (typeof customerRoutes)[keyof typeof customerRoutes]
@@ -73,8 +68,8 @@ type BaseURLFunctionProps = {
     | (typeof otpRoutes)[keyof typeof otpRoutes]
     | (typeof roomRoutes)[keyof typeof roomRoutes]
     | (typeof bookingRoutes)[keyof typeof bookingRoutes]
-    | (typeof roomTypeRoutes)[keyof typeof roomTypeRoutes]
-    | (typeof notificationRoutes)[keyof typeof notificationRoutes];
+    | (typeof roomTypeRoutes)[keyof typeof roomTypeRoutes];
+
   prefix:
     | "admin"
     | "customers"
@@ -83,8 +78,8 @@ type BaseURLFunctionProps = {
     | "roomtypes"
     | "rooms"
     | "bookings"
-    | "payments"
-    | "notifications";
+    | "payments";
+
   includeBaseURL?: boolean;
 };
 
@@ -124,8 +119,6 @@ export const customerOnlyRoutes = [
 export const adminOnlyRoutes = [
   createRoute({ prefix: "rooms", route: "/createRooms" }),
   createRoute({ prefix: "rooms", route: "/updateRoom" }),
-  createRoute({ prefix: "notifications", route: "/listNotifications" }),
-  createRoute({ prefix: "notifications", route: "/deleteNotification" }),
   createRoute({ prefix: "admin", route: "/updateRefreshToken" }),
   createRoute({ prefix: "rooms", route: "/listRooms" }),
   createRoute({ prefix: "rooms", route: "/deleteRoom" }),

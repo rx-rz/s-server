@@ -12,7 +12,6 @@ import { createHmac } from "node:crypto";
 import { ENV_VARS } from "../../env";
 import { paymentRepository } from "../payment/payment.repository";
 import { roomRepository } from "../room/room.repository";
-import { notificationRepository } from "../notification/notification.repository";
 
 export async function checkIfBookingExists(id: string) {
   const booking = await bookingRepository.getBookingDetails(id);
@@ -90,10 +89,6 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
             status: "confirmed",
           }),
         ]);
-        await notificationRepository.createNotification({
-          type: "booking_made",
-          associatedID: paymentMade.id,
-        });
       } else {
         const [bookingCancelled, failedPayment, availableRoom] =
           await Promise.all([
@@ -110,16 +105,6 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
               status: "available",
             }),
           ]);
-        await Promise.all([
-          notificationRepository.createNotification({
-            associatedID: failedPayment.id,
-            type: "booking_cancelled",
-          }),
-          notificationRepository.createNotification({
-            associatedID: availableRoom.roomNo.toString(),
-            type: "room_available",
-          }),
-        ]);
       }
     }
   } catch (err) {
@@ -132,10 +117,6 @@ const updateBooking: Handler = async (req, res, next) => {
     const body = v.updateBookingValidator.parse(req.body);
     await checkIfBookingExists(body.id);
     const bookingUpdated = await bookingRepository.updateBooking(body);
-    await notificationRepository.createNotification({
-      type: "booking_updated",
-      associatedID: bookingUpdated.id,
-    });
     return res
       .status(httpstatus.ACCEPTED)
       .json({ bookingUpdated, isSuccess: true });
@@ -155,10 +136,7 @@ const deleteBooking: Handler = async (req, res, next) => {
         roomNo: existingBooking.roomNo,
       }),
     ]);
-    await notificationRepository.createNotification({
-      associatedID: roomUpdated.roomNo.toString(),
-      type: "room_available",
-    });
+
     return res.status(httpstatus.OK).json({ deletedBooking, isSuccess: true });
   } catch (err) {
     next(err);
