@@ -31,7 +31,16 @@ const deleteNotification = async (id: string) => {
   return deletedNotification;
 };
 
+const listNotifications = async ({ limit }: { limit: number }) => {
+  const notifications = await ctx.db
+    .select()
+    .from(notificationTable)
+    .limit(limit || 10);
+  return notifications;
+};
+
 export const notificationRepository = {
   createNotification,
   deleteNotification,
+  listNotifications
 };

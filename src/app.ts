@@ -25,6 +25,7 @@ import {
   adminAccessOnly,
   customerAccessOnly,
 } from "./middleware/determine-user-role";
+import { notificationRouter } from "./notification/notification.routes";
 
 // Load environment variables from .env file
 config({ path: ".env" });
@@ -59,6 +60,7 @@ api.use("/admin", adminRouter);
 api.use("/roomtypes", roomTypeRouter);
 api.use("/rooms", roomRouter);
 api.use("/bookings", bookingRouter);
+api.use("/notifications", notificationRouter);
 api.use("/payments", paymentRouter);
 
 // Error handling middleware
