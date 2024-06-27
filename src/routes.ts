@@ -9,6 +9,7 @@ export const adminRoutes = {
   update_admin_password: "/updateAdminPassword",
   get_dashboard_details: "/getDashboardDetails",
   update_admin_refresh_token: "/updateRefreshToken",
+  list_admins: "/listAdmins",
 } as const;
 
 export const customerRoutes = {
@@ -120,6 +121,7 @@ export const adminOnlyRoutes = [
   createRoute({ prefix: "rooms", route: "/createRooms" }),
   createRoute({ prefix: "rooms", route: "/updateRoom" }),
   createRoute({ prefix: "admin", route: "/updateRefreshToken" }),
+  createRoute({ prefix: "admin", route: "/listAdmins" }),
   createRoute({ prefix: "rooms", route: "/listRooms" }),
   createRoute({ prefix: "rooms", route: "/deleteRoom" }),
   createRoute({ prefix: "admin", route: "/deleteAdmin" }),

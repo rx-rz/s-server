@@ -1,4 +1,15 @@
-import { SQLWrapper, and, asc, desc, eq, ilike } from "drizzle-orm";
+import {
+  SQLWrapper,
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  ilike,
+  is,
+  like,
+  sql,
+} from "drizzle-orm";
 import { ctx } from "../ctx";
 import {
   CustomerDeleteRequest,
@@ -68,17 +79,36 @@ const getCustomerWithBookingAndPaymentDetails = async (email: string) => {
   return customerDetails;
 };
 
+// const customerListSearch = (search: Search): SQLWrapper[] => {
+//   let filterQueries = [];
+//   for (let i of search) {
+//     switch (i.key) {
+//       case "isVerified":
+//         if (typeof i.value === "boolean")
+//           filterQueries.push(eq(customerTable.isVerified, i.value));
+//       default:
+//         filterQueries.push(
+//           ilike(customerTable[i.key], `%${i.value.toString()}%`)
+//         );
+//     }
+//   }
+//   return filterQueries;
+// };
+
 const customerListSearch = (search: Search): SQLWrapper[] => {
   let filterQueries = [];
   for (let i of search) {
     switch (i.key) {
       case "isVerified":
-        if (typeof i.value === "boolean")
-          filterQueries.push(eq(customerTable.isVerified, i.value));
-      default:
+        filterQueries.push(eq(customerTable.isVerified, i.value === true));
+      case "firstName":
+      case "lastName":
+      case "email":
         filterQueries.push(
           ilike(customerTable[i.key], `%${i.value.toString()}%`)
         );
+      // case "createdAt":
+      //   filterQueries.push(eq(customerTable.createdAt, i.value.toString()));
     }
   }
   return filterQueries;

@@ -2,43 +2,9 @@ import { describe, expect, it } from "vitest";
 import { createRoute } from "../routes";
 import { authenticatedTestApi, testApi } from "./setup";
 import { getNoOfDays } from "../booking/booking.helpers";
+import { getABooking, getAvailableRoom, getCustomer } from "./test-helpers";
 
-async function getAvailableRoom() {
-  const response = await testApi.get(
-    createRoute({
-      prefix: "rooms",
-      route: "/getAvailableRooms",
-      includeBaseURL: true,
-    })
-  );
 
-  return response.body.availableRooms[0];
-}
-
-async function getCustomer() {
-  const response = await authenticatedTestApi("ADMIN")
-    .get(
-      createRoute({
-        prefix: "customers",
-        route: "/listCustomers",
-        includeBaseURL: true,
-      })
-    )
-    .query({ limit: 1 });
-
-  return response.body.customers[0];
-}
-
-async function getABooking() {
-  const response = await authenticatedTestApi("ADMIN").get(
-    createRoute({
-      prefix: "bookings",
-      route: "/listBookings",
-      includeBaseURL: true,
-    })
-  );
-  return response.body.bookings[0];
-}
 
 const date = new Date();
 

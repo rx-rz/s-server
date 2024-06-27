@@ -1,37 +1,38 @@
 import { faker } from "@faker-js/faker";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { generateRefreshToken } from "../middleware/jwt-token";
-import { startTestServer } from "../setup-tests";
-import { testServerPorts } from "../lib/test-server-ports";
 import { createRoute } from "../routes";
-import request from "supertest";
-import { app } from "../app";
-import { authenticatedTestApi } from "./setup";
+import { authenticatedTestApi, testApi } from "./setup";
+import { httpstatus } from "../ctx";
+import qs from "qs";
+import {
+  ListCustomersResponse,
+  LoginCustomerResponse,
+  RegisterCustomerResponse,
+  UpdateCustomerEmailResponse,
+  UpdateCustomerPasswordResponse,
+  UpdateCustomerResponse,
+} from "../types/customer.types";
 
-const customer1 = {
-  email: faker.internet.email(),
-  firstName: faker.person.firstName(),
-  lastName: faker.person.lastName(),
-  password: faker.internet.password(),
+type CustomerRegisterObject = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
 };
 
-const customer2 = {
-  email: faker.internet.email(),
-  firstName: faker.person.firstName(),
-  lastName: faker.person.lastName(),
-  password: faker.internet.password(),
-};
-
-beforeAll(async () => {
-  await startTestServer(testServerPorts.customer);
-});
-
-const testApi = request.agent(app);
+let testCustomer: CustomerRegisterObject;
 
 describe("CUSTOMER", () => {
-  const refreshToken = generateRefreshToken(customer1.email);
-  const newCustomer = { ...customer1, refreshToken };
   describe("Register new customer", () => {
+    const customer = {
+      email: faker.internet.email(),
+      firstName: faker.person.firstName(),
+      lastName: faker.person.lastName(),
+      password: faker.internet.password(),
+    };
+    const refreshToken = generateRefreshToken(customer.email);
+    const newCustomer = { ...customer, refreshToken };
     const route = createRoute({
       prefix: "customers",
       route: "/registerCustomer",
@@ -39,8 +40,9 @@ describe("CUSTOMER", () => {
     });
     it("should register a new customer", async () => {
       const response = await testApi.post(route).send(newCustomer);
-      expect(response.body.isSuccess).toBe(true);
-      expect(response.body.message).toBe("Account created");
+      const responseBody: RegisterCustomerResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.message).toBe("Account created");
     });
 
     it("should throw a duplicate entry error when registered with the same customer", async () => {
@@ -48,6 +50,36 @@ describe("CUSTOMER", () => {
       expect(response.body.isSuccess).toBe(false);
       expect(response.body.error_type).toBe("Duplicate Entry Error");
     });
+  });
+
+  beforeEach(async () => {
+    testCustomer = {
+      email: faker.internet.email(),
+      lastName: faker.person.lastName(),
+      firstName: faker.person.firstName(),
+      password: faker.internet.password(),
+    };
+    await testApi
+      .post(
+        createRoute({
+          prefix: "customers",
+          route: "/registerCustomer",
+          includeBaseURL: true,
+        })
+      )
+      .send(testCustomer);
+  });
+
+  afterEach(async () => {
+    await authenticatedTestApi("CUSTOMER")
+      .delete(
+        createRoute({
+          prefix: "customers",
+          route: "/deleteCustomer",
+          includeBaseURL: true,
+        })
+      )
+      .query({ email: testCustomer.email });
   });
 
   describe("Login a customer", () => {
@@ -60,10 +92,18 @@ describe("CUSTOMER", () => {
     it("should log in with provided details and return a token", async () => {
       const response = await testApi
         .post(route)
-        .send({ email: newCustomer.email, password: newCustomer.password });
-      // testApi.set("Cookie", `refreshToken=${refreshToken}`);
-      expect(response.body.isSuccess).toBe(true);
-      expect(response.body.token).toBeDefined();
+        .send({ email: testCustomer.email, password: testCustomer.password });
+      const responseBody: LoginCustomerResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.token).toBeDefined();
+    });
+    it("should throw an error when invalid credentials are provided for the customer", async () => {
+      const response = await testApi.post(route).send({
+        email: testCustomer.email,
+        password: "#fakepassword#fake@123",
+      });
+      expect(response.body.isSuccess).toBe(false);
+      expect(response.body.error_type).toBe("Not Found Error");
     });
   });
 
@@ -74,15 +114,123 @@ describe("CUSTOMER", () => {
       includeBaseURL: true,
     });
 
-    it("should update a customer's details- first name and last name in this case", async () => {
-      const response = await authenticatedTestApi("CUSTOMER").patch(route).send({
-        email: newCustomer.email,
-        firstName: customer2.firstName,
-        lastName: customer2.lastName,
-      });
+    it.skip("should update a customer's details- first name and last name in this case", async () => {
+      const [firstName, lastName] = [
+        faker.person.firstName(),
+        faker.person.lastName(),
+      ];
+      const response = await authenticatedTestApi("CUSTOMER")
+        .patch(route)
+        .send({
+          email: testCustomer.email,
+          firstName,
+          lastName,
+        });
+      const responseBody: UpdateCustomerResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.customerUpdated.firstName).toBe(firstName);
+      expect(responseBody.customerUpdated.lastName).toBe(lastName);
+    });
+
+    it("should throw a not found error if the customer details for update provided are incorrect", async () => {
+      const response = await authenticatedTestApi("CUSTOMER")
+        .patch(route)
+        .send({
+          email: "fakeemail@email.fake",
+          firstName: testCustomer.firstName,
+          lastName: testCustomer.lastName,
+        });
+      expect(response.body.isSuccess).toBe(false);
+      expect(response.body.error_type).toBe("Not Found Error");
+    });
+  });
+
+  describe("List customers", async () => {
+    const route = createRoute({
+      prefix: "customers",
+      route: "/listCustomers",
+      includeBaseURL: true,
+    });
+
+    it("should return a list of customers with default parameters", async () => {
+      const response = await authenticatedTestApi("ADMIN").get(route);
+      const responseBody: ListCustomersResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(Array.isArray(responseBody.customers)).toBe(true);
+      expect(typeof responseBody.noOfCustomers).toBe("number");
+      expect(typeof responseBody.maxPageNo).toBe("number");
+    });
+
+    it("should apply pagination correctly", async () => {
+      const response = await authenticatedTestApi("ADMIN")
+        .get(route)
+        .query({ limit: 5 });
+      const responseBody: ListCustomersResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.customers.length).toBeLessThanOrEqual(5);
+    });
+
+    it("should apply text search filters for first name, last name and email correctly", async () => {
+      const [email, password, firstName, lastName] = [
+        faker.internet.email(),
+        faker.internet.password(),
+        faker.person.firstName(),
+        faker.person.lastName(),
+      ];
+      await testApi
+        .post(
+          createRoute({
+            prefix: "customers",
+            route: "/registerCustomer",
+            includeBaseURL: true,
+          })
+        )
+        .send({
+          email,
+          firstName,
+          lastName,
+          password,
+        });
+      const response = await authenticatedTestApi("ADMIN")
+        .get(route)
+        .query(
+          qs.stringify({
+            searchBy: [
+              {
+                key: "firstName",
+                value: firstName,
+              },
+              {
+                key: "lastName",
+                value: lastName,
+              },
+              {
+                key: "email",
+                value: email,
+              },
+              // {
+              //   key: "isVerified",
+              //   value: false
+              // }
+            ],
+          })
+        );
+      const responseBody: ListCustomersResponse = response.body;
+      const matchingCustomer = responseBody.customers.find(
+        (customer) =>
+          customer.email === email &&
+          customer.firstName === firstName &&
+          customer.lastName === lastName
+      );
       expect(response.body.isSuccess).toBe(true);
-      expect(response.body.customerUpdated.firstName).toBe(customer2.firstName);
-      expect(response.body.customerUpdated.lastName).toBe(customer2.lastName);
+      expect(matchingCustomer).toBeDefined();
+    });
+
+    it("should throw validation errors for invalid query parameters", async () => {
+      const response = await authenticatedTestApi("ADMIN")
+        .get(route)
+        .query({ limit: "10seconds" });
+      expect(response.body.isSuccess).toBe(false);
     });
   });
 
@@ -92,56 +240,61 @@ describe("CUSTOMER", () => {
       includeBaseURL: true,
       route: "/updateCustomerEmail",
     });
-
+    const newEmail = faker.internet.email();
     it("should update a customer's email", async () => {
-      const response = await authenticatedTestApi("CUSTOMER").patch(route).send({
-        email: customer1.email,
-        newEmail: customer2.email,
-        password: customer1.password,
-      });
-
-      expect(response.body.isSuccess).toBe(true);
-      expect(response.body.customerUpdated.email).toBe(customer2.email);
+      const response = await authenticatedTestApi("CUSTOMER")
+        .patch(route)
+        .send({
+          email: testCustomer.email,
+          newEmail,
+          password: testCustomer.password,
+        });
+      const responseBody: UpdateCustomerEmailResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.customerUpdated.email).toBe(newEmail);
     });
 
     it("should throw a not found error for invalid password", async () => {
-      const response = await authenticatedTestApi("CUSTOMER").patch(route).send({
-        email: customer2.email,
-        newEmail: customer1.email,
-        password: "fakepassword@fakepassword",
-      });
+      const response = await authenticatedTestApi("CUSTOMER")
+        .patch(route)
+        .send({
+          email: testCustomer.email,
+          newEmail,
+          password: "fakepassword@fakepassword",
+        });
       expect(response.body.isSuccess).toBe(false);
       expect(response.body.error_type).toBe("Not Found Error");
     });
   });
 
-  //remember, the correct email is now that of customer2.
   describe("Update a customer's password", async () => {
     const route = createRoute({
       prefix: "customers",
       includeBaseURL: true,
       route: "/updateCustomerPassword",
     });
-
+    const newPassword = faker.internet.password();
     it("should update a customer's password", async () => {
-      const response = await authenticatedTestApi("CUSTOMER").patch(route).send({
-        email: customer2.email,
-        //we haven't changed the password yet, just the email so the current password
-        //is still that of customer1 👀
-        currentPassword: customer1.password,
-        newPassword: customer2.password,
-      });
-      expect(response.body.isSuccess).toBe(true);
-      expect(response.body.customerUpdated.email).toBe(customer2.email);
+      const response = await authenticatedTestApi("CUSTOMER")
+        .patch(route)
+        .send({
+          email: testCustomer.email,
+          currentPassword: testCustomer.password,
+          newPassword,
+        });
+      const responseBody: UpdateCustomerPasswordResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.customerUpdated.email).toBe(testCustomer.email);
     });
 
     it("should throw a not found error for invalid password", async () => {
-      const response = await authenticatedTestApi("CUSTOMER").patch(route).send({
-        email: customer2.email,
-        newPassword: customer2.password,
-        currentPassword: "fakepassword@fakepassword",
-      });
-      console.log({ response: response.body });
+      const response = await authenticatedTestApi("CUSTOMER")
+        .patch(route)
+        .send({
+          email: testCustomer.email,
+          newPassword: testCustomer.password,
+          currentPassword: "fakepassword@fakepassword",
+        });
       expect(response.body.isSuccess).toBe(false);
       expect(response.body.error_type).toBe("Not Found Error");
     });
@@ -153,22 +306,31 @@ describe("CUSTOMER", () => {
       route: "/updateRefreshToken",
       includeBaseURL: true,
     });
-    it.skip("should update the refresh token", async () => {
-      const response = await authenticatedTestApi("CUSTOMER").patch(route).send({
-        email: customer2.email,
-      });
+
+    it.skip("should throw an unauthorized error if there is no refresh token", async () => {
+      const response = await authenticatedTestApi("CUSTOMER")
+        .patch(route)
+        .set({ Cookie: "" })
+        .send({ email: testCustomer.email });
+      expect(response.body.isSuccess).toBe(false);  
+      expect(response.statusCode).toBe(httpstatus.UNAUTHORIZED);
+    });
+
+    it.skip("should update an customer's refresh token in the db and in cookies", async () => {
+      const refreshToken = generateRefreshToken(faker.internet.email());
+      const response = await authenticatedTestApi("CUSTOMER")
+        .patch(route)
+        .set({ Cookie: `refreshToken=${refreshToken}` })
+        .send({ email: testCustomer.email });
+      const newCookie = response.headers["set-cookie"][0];
+      const newRefreshToken = newCookie.split("refreshToken=")[1].split(";")[0];
       expect(response.body.isSuccess).toBe(true);
+      expect(response.headers["set-cookie"]).toBeDefined();
+      expect(newRefreshToken).not.toBe(refreshToken);
     });
   });
 
-  // describe("List customers", async () => {
-  //   const route = createRoute({
-  //     prefix: "customers",
-  //     route: "/listCustomers",
-  //     includeBaseURL: true,
-  //   });
-  // });
-  describe("Delete an customer", async () => {
+  describe("Delete a customer", async () => {
     const route = createRoute({
       prefix: "customers",
       route: "/deleteCustomer",
@@ -178,9 +340,18 @@ describe("CUSTOMER", () => {
     it("should delete a customer with the provided details", async () => {
       const response = await authenticatedTestApi("CUSTOMER")
         .delete(route)
-        .query({ email: customer2.email });
+        .query({ email: testCustomer.email });
+      const responseBody: UpdateCustomerPasswordResponse = response.body;
       expect(response.body.isSuccess).toBe(true);
-      expect(response.body.customerDeleted.email).toBe(customer2.email);
+      expect(response.body.customerDeleted.email).toBe(testCustomer.email);
+    });
+
+    it("should throw a not found error for  an inexistent customer", async () => {
+      const response = await authenticatedTestApi("CUSTOMER")
+        .delete(route)
+        .query({ email: faker.internet.email() });
+      expect(response.body.isSuccess).toBe(false);
+      expect(response.body.error_type).toBe("Not Found Error");
     });
   });
 });

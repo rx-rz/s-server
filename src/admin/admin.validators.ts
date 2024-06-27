@@ -76,6 +76,7 @@ const updateValidator = z.object({
         "Email input is not a valid email. Please correct and try again.",
     })
     .max(255, { message: "Email cannot be more than 255 characters." }),
+  isVerified: z.boolean().optional()
 });
 
 const emailValidator = z.object({

@@ -19,13 +19,26 @@ function generateJWTToken(role: "ADMIN" | "CUSTOMER") {
   return sign(payload, secret, { expiresIn: "10m" });
 }
 
+function generateRefreshToken(role: "ADMIN" | "CUSTOMER") {
+  const secret = ENV_VARS.JWT_REFRESH_SECRET || "refresh-secret";
+  const payload = { role };
+  return sign(payload, secret, { expiresIn: "7d" });
+}
+
 const tokens = {
-  ADMIN: generateJWTToken("ADMIN"),
-  CUSTOMER: generateJWTToken("CUSTOMER"),
+  ADMIN: {
+    accessToken: generateJWTToken("ADMIN"),
+    refreshToken: generateRefreshToken("ADMIN"),
+  },
+  CUSTOMER: {
+    accessToken: generateJWTToken("CUSTOMER"),
+    refreshToken: generateRefreshToken("CUSTOMER"),
+  },
 };
 
 export const testApi = request.agent(app);
 
 export const authenticatedTestApi = (role: "ADMIN" | "CUSTOMER") => {
-  return testApi.set("Authorization", `Bearer ${tokens[role]}`)
-}
+  testApi.set("Authorization", `Bearer ${tokens[role].accessToken}`);
+  return testApi;
+};

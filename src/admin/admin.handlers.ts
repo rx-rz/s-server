@@ -89,12 +89,21 @@ const deleteAdmin: Handler = async (req, res, next) => {
   }
 };
 
+const listAdmins: Handler = async (req, res, next) => {
+  try {
+    const admins = await adminRepository.listAdmins();
+    return res.status(httpstatus.OK).json({ admins, isSuccess: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const updateAdmin: Handler = async (req, res, next) => {
   try {
     const body = v.updateValidator.parse(req.body);
     await checkIfAdminExists(body.email);
-    const updatedAdmin = await adminRepository.updateAdminDetails(body);
-    return res.status(httpstatus.OK).send({ updatedAdmin, isSuccess: true });
+    const adminUpdated = await adminRepository.updateAdminDetails(body);
+    return res.status(httpstatus.OK).send({ adminUpdated, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -113,15 +122,15 @@ const updateAdminEmail: Handler = async (req, res, next) => {
         `User with the provided credentials could not be found.`
       );
     }
-    const updatedAdmin = await adminRepository.updateAdminEmail(body);
-    return res.status(httpstatus.OK).send({ updatedAdmin, isSuccess: true });
+    const adminUpdated = await adminRepository.updateAdminEmail(body);
+    return res.status(httpstatus.OK).send({ adminUpdated, isSuccess: true });
   } catch (err) {
     next(err);
   }
 };
 
 const updateAdminRefreshToken: Handler = async (req, res, next) => {
-  const { refreshToken } = req.cookies;
+  const refreshToken = req.headers["cookie"];
   const { email } = v.emailValidator.parse(req.body);
   try {
     if (!refreshToken) {
@@ -156,11 +165,11 @@ const updateAdminPassword: Handler = async (req, res, next) => {
       );
     }
     const newPasswordHash = hashUserPassword(body.newPassword);
-    const updatedAdmin = await adminRepository.updateAdminPassword({
+    const adminUpdated = await adminRepository.updateAdminPassword({
       email: body.email,
       newPassword: newPasswordHash,
     });
-    return res.status(httpstatus.OK).send({ updatedAdmin, isSuccess: true });
+    return res.status(httpstatus.OK).send({ adminUpdated, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -198,6 +207,7 @@ export const adminHandlers = {
   registerAdmin,
   deleteAdmin,
   updateAdmin,
+  listAdmins,
   updateAdminEmail,
   updateAdminPassword,
   getAdminDashboardOverviewDetails,

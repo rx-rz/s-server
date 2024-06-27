@@ -111,7 +111,7 @@ const updateCustomer: Handler = async (req, res, next) => {
 };
 
 const updateCustomerRefreshToken: Handler = async (req, res, next) => {
-  const { refreshToken } = req.cookies;
+  const refreshToken = req.headers["cookie"];
   const { email } = v.emailValidator.parse(req.body);
   try {
     if (!refreshToken) {
@@ -133,6 +133,7 @@ const updateCustomerRefreshToken: Handler = async (req, res, next) => {
     next(err);
   }
 };
+
 
 const updateCustomerEmail: Handler = async (req, res, next) => {
   try {

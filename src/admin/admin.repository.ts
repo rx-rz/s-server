@@ -33,6 +33,13 @@ const getAdminDetails = async (email: string) => {
   return adminDetails;
 };
 
+const listAdmins = async () => {
+  /* limited the amount of admins to 1 because this endpoint isn't needed on the frontend.
+     i just require it for testing purposes to fetch an admin in the DB. */
+  const admins = await ctx.db.select(adminValues).from(adminTable).limit(1);
+  return admins;
+};
+
 const getRefreshToken = async (email: string) => {
   const [admin] = await ctx.db
     .select({ refreshToken: adminTable.refreshToken })
@@ -59,14 +66,15 @@ const deleteAdmin = async (email: string) => {
 };
 
 const updateAdminDetails = async (adminRequest: AdminUpdateRequest) => {
-  const {email, ...request} = adminRequest;
+  const { email, ...request } = adminRequest;
   const [adminUpdated] = await ctx.db
     .update(adminTable)
-    .set(request).where(eq(adminTable.email, email))
+    .set(request)
+    .where(eq(adminTable.email, email))
     .returning(adminValues);
   return adminUpdated;
 };
- 
+
 const updateAdminEmail = async (adminRequest: ChangeAdminEmailRequest) => {
   const [adminUpdated] = await ctx.db
     .update(adminTable)
@@ -102,6 +110,7 @@ export const adminRepository = {
   getAdminDetails,
   register,
   deleteAdmin,
+  listAdmins,
   updateAdminDetails,
   updateRefreshToken,
   getRefreshToken,

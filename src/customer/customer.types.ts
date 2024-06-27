@@ -1,5 +1,3 @@
-import { customerValues } from "./customer.repository";
-
 export type CustomerRegisterRequest = {
   firstName: string;
   lastName: string;
