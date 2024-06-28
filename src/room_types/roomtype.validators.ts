@@ -24,8 +24,26 @@ const updateRoomTypeValidator = z.object({
   roomImageURLS: z.array(z.string()).optional(),
 });
 
+const roomTypeImageUploadValidator = z.object({
+  name: z.string({ required_error: "Room Type value should be provided." }),
+  files: z.array(
+    z.object({
+      fieldname: z.string(),
+      originalName: z.string(),
+      encoding: z.string(),
+      mimetype: z.string(),
+      size: z.number(),
+      destination: z.string().optional(),
+      filename: z.string().optional(),
+      path: z.string().optional(),
+      buffer: z.instanceof(Buffer).optional(),
+    })
+  ),
+});
+
 export const v = {
   createRoomTypeValidator,
   roomTypeNameValidator,
   updateRoomTypeValidator,
+  roomTypeImageUploadValidator
 };

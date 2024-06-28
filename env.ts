@@ -2,6 +2,7 @@ import z from "zod";
 import { config } from "dotenv";
 
 config({ path: process.env.NODE_ENV === "test" ? ".env.test" : ".env" });
+
 const ENV = z.object({
   HOST: z.coerce.string().default(process.env.HOST || ""),
   PORT: z.coerce.number().default(Number(process.env.PORT) || 8081),
@@ -22,6 +23,10 @@ const ENV = z.object({
     .literal(process.env.PRODUCTION_CONNECTION_STRING)
     .default(""),
   JWT_REFRESH_SECRET: z.literal(process.env.JWT_REFRESH_SECRET).default(""),
+  STORAGE_ENDPOINT: z.literal(process.env.STORAGE_ENDPOINT).default(""),
+  STORAGE_ACCESS_KEY_ID: z.literal(process.env.STORAGE_ACCESS_KEY_ID).default(""),
+  STORAGE_SECRET_ACCESS_KEY_ID: z.literal(process.env.STORAGE_SECRET_ACCESS_KEY_ID).default(""),
+  STORAGE_BUCKET: z.literal(process.env.STORAGE_BUCKET).default("")
 });
 
 export const ENV_VARS = ENV.parse(process.env);

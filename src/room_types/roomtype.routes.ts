@@ -28,3 +28,7 @@ roomTypeRouter.get(
   roomTypeRoutes.rooms_for_room_type,
   roomTypeHandlers.getRoomsForRoomType
 );
+roomTypeRouter.patch(
+  roomTypeRoutes.upload_room_type_images,
+  roomTypeHandlers.uploadImagesForRoomType
+);

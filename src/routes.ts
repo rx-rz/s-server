@@ -59,6 +59,7 @@ export const roomTypeRoutes = {
   update_room_type: "/updateRoomType",
   room_type_details: "/roomTypeDetails",
   rooms_for_room_type: "/getRoomsForRoomType",
+  upload_room_type_images: "/uploadImagesForRoomType"
 } as const;
 
 type BaseURLFunctionProps = {

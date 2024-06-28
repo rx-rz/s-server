@@ -1,39 +1,64 @@
-// import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-// import { ctx } from "../ctx";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { ENV_VARS } from "../../env";
+import { ctx } from "../ctx";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-// const base64ToBlob = async (base64: string) => {
-//   const binary = atob(base64.split(",")[1]);
-//   const imgBlob = await fetch(binary).then((res) => {
-//     let blob;
-//     blob = res.blob();
-//     return blob;
-//   });
-//   console.log({imgBlob})
-//   return imgBlob;
-// };
+type Files = {
+  fieldname: string;
+  originalName: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  buffer?: Buffer | undefined;
+  path?: string | undefined;
+  destination?: string | undefined;
+  filename?: string | undefined;
+}[];
 
-// const uploadBlobAndGetImageURL = async (blob: Blob, blobName: string) => {
-//   const storageRef = ref(ctx.storage, `/rooms/${blobName}`);
-//   try {
-//     const snapshot = await uploadBytes(storageRef, blob);
-//     const downloadURL = await getDownloadURL(snapshot.ref);
-//     return downloadURL;
-//   } catch (err) {
-//     throw err;
-//   }
-// };
+export const getFileUploadPromisesAndFileLinks = (
+  files: Files,
+  name: string
+) => {
+  let filePromises = [];
+  let fileLinks: string[] = [];
+  let fileNames: string[] = [];
+  for (let i = 0; i < files.length; i++) {
+    const filePromise = new Promise(async (resolve, reject) => {
+      try {
+        const fileName = `${name}-${i}-${Date.now()}`;
+        fileNames.push(fileName);
+        const params = {
+          Bucket: ENV_VARS.STORAGE_BUCKET,
+          Key: fileName,
+          Body: files[i].buffer,
+          ContentType: files[i].mimetype,
+        };
+        const command = new PutObjectCommand(params);
+        await ctx.storage.send(command);
 
-// export const getImageURLSForBase64 = async (
-//   base64Strings: string[],
-//   fileNames: string[]
-// ) => {  
-//   const promises = [];
-//   for (let i = 0; i < base64Strings.length; i++) {
-//     const blob = await base64ToBlob(base64Strings[i]);
-//     const fileName = fileNames[i];
-//     const promise = uploadBlobAndGetImageURL(blob, fileName);
-//     promises.push(promise);
-//   }
-//   const imageURLs = await Promise.all(promises);
-//   return imageURLs;
-// };
+        const url = await getSignedUrl(
+          ctx.storage,
+          new PutObjectCommand({
+            Bucket: ENV_VARS.STORAGE_BUCKET,
+            Key: fileName,
+          })
+        );
+        fileLinks.push(url);
+        resolve(files[i]);
+      } catch (err) {
+        reject(err);
+      }
+    });
+    filePromises.push(filePromise);
+  }
+  return { filePromises, fileLinks, fileNames };
+};
+
+export const uploadFilesAndGetLinks = async (files: Files, name: string) => {
+  const { fileLinks, filePromises, fileNames } = getFileUploadPromisesAndFileLinks(
+    files,
+    name
+  );
+  await Promise.all(filePromises);
+  return { fileLinks, fileNames };
+};

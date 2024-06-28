@@ -1,13 +1,20 @@
 import { Handler } from "express";
 import { v } from "./roomtype.validators";
 import { roomTypeRepository } from "./roomtype.repository";
-import { httpstatus } from "../ctx";
+import { ctx, httpstatus } from "../ctx";
 import { DuplicateEntryError, NotFoundError } from "../errors";
+import multer, { memoryStorage } from "multer";
+import { ENV_VARS } from "../../env";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import {
+  getFileUploadPromisesAndFileLinks,
+  uploadFilesAndGetLinks,
+} from "./roomtype.helpers";
 
 async function checkIfRoomTypeExists(name: string) {
   const roomTypeExists = await roomTypeRepository.getRoomTypeDetails(name);
-  if (!roomTypeExists)
-    throw new NotFoundError(`Room type does not exist.`);
+  if (!roomTypeExists) throw new NotFoundError(`Room type does not exist.`);
 }
 
 const createRoomType: Handler = async (req, res, next) => {
@@ -17,11 +24,28 @@ const createRoomType: Handler = async (req, res, next) => {
       body.name
     );
     if (roomTypeExists)
-      throw new DuplicateEntryError(
-        `Room type already exists.`
-      );
+      throw new DuplicateEntryError(`Room type already exists.`);
     const roomType = await roomTypeRepository.createRoomType(body);
     return res.status(httpstatus.CREATED).send({ roomType, isSuccess: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const uploadImagesForRoomType: Handler = async (req, res, next) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      throw new NotFoundError(`Room type images are not provided.`);
+    }
+    const { name, files } = v.roomTypeImageUploadValidator.parse(req.body);
+    const {fileLinks, fileNames} = await uploadFilesAndGetLinks(files, name);
+    if(fileLinks){
+      await roomTypeRepository.updateRoomType({
+        currentName:name,
+        imageFileNames: fileNames,
+        roomImageURLS: fileLinks
+      })
+    }
   } catch (err) {
     next(err);
   }
@@ -66,7 +90,9 @@ const getRoomsForRoomType: Handler = async (req, res, next) => {
   try {
     const { name } = v.roomTypeNameValidator.parse(req.query);
     await checkIfRoomTypeExists(name);
-    const getRoomsForRoomType = await roomTypeRepository.getRoomsForRoomType(name);
+    const getRoomsForRoomType = await roomTypeRepository.getRoomsForRoomType(
+      name
+    );
     return res
       .status(httpstatus.OK)
       .json({ getRoomsForRoomType, isSuccess: true });
@@ -92,5 +118,6 @@ export const roomTypeHandlers = {
   updateRoomType,
   getRoomTypes,
   getRoomTypeDetails,
+  uploadImagesForRoomType,
   getRoomsForRoomType,
 };
