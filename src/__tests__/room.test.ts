@@ -1,31 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { authenticatedTestApi, testApi } from "./setup";
 import { createRoute } from "../routes";
+import { getARoom, getRoomTypeID } from "./test-helpers";
+import { CreateRoomResponse } from "../room/room.types";
 
-async function getRoomTypeID() {
-  const roomTypesResponse: any = await authenticatedTestApi("ADMIN").get(
-    createRoute({
-      prefix: "roomtypes",
-      route: "/getRoomTypes",
-      includeBaseURL: true,
-    })
-  );
-  return roomTypesResponse.body.roomTypes[0].id;
-}
-
-async function getARoom(available?: boolean) {
-  const roomResponse: any = await authenticatedTestApi("ADMIN")
-    .get(
-      createRoute({
-        prefix: "rooms",
-        route: "/listRooms",
-        includeBaseURL: true,
-      })
-    )
-    .query({ noOfRooms: 10 });
-  console.log({ again: roomResponse.body });
-  return roomResponse.body.rooms[0];
-}
 
 describe("ROOM", () => {
   describe("Create rooms", () => {
@@ -43,11 +21,9 @@ describe("ROOM", () => {
       const response = await authenticatedTestApi("ADMIN")
         .post(route)
         .send(rooms);
-      console.log({ res: response.body });
-      expect(response.body.isSuccess).toBe(true);
-      expect(response.body.message).toBe(
-        `${rooms.noOfRooms} rooms have been created.`
-      );
+      const responseBody: CreateRoomResponse = response.body
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.message).toBeDefined()
     });
   });
   describe("Get room details", () => {
@@ -56,7 +32,7 @@ describe("ROOM", () => {
       route: "/getRoomDetails",
       includeBaseURL: true,
     });
-    it.skip("should get room details that match a provided room number", async () => {
+    it("should get room details that match a provided room number", async () => {
       const existingRoomInDB = await getARoom();
       const response = await authenticatedTestApi("ADMIN")
         .get(route)

@@ -21,7 +21,7 @@ function decodeUserToken(token: string) {
 }
 
 export function generateAccessToken(user: User) {
-  const token = sign(user, ENV_VARS.JWT_SECRET!, { expiresIn: "15m" });
+  const token = sign({ user }, ENV_VARS.JWT_SECRET!, { expiresIn: "15m" });
   return token;
 }
 
@@ -34,7 +34,7 @@ export function generateRefreshToken(email: string) {
   });
   return token;
 }
-
+ 
 export function verifyRequest(req: Request, res: Response, next: NextFunction) {
   if (routesThatDontRequireAuthentication.includes(req.path)) next();
   else {
