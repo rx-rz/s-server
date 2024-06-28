@@ -29,24 +29,26 @@ export type GetRoomTypeDetailsResponse = {
 };
 
 export type GetRoomsForRoomTypeResponse = {
-  id: number;
-  name: string;
-  createdAt: string | null;
-  description: string | null;
-  rating: string;
-  price: string;
-  roomImageURLS: string[] | null;
-  features: string[] | null;
-  imageFileNames: string[] | null;
-  rooms: {
-    roomNo: number;
-    status: "available" | "booked" | "pending" | null;
+  roomsForRoomType: {
+    id: number;
+    name: string;
     createdAt: string | null;
-    typeId: number;
-    noOfTimesBooked: number | null;
-  }[];
+    description: string | null;
+    rating: string;
+    price: string;
+    roomImageURLS: string[] | null;
+    features: string[] | null;
+    imageFileNames: string[] | null;
+    rooms: {
+      roomNo: number;
+      status: "available" | "booked" | "pending" | null;
+      createdAt: string | null;
+      typeId: number;
+      noOfTimesBooked: number | null;
+    }[];
+  };
+  isSuccess: boolean;
 };
-
 
 export type DeleteRoomTypeResponse = {
   id: number;
@@ -57,4 +59,4 @@ export type DeleteRoomTypeResponse = {
   roomImageURLS: string[] | null;
   features: string[] | null;
   imageFileNames: string[] | null;
-}
+};

@@ -1,14 +1,10 @@
 import { Handler } from "express";
 import { v } from "./roomtype.validators";
 import { roomTypeRepository } from "./roomtype.repository";
-import { ctx, httpstatus } from "../ctx";
+import {  httpstatus } from "../ctx";
 import { DuplicateEntryError, NotFoundError } from "../errors";
-import multer, { memoryStorage } from "multer";
-import { ENV_VARS } from "../../env";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
 import {
-  getFileUploadPromisesAndFileLinks,
   uploadFilesAndGetLinks,
 } from "./roomtype.helpers";
 
@@ -90,12 +86,12 @@ const getRoomsForRoomType: Handler = async (req, res, next) => {
   try {
     const { name } = v.roomTypeNameValidator.parse(req.query);
     await checkIfRoomTypeExists(name);
-    const getRoomsForRoomType = await roomTypeRepository.getRoomsForRoomType(
+    const roomsForRoomType = await roomTypeRepository.getRoomsForRoomType(
       name
     );
     return res
       .status(httpstatus.OK)
-      .json({ getRoomsForRoomType, isSuccess: true });
+      .json({ roomsForRoomType, isSuccess: true });
   } catch (err) {
     next(err);
   }

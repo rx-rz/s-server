@@ -20,8 +20,6 @@ const updateRoomTypeValidator = z.object({
   price: z.coerce.string().optional(),
   features: z.array(z.string()).optional(),
   description: z.string().optional(),
-  imageFileNames: z.array(z.string()).optional(),
-  roomImageURLS: z.array(z.string()).optional(),
 });
 
 const roomTypeImageUploadValidator = z.object({
