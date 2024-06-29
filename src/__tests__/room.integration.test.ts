@@ -6,7 +6,9 @@ import {
   CreateRoomResponse,
   GetAvailableRoomsResponse,
   GetRoomDetailsResponse,
-} from "../room/room.types";
+  UpdateRoomResponse,
+} from "../types/room.types";
+import { faker } from "@faker-js/faker";
 
 describe("ROOM", () => {
   describe("Create rooms", () => {
@@ -31,7 +33,7 @@ describe("ROOM", () => {
 
     it("should throw  a not found error when an existent room type ID is provided.", async () => {
       const rooms = {
-        typeId: 1_000_000_000,
+        typeId: faker.number.int({ min: 1000000, max: 2000000 }),
         noOfRooms: 2,
       };
       const response = await authenticatedTestApi("ADMIN")
@@ -55,13 +57,13 @@ describe("ROOM", () => {
         .query({ roomNo: existingRoomInDB.roomNo });
       const responseBody: GetRoomDetailsResponse = response.body;
       expect(responseBody.isSuccess).toBe(true);
-      expect(responseBody.rooms.roomNo).toBe(existingRoomInDB.roomNo);
+      expect(responseBody.room.roomNo).toBe(existingRoomInDB.roomNo);
     });
 
     it("should throw a not found error for when an inexistent room number is provided", async () => {
       const response = await authenticatedTestApi("ADMIN")
         .get(route)
-        .query({ roomNo: 1_000_000_000 });
+        .query({ roomNo: faker.number.int({ min: 1000000, max: 2000000 }) });
       expect(response.body.isSuccess).toBe(false);
       expect(response.body.error_type).toBe("Not Found Error");
     });
@@ -79,7 +81,7 @@ describe("ROOM", () => {
       expect(responseBody.isSuccess).toBe(true);
       expect(
         responseBody.availableRooms.every(
-          (availableRoom) => availableRoom.rooms.status === "available"
+          (availableRoom) => availableRoom.status === "available"
         )
       ).toBe(true);
     });
@@ -97,8 +99,31 @@ describe("ROOM", () => {
         roomNo: existingRoomInDB.roomNo,
         status: "booked",
       });
-      expect(response.body.isSuccess).toBe(true);
-      expect(response.body.roomUpdated.status).toBe("booked");
+      const responseBody: UpdateRoomResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.roomUpdated.status).toBe("booked");
+    });
+    it("should throw a not found error if a room type that is inexistent is provided", async () => {
+      const existingRoomInDB = await getARoom();
+      const response = await authenticatedTestApi("ADMIN")
+        .patch(route)
+        .send({
+          roomNo: existingRoomInDB.roomNo,
+          status: "booked",
+          typeId: faker.number.int({ min: 1000000, max: 2000000 }),
+        });
+      expect(response.body.isSuccess).toBe(false);
+      expect(response.body.error_type).toBe("Not Found Error");
+    });
+    it("should throw a not found error for a room that does not exist", async () => {
+      const response = await authenticatedTestApi("ADMIN")
+        .patch(route)
+        .send({
+          roomNo: faker.number.int({ min: 1000000, max: 2000000 }),
+          status: "booked",
+        });
+      expect(response.body.isSuccess).toBe(false);
+      expect(response.body.error_type).toBe("Not Found Error");
     });
   });
   describe("Delete a room", () => {
@@ -107,13 +132,23 @@ describe("ROOM", () => {
       route: "/deleteRoom",
       includeBaseURL: true,
     });
-    it.skip("should delete a room with the specified room number", async () => {
+    it("should delete a room with the specified room number", async () => {
       const existingRoomInDB = await getARoom();
       const response = await authenticatedTestApi("ADMIN").delete(route).query({
         roomNo: existingRoomInDB.roomNo,
       });
       expect(response.body.isSuccess).toBe(true);
       expect(response.body.roomDeleted.roomNo).toBe(existingRoomInDB.roomNo);
+    });
+    it("should throw a not found error when an inexistent room is provided.", async () => {
+      const existingRoomInDB = await getARoom();
+      const response = await authenticatedTestApi("ADMIN")
+        .delete(route)
+        .query({
+          roomNo: faker.number.int({ min: 1000000, max: 2000000 }),
+        });
+      expect(response.body.isSuccess).toBe(false);
+      expect(response.body.error_type).toBe("Not Found Error");
     });
   });
 });

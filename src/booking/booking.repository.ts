@@ -9,6 +9,7 @@ import {
   UpdateBookingRequest,
 } from "./booking.types";
 const bookingTable = ctx.schema.booking;
+const customerTable = ctx.schema.customer;
 const roomTable = ctx.schema.room;
 
 const bookingValues = {
@@ -122,33 +123,36 @@ const deleteBooking = async (bookingID: string) => {
     .where(eq(bookingTable.id, bookingID));
   return bookingDeleted;
 };
-
-const bookingListSearch = (search: Search) => {
-  let filterQueries: SQLWrapper[] = [];
-  for (let i of search) {
-    switch (i.key) {
-      case "roomNo":
-        filterQueries.push(eq(bookingTable.roomNo, Number(i.value)));
+const buildBookingSearchQuery = (search: Search) => {
+  const filterQueries: SQLWrapper[] = [];
+  for (const { key, value } of search) {
+    switch (key) {
+      case "id":
+        filterQueries.push(ilike(bookingTable.id, `%${value.toString()}%`));
+        break;
+      case "endDate":
+        filterQueries.push(lte(bookingTable.endDate, value.toString()));
+        break;
       case "status":
         filterQueries.push(
           eq(
             bookingTable.status,
-            i.value as "pending" | "active" | "cancelled" | "done"
+            value as "pending" | "active" | "cancelled" | "done"
           )
         );
-      case "customerId":
-        filterQueries.push(eq(bookingTable.customerId, i.value.toString()));
-      case "amount":
-        filterQueries.push(eq(bookingTable.amount, i.value.toString()));
-      case "id":
-        filterQueries.push(ilike(bookingTable.id, `%${i.value.toString()}%`));
-      case "endDate":
-        filterQueries.push(lte(bookingTable.endDate, i.value.toString()));
+        break;
+      case "customerEmail":
+        filterQueries.push(eq(customerTable.email, value.toString()));
+      case "startDate":
+        filterQueries.push(gte(bookingTable.startDate, value.toString()));
+        break;
       default:
-        filterQueries.push(gte(bookingTable[i.key], i.value));
+        filterQueries.push(gte(bookingTable[key], value.toString()));
+        break;
     }
   }
-  return filterQueries;
+
+  return and(...filterQueries);
 };
 
 const listBookings = async ({
@@ -158,22 +162,28 @@ const listBookings = async ({
   ascOrDesc,
   searchBy,
 }: ListBookingParams) => {
-  let bookings;
-  const dbQuery = ctx.db.select(bookingValues).from(bookingTable);
+  let query;
+  query = ctx.db
+    .select({ ...bookingValues, customerEmail: customerTable.email })
+    .from(bookingTable)
+    .leftJoin(customerTable, eq(customerTable.id, bookingTable.customerId));
   if (searchBy) {
-    const filterQueries = bookingListSearch(searchBy);
-    bookings = await dbQuery.where(and(...filterQueries));
+    const filterCondition = buildBookingSearchQuery(searchBy);
+    if (filterCondition) {
+      query = query.where(filterCondition);
+    }
   }
-  const bookingList = await dbQuery;
-  bookings = await dbQuery
-    .limit(limit)
-    .offset((pageNo - 1) * limit)
-    .orderBy(
-      ascOrDesc === "asc"
-        ? asc(bookingTable[`${orderBy}`])
-        : desc(bookingTable[`${orderBy}`])
+  if (orderBy) {
+    const orderColumn =
+      orderBy === "customerEmail" ? customerTable.email : bookingTable[orderBy];
+    query = query.orderBy(
+      ascOrDesc === "asc" ? asc(orderColumn) : desc(orderColumn)
     );
-  return { bookings, noOfBookings: bookingList.length };
+  }
+
+  const noOfBookings = (await query).length;
+  const bookings = await query.limit(limit).offset((pageNo - 1) * limit);
+  return { noOfBookings, bookings };
 };
 
 const updateBookingStatusesToDone = async (bookingsToUpdate: Booking[]) => {

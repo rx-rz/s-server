@@ -44,10 +44,10 @@ const listBookingValidator = z.object({
     .array(
       z.object({
         key: z.enum([
-          "customerId",
           "id",
           "createdAt",
           "amount",
+          "customerEmail",
           "startDate",
           "endDate",
           "status",
@@ -59,7 +59,7 @@ const listBookingValidator = z.object({
     .optional(),
   orderBy: z
     .enum([
-      "customerId",
+      "customerEmail",
       "id",
       "createdAt",
       "amount",

@@ -59,7 +59,7 @@ export const roomTypeRoutes = {
   update_room_type: "/updateRoomType",
   room_type_details: "/roomTypeDetails",
   rooms_for_room_type: "/getRoomsForRoomType",
-  upload_room_type_images: "/uploadImagesForRoomType"
+  upload_room_type_images: "/uploadImagesForRoomType",
 } as const;
 
 type BaseURLFunctionProps = {
@@ -103,6 +103,7 @@ export const routesThatDontRequireAuthentication = [
   createRoute({ prefix: "admin", route: "/loginAdmin" }),
   createRoute({ prefix: "rooms", route: "/getAvailableRooms" }),
   createRoute({ prefix: "bookings", route: "/checkExpiredBookings" }),
+  createRoute({ prefix: "bookings", route: "/createBooking" }),
   createRoute({
     prefix: "bookings",
     route: "/updateBookingPaymentStatus",
@@ -110,7 +111,6 @@ export const routesThatDontRequireAuthentication = [
 ];
 
 export const customerOnlyRoutes = [
-  createRoute({ prefix: "bookings", route: "/createBooking" }),
   createRoute({ prefix: "customers", route: "/deleteCustomer" }),
   createRoute({ prefix: "customers", route: "/updateRefreshToken" }),
   createRoute({ prefix: "customers", route: "/updateCustomer" }),

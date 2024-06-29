@@ -79,21 +79,6 @@ const getCustomerWithBookingAndPaymentDetails = async (email: string) => {
   return customerDetails;
 };
 
-// const customerListSearch = (search: Search): SQLWrapper[] => {
-//   let filterQueries = [];
-//   for (let i of search) {
-//     switch (i.key) {
-//       case "isVerified":
-//         if (typeof i.value === "boolean")
-//           filterQueries.push(eq(customerTable.isVerified, i.value));
-//       default:
-//         filterQueries.push(
-//           ilike(customerTable[i.key], `%${i.value.toString()}%`)
-//         );
-//     }
-//   }
-//   return filterQueries;
-// };
 
 const customerListSearch = (search: Search): SQLWrapper[] => {
   let filterQueries = [];
@@ -124,15 +109,15 @@ const listCustomer = async ({
   ascOrDesc,
 }: ListCustomerParams) => {
   let customers;
-  const dbQuery = ctx.db.select(customerValues).from(customerTable);
+  const query = ctx.db.select(customerValues).from(customerTable);
   if (searchBy) {
     const filterQueries = customerListSearch(searchBy);
-    customers = await dbQuery.where(and(...filterQueries));
+    customers = await query.where(and(...filterQueries));
   } else {
-    customers = await dbQuery;
+    customers = await query;
   }
-  const customerList = await dbQuery;
-  customers = await dbQuery
+  const customerList = await query;
+  customers = await query
     .limit(limit)
     .offset((pageNo - 1) * limit)
     .orderBy(

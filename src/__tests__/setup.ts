@@ -10,9 +10,11 @@ beforeAll(async () => {
   await startTestServer(0);
 });
 
+
 afterAll(async () => {
   await stopTestServer();
 });
+
 
 function generateJWTToken(role: "ADMIN" | "CUSTOMER") {
   const secret = ENV_VARS.JWT_SECRET || "secret";

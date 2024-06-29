@@ -45,7 +45,7 @@ const createBooking: Handler = async (req, res, next) => {
 
     return res
       .status(httpstatus.CREATED)
-      .json({ ...bookingCreated, isSuccess: true });
+      .json({ bookingCreated, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -74,7 +74,7 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
         existingBooking.roomNo
       );
       if (body.event === "charge.success") {
-        const [bookingUpdated, roomUpdated, paymentMade] = await Promise.all([
+        await Promise.all([
           bookingRepository.updateBooking({
             id: existingBooking.id,
             status: "active",
@@ -90,21 +90,20 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
           }),
         ]);
       } else {
-        const [bookingCancelled, failedPayment, availableRoom] =
-          await Promise.all([
-            bookingRepository.updateBooking({
-              id: existingBooking.id,
-              status: "cancelled",
-            }),
-            paymentRepository.updatePayment({
-              reference: body.data.reference,
-              status: "failed",
-            }),
-            roomRepository.updateRoom({
-              roomNo: Number(existingBooking.roomNo),
-              status: "available",
-            }),
-          ]);
+        await Promise.all([
+          bookingRepository.updateBooking({
+            id: existingBooking.id,
+            status: "cancelled",
+          }),
+          paymentRepository.updatePayment({
+            reference: body.data.reference,
+            status: "failed",
+          }),
+          roomRepository.updateRoom({
+            roomNo: Number(existingBooking.roomNo),
+            status: "available",
+          }),
+        ]);
       }
     }
   } catch (err) {
@@ -137,7 +136,9 @@ const deleteBooking: Handler = async (req, res, next) => {
       }),
     ]);
 
-    return res.status(httpstatus.OK).json({ deletedBooking, isSuccess: true });
+    return res
+      .status(httpstatus.OK)
+      .json({ deletedBooking, roomUpdated, isSuccess: true });
   } catch (err) {
     next(err);
   }
@@ -159,7 +160,7 @@ const checkExpiredBookings: Handler = async (req, res, next) => {
     if (bookings) {
       await bookingRepository.updateBookingStatusesToDone(bookings);
     }
-    return res.json({ bookings });
+    return res.json({ bookings, isSuccess: true });
   } catch (err) {
     next(err);
   }

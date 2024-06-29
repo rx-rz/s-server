@@ -1,6 +1,7 @@
 import { GetAvailableRoomsResponse, ListRoomsResponse } from "../room/room.types";
 import { createRoute } from "../routes";
 import { ListAdminsResponse } from "../types/admin.types";
+import { ListBookingsResponse } from "../types/booking.types";
 import { ListCustomersResponse } from "../types/customer.types";
 import { GetRoomTypesResponse } from "../types/roomtype.types";
 import { authenticatedTestApi, testApi } from "./setup";
@@ -63,7 +64,8 @@ export async function getABooking() {
       includeBaseURL: true,
     })
   );
-  return response.body.bookings[0];
+  const responseBody: ListBookingsResponse = response.body
+  return responseBody.bookings[0];
 }
 
 export async function getARoom(available?: boolean) {

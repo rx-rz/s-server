@@ -20,6 +20,7 @@ import { db } from "../db/db";
 
 const roomTable = ctx.schema.room;
 const roomTypeTable = ctx.schema.roomType;
+const bookingTable = ctx.schema.booking;
 
 const roomValues = {
   typeId: roomTable.typeId,
@@ -57,14 +58,14 @@ const createRoom = async (request: CreateRoomRequest) => {
 };
 
 const getRoomDetails = async (roomNo: number) => {
-  const getRoomDetails = await ctx.db.query.room.findFirst({
+  const roomDetails = await ctx.db.query.room.findFirst({
     where: eq(roomTable.roomNo, roomNo),
     with: {
       bookings: true,
       roomType: true,
     },
   });
-  return getRoomDetails;
+  return roomDetails;
 };
 
 const updateRoom = async (request: UpdateRoomRequest) => {
@@ -77,42 +78,7 @@ const updateRoom = async (request: UpdateRoomRequest) => {
   return roomUpdated;
 };
 
-const roomListSearch = (search: Search) => {
-  let filterQueries: SQLWrapper[] = [];
-  for (let i of search) {
-    switch (i.key) {
-      case "createdAt":
-        filterQueries.push(gte(roomTable.createdAt, i.value.toString()));
-        break;
-      case "status":
-        filterQueries.push(
-          eq(
-            roomTable.status,
-            i.value.toString() as "available" | "pending" | "booked"
-          )
-        );
-        break;
-      default:
-        if (i.key !== "price" && i.key !== "name") {
-          filterQueries.push(eq(roomTable[i.key], Number(i.value)));
-          break;
-        }
-        if (i.key === "price" || i.key === "name") {
-          switch (i.key) {
-            case "name":
-              filterQueries.push(eq(roomTypeTable.name, i.value.toString()));
-              break;
-            case "price":
-              filterQueries.push(eq(roomTypeTable.price, i.value.toString()));
-              break;
-          }
-        }
-    }
-  }
-  return filterQueries;
-};
-
-const buildRoomListQuery = (search: Search) => {
+const buildRoomListSearchQuery = (search: Search) => {
   const filterQueries: SQLWrapper[] = [];
   for (const { key, value } of search) {
     switch (key) {
@@ -141,60 +107,6 @@ const buildRoomListQuery = (search: Search) => {
   return and(...filterQueries);
 };
 
-// const listRooms = async ({
-//   limit,
-//   pageNo,
-//   orderBy,
-//   searchBy,
-//   ascOrDesc,
-// }: ListRoomParams) => {
-//   let rooms;
-//   let roomList = [];
-//   const dbQuery = ctx.db
-//     .select(roomListValues)
-//     .from(roomTable)
-//     .leftJoin(roomTypeTable, eq(roomTypeTable.id, roomTable.typeId));
-
-//   if (searchBy) {
-//     let searchByQuery;
-//     const filterQueries = roomListSearch(searchBy);
-//     searchByQuery = dbQuery.where(and(...filterQueries));
-//     if (orderBy) {
-//       if (orderBy !== "name" && orderBy !== "price") {
-//         roomList = await searchByQuery;
-//         rooms =
-//           (await searchByQuery
-//             .orderBy(
-//               ascOrDesc === "asc"
-//                 ? asc(roomTable[`${orderBy}`])
-//                 : desc(roomTable[`${orderBy}`])
-//             )
-//             .limit(limit)
-//             .offset((pageNo - 1) * limit)) || [];
-//       } else {
-//         roomList = await searchByQuery;
-//         rooms =
-//           (await searchByQuery
-//             .orderBy(
-//               ascOrDesc === "asc"
-//                 ? asc(roomTypeTable[`${orderBy}`])
-//                 : desc(roomTypeTable[`${orderBy}`])
-//             )
-//             .limit(limit)
-//             .offset((pageNo - 1) * limit)) || [];
-//       }
-//     } else {
-//       roomList = await searchByQuery;
-//       rooms =
-//         (await searchByQuery.limit(limit).offset((pageNo - 1) * limit)) || [];
-//     }
-//   } else {
-//     roomList = await dbQuery;
-//     rooms = (await dbQuery.limit(limit).offset((pageNo - 1) * limit)) || [];
-//   }
-//   return { rooms, noOfRooms: roomList.length };
-// };
-
 const listRooms = async ({
   limit,
   pageNo,
@@ -209,7 +121,7 @@ const listRooms = async ({
     .leftJoin(roomTypeTable, eq(roomTypeTable.id, roomTable.typeId));
 
   if (searchBy) {
-    const filterCondition = buildRoomListQuery(searchBy);
+    const filterCondition = buildRoomListSearchQuery(searchBy);
     if (filterCondition) {
       query = query.where(filterCondition);
     }
@@ -231,7 +143,7 @@ const listRooms = async ({
 
 const getAvailableRooms = async () => {
   const rooms = await ctx.db
-    .selectDistinctOn([roomTable.typeId])
+    .selectDistinctOn([roomTable.typeId], roomListValues)
     .from(roomTable)
     .leftJoin(roomTypeTable, eq(roomTable.typeId, roomTypeTable.id))
     .where(eq(roomTable.status, "available"));

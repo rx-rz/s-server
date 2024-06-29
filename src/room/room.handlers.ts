@@ -31,7 +31,7 @@ const createRoom: Handler = async (req, res, next) => {
 const getRoomDetails: Handler = async (req, res, next) => {
   try {
     const { roomNo } = v.roomNoValidator.parse(req.query);
-    const room = checkIfRoomExists(roomNo);
+    const room = await checkIfRoomExists(roomNo);
     return res.status(httpstatus.OK).json({
       room,
       isSuccess: true,
