@@ -3,6 +3,11 @@ import { User } from "./jwt-token";
 import { httpstatus } from "../ctx";
 import { adminOnlyRoutes, customerOnlyRoutes } from "../routes";
 
+type UserToken = {
+  user: User;
+  iat: number;
+  exp: number;
+};
 function decodeUserToken(token: string) {
   const userToken = JSON.parse(
     Buffer.from(token.split(".")[1], "base64").toString()
@@ -20,8 +25,16 @@ export const adminAccessOnly: Handler = (req, res, next) => {
         isSuccess: false,
       });
     }
-    const user: User = decodeUserToken(userToken);
-    if (user.role !== "ADMIN") {
+    const token: UserToken = decodeUserToken(userToken);
+    console.log({token})
+    if(!token){
+      return res.status(httpstatus.FORBIDDEN).json({
+        error_type: "JWT Error",
+        error: "Unauthorized request. No token provided",
+        isSuccess: false,
+      });
+    }
+    if (token.user.role !== "ADMIN") {
       return res.status(httpstatus.FORBIDDEN).json({
         error_type: "User Role Error",
         error: "Unauthorized request. Only admins can access this route.",
@@ -42,8 +55,8 @@ export const customerAccessOnly: Handler = (req, res, next) => {
         isSuccess: false,
       });
     }
-    const user: User = decodeUserToken(userToken);
-    if (user.role !== "CUSTOMER") {
+    const token: UserToken = decodeUserToken(userToken);
+    if (token.user.role !== "CUSTOMER") {
       return res.status(httpstatus.FORBIDDEN).json({
         error_type: "User Role Error",
         error: "Unauthorized request. Only customers can access this route.",

@@ -37,6 +37,7 @@ const getRoomTypeDetailsByID = async (id: number) => {
     .where(eq(roomTypeTable.id, id));
   return getRoomDetails;
 };
+
 const deleteRoomType = async (name: string) => {
   const [roomTypeDeleted] = await ctx.db
     .delete(roomTypeTable)

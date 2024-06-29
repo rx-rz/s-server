@@ -56,6 +56,8 @@ export function verifyRequest(req: Request, res: Response, next: NextFunction) {
             const newAccessToken = generateAccessToken(user);
             res.setHeader("Authorization", `Bearer ${newAccessToken}`);
             return next();
+          }else{
+            return res.status(403).json({message: "Refresh token has expired."})
           }
         }
         return res

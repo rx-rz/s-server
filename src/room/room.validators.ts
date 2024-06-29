@@ -6,7 +6,9 @@ const roomCreationValidator = z.object({
       required_error: "No of rooms must be provided",
     })
     .max(10, { message: "The maximum no of rooms you can create is 10" }),
-  typeId: z.coerce.number({ required_error: "Room type must be provided" }),
+  typeId: z.coerce
+    .number({ required_error: "Room type must be provided" })
+    .min(1, { message: "Room type ID cannot be zero or a negative number." }),
 });
 
 const roomUpdateValidator = z.object({

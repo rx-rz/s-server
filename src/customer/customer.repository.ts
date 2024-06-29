@@ -101,12 +101,14 @@ const customerListSearch = (search: Search): SQLWrapper[] => {
     switch (i.key) {
       case "isVerified":
         filterQueries.push(eq(customerTable.isVerified, i.value === true));
+        break;
       case "firstName":
       case "lastName":
       case "email":
         filterQueries.push(
           ilike(customerTable[i.key], `%${i.value.toString()}%`)
         );
+        break;
       // case "createdAt":
       //   filterQueries.push(eq(customerTable.createdAt, i.value.toString()));
     }

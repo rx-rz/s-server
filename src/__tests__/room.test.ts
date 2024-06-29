@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { authenticatedTestApi, testApi } from "./setup";
 import { createRoute } from "../routes";
 import { getARoom, getRoomTypeID } from "./test-helpers";
-import { CreateRoomResponse } from "../room/room.types";
+import { CreateRoomResponse, GetAvailableRoomsResponse, GetRoomDetailsResponse } from "../room/room.types";
 
 
 describe("ROOM", () => {
@@ -25,7 +25,20 @@ describe("ROOM", () => {
       expect(responseBody.isSuccess).toBe(true);
       expect(responseBody.message).toBeDefined()
     });
+
+    it("should throw  a not found error when an existent room type ID is provided.", async () => {
+      const rooms = {
+        typeId: 1_000_000_000,
+        noOfRooms: 2,
+      };
+      const response = await authenticatedTestApi("ADMIN")
+      .post(route)
+      .send(rooms);
+      expect(response.body.isSuccess).toBe(false)
+      expect(response.body.error_type).toBe("Not Found Error")
+    })
   });
+
   describe("Get room details", () => {
     const route = createRoute({
       prefix: "rooms",
@@ -37,10 +50,18 @@ describe("ROOM", () => {
       const response = await authenticatedTestApi("ADMIN")
         .get(route)
         .query({ roomNo: existingRoomInDB.roomNo });
-      expect(response.body.isSuccess).toBe(true);
-      expect(response.body.room.roomNo).toBe(existingRoomInDB.roomNo);
+        const responseBody: GetRoomDetailsResponse = response.body
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.rooms.roomNo).toBe(existingRoomInDB.roomNo);
     });
+
+    it("should throw a not found error for when an inexistent room number is provided", async () => {
+      const response = await authenticatedTestApi("ADMIN").get(route).query({roomNo: Infinity})
+      expect(response.body.isSuccess).toBe(false)
+      expect(response.body.error_type).toBe("Not Found Error")
+    })
   });
+
   describe("Get available rooms", () => {
     const route = createRoute({
       prefix: "rooms",
@@ -49,19 +70,19 @@ describe("ROOM", () => {
     });
     it("get rooms with a status of available", async () => {
       const response = await testApi.get(route);
-      expect(response.body.isSuccess).toBe(true);
-      expect(response.body.availableRooms[0].rooms.status).toBe("available");
+      const responseBody: GetAvailableRoomsResponse = response.body
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.availableRooms.every(availableRoom => availableRoom.rooms.status === "available")).toBe(true);
     });
   });
 
-  // describe("List rooms" )
   describe("Update a room", () => {
     const route = createRoute({
       prefix: "rooms",
       route: "/updateRoom",
       includeBaseURL: true,
     });
-    it.skip("should update a room with the specified values", async () => {
+    it("should update a room with the specified values", async () => {
       const existingRoomInDB = await getARoom();
       const response = await authenticatedTestApi("ADMIN").patch(route).send({
         roomNo: existingRoomInDB.roomNo,

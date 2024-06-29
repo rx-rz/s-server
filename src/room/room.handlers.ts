@@ -4,6 +4,7 @@ import { roomRepository } from "./room.repository";
 import { httpstatus } from "../ctx";
 import { roomTypeRepository } from "../room_types/roomtype.repository";
 import { NotFoundError } from "../errors";
+import { checkIfRoomTypeExists } from "../room_types/roomtype.handlers";
 
 async function checkIfRoomExists(roomNo: number) {
   const room = await roomRepository.getRoomDetails(roomNo);
@@ -16,6 +17,8 @@ async function checkIfRoomExists(roomNo: number) {
 const createRoom: Handler = async (req, res, next) => {
   try {
     const { noOfRooms, typeId } = v.roomCreationValidator.parse(req.body);
+    const roomTypeExists = await roomTypeRepository.getRoomTypeDetailsByID(typeId)
+    if(!roomTypeExists) throw new NotFoundError(`Room type with the provided ID does not exist`)
     await roomRepository.createRoom({ noOfRooms, typeId });
     return res.status(httpstatus.CREATED).json({
       message: `${noOfRooms} rooms have been created.`,

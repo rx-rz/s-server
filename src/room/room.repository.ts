@@ -1,4 +1,14 @@
-import { SQLWrapper, and, asc, count, desc, eq, gte } from "drizzle-orm";
+import {
+  SQLWrapper,
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  like,
+  sql,
+} from "drizzle-orm";
 import { ctx } from "../ctx";
 import {
   CreateRoomRequest,
@@ -73,24 +83,117 @@ const roomListSearch = (search: Search) => {
     switch (i.key) {
       case "createdAt":
         filterQueries.push(gte(roomTable.createdAt, i.value.toString()));
+        break;
       case "status":
-        filterQueries.push(eq(roomTable.status, "available"));
+        filterQueries.push(
+          eq(
+            roomTable.status,
+            i.value.toString() as "available" | "pending" | "booked"
+          )
+        );
+        break;
       default:
         if (i.key !== "price" && i.key !== "name") {
           filterQueries.push(eq(roomTable[i.key], Number(i.value)));
+          break;
         }
         if (i.key === "price" || i.key === "name") {
           switch (i.key) {
             case "name":
               filterQueries.push(eq(roomTypeTable.name, i.value.toString()));
+              break;
             case "price":
               filterQueries.push(eq(roomTypeTable.price, i.value.toString()));
+              break;
           }
         }
     }
   }
   return filterQueries;
 };
+
+const buildRoomListQuery = (search: Search) => {
+  const filterQueries: SQLWrapper[] = [];
+  for (const { key, value } of search) {
+    switch (key) {
+      case "createdAt":
+        filterQueries.push(gte(roomTable.createdAt, value.toString()));
+        break;
+      case "status":
+        filterQueries.push(
+          eq(
+            roomTable.status,
+            value.toString() as "available" | "pending" | "booked"
+          )
+        );
+        break;
+      case "name":
+        filterQueries.push(eq(roomTypeTable.name, value.toString()));
+        break;
+      case "price":
+        filterQueries.push(eq(roomTypeTable.price, value.toString()));
+        break;
+      default:
+        filterQueries.push(eq(roomTable[key], Number(value)));
+    }
+  }
+
+  return and(...filterQueries);
+};
+
+// const listRooms = async ({
+//   limit,
+//   pageNo,
+//   orderBy,
+//   searchBy,
+//   ascOrDesc,
+// }: ListRoomParams) => {
+//   let rooms;
+//   let roomList = [];
+//   const dbQuery = ctx.db
+//     .select(roomListValues)
+//     .from(roomTable)
+//     .leftJoin(roomTypeTable, eq(roomTypeTable.id, roomTable.typeId));
+
+//   if (searchBy) {
+//     let searchByQuery;
+//     const filterQueries = roomListSearch(searchBy);
+//     searchByQuery = dbQuery.where(and(...filterQueries));
+//     if (orderBy) {
+//       if (orderBy !== "name" && orderBy !== "price") {
+//         roomList = await searchByQuery;
+//         rooms =
+//           (await searchByQuery
+//             .orderBy(
+//               ascOrDesc === "asc"
+//                 ? asc(roomTable[`${orderBy}`])
+//                 : desc(roomTable[`${orderBy}`])
+//             )
+//             .limit(limit)
+//             .offset((pageNo - 1) * limit)) || [];
+//       } else {
+//         roomList = await searchByQuery;
+//         rooms =
+//           (await searchByQuery
+//             .orderBy(
+//               ascOrDesc === "asc"
+//                 ? asc(roomTypeTable[`${orderBy}`])
+//                 : desc(roomTypeTable[`${orderBy}`])
+//             )
+//             .limit(limit)
+//             .offset((pageNo - 1) * limit)) || [];
+//       }
+//     } else {
+//       roomList = await searchByQuery;
+//       rooms =
+//         (await searchByQuery.limit(limit).offset((pageNo - 1) * limit)) || [];
+//     }
+//   } else {
+//     roomList = await dbQuery;
+//     rooms = (await dbQuery.limit(limit).offset((pageNo - 1) * limit)) || [];
+//   }
+//   return { rooms, noOfRooms: roomList.length };
+// };
 
 const listRooms = async ({
   limit,
@@ -99,38 +202,31 @@ const listRooms = async ({
   searchBy,
   ascOrDesc,
 }: ListRoomParams) => {
-  let rooms;
-  const dbQuery = ctx.db
+  let query;
+  query = ctx.db
     .select(roomListValues)
     .from(roomTable)
     .leftJoin(roomTypeTable, eq(roomTypeTable.id, roomTable.typeId));
-  // if (searchBy) {
-  //   let searchByQuery;
-  //   const filterQueries = roomListSearch(searchBy);
-  //   searchByQuery = dbQuery.where(and(...filterQueries));
-  //   rooms = searchByQuery;
-  // }
 
-  // if (orderBy && rooms) {
-  //   let orderByQuery;
-  //   if (orderBy !== "name" && orderBy !== "price") {
-  //     orderByQuery = rooms.orderBy(
-  //       ascOrDesc === "asc"
-  //         ? asc(roomTable[`${orderBy}`])
-  //         : desc(roomTable[`${orderBy}`])
-  //     );
-  //     rooms = orderByQuery;
-  //   } else {
-  //     orderByQuery = rooms.orderBy(
-  //       ascOrDesc === "asc"
-  //         ? asc(roomTypeTable[`${orderBy}`])
-  //         : desc(roomTypeTable[`${orderBy}`])
-  //     );
-  //     rooms = orderByQuery;
-  //   }
-  // } 
-  rooms = (await dbQuery?.limit(limit).offset((pageNo - 1) * limit)) || [];
-  return { rooms, noOfRooms: rooms.length };
+  if (searchBy) {
+    const filterCondition = buildRoomListQuery(searchBy);
+    if (filterCondition) {
+      query = query.where(filterCondition);
+    }
+  }
+
+  if (orderBy) {
+    const orderColumn =
+      orderBy === "name" || orderBy === "price"
+        ? roomTypeTable[orderBy]
+        : roomTable[orderBy];
+    query = query.orderBy(
+      ascOrDesc === "asc" ? asc(orderColumn) : desc(orderColumn)
+    );
+  }
+  const noOfRooms = (await query).length;
+  const rooms = await query.limit(limit).offset((pageNo - 1) * limit);
+  return { noOfRooms, rooms };
 };
 
 const getAvailableRooms = async () => {

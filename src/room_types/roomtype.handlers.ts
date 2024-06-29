@@ -8,7 +8,7 @@ import {
   uploadFilesAndGetLinks,
 } from "./roomtype.helpers";
 
-async function checkIfRoomTypeExists(name: string) {
+export async function checkIfRoomTypeExists(name: string) {
   const roomTypeExists = await roomTypeRepository.getRoomTypeDetails(name);
   if (!roomTypeExists) throw new NotFoundError(`Room type does not exist.`);
 }
