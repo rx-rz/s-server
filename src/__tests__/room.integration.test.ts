@@ -6,8 +6,10 @@ import {
   CreateRoomResponse,
   GetAvailableRoomsResponse,
   GetRoomDetailsResponse,
+  ListRoomsResponse,
   UpdateRoomResponse,
 } from "../types/room.types";
+import qs from "qs";
 import { faker } from "@faker-js/faker";
 
 describe("ROOM", () => {
@@ -126,6 +128,77 @@ describe("ROOM", () => {
       expect(response.body.error_type).toBe("Not Found Error");
     });
   });
+
+  describe("List rooms", () => {
+    const route = createRoute({
+      prefix: "rooms",
+      route: "/listRooms",
+      includeBaseURL: true,
+    });
+    it("should list rooms with default parameters", async () => {
+      const response = await authenticatedTestApi("ADMIN").get(route);
+      const responseBody: ListRoomsResponse = response.body;
+      expect(Array.isArray(responseBody.rooms)).toBe(true);
+      expect(responseBody.isSuccess).toBe(true);
+    });
+
+    it("should filter rooms correctly", async () => {
+      const room = await getARoom();
+      const response = await authenticatedTestApi("ADMIN")
+        .get(route)
+        .query(
+          qs.stringify({
+            searchBy: [
+              {
+                key: "status",
+                value: room.status,
+              },
+              {
+                key: "roomNo",
+                value: room.roomNo,
+              },
+              {
+                key: "typeId",
+                value: room.typeId,
+              },
+              {
+                key: "price",
+                value: room.price,
+              },
+              {
+                key: "name",
+                value: room.name,
+              },
+            ],
+          })
+        );
+      const responseBody: ListRoomsResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.rooms[0].roomNo).toBe(room.roomNo);
+      expect(responseBody.rooms[0].name).toBe(room.name);
+      expect(responseBody.rooms[0].status).toBe(room.status);
+      expect(responseBody.rooms[0].price).toBe(room.price);
+      expect(responseBody.rooms[0].typeId).toBe(room.typeId);
+    });
+
+    it("should paginate results", async () => {
+      const response = await authenticatedTestApi("ADMIN")
+        .get(route)
+        .query({ limit: 3 });
+      const responseBody: ListRoomsResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.rooms.length).toBeLessThanOrEqual(3);
+    });
+
+    it("should handle invalid query parameters", async () => {
+      const response = await authenticatedTestApi("ADMIN")
+        .get(route)
+        .query({ limit: "akhi" });
+      expect(response.body.isSuccess).toBe(false);
+      expect(response.body.error_type).toBe("Validation Error");
+    });
+  });
+
   describe("Delete a room", () => {
     const route = createRoute({
       prefix: "rooms",

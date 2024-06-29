@@ -40,17 +40,6 @@ const getPaymentDetails = async (id: string) => {
   return paymentDetails;
 };
 
-// const getPaymentDetailsByBookingID = async (bookingId: string) => {
-//   const paymentDetails = await ctx.db.query.payment.findFirst({
-//     where: eq(paymentTable.bookingId, bookingId),
-//     with: {
-//       booking: true,
-//       customer: true,
-//     },
-//   });
-//   return paymentDetails;
-// };
-
 const updatePayment = async ({
   reference,
   payedAt,

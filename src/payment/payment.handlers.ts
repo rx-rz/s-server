@@ -9,7 +9,6 @@ import { httpstatus } from "../ctx";
 export const createPayment: Handler = async (req, res, next) => {
   try {
     const { bookingId, email } = v.makePaymentValidator.parse(req.body);
-
     const customer =
       await customerRepository.getCustomerWithBookingAndPaymentDetails(email);
     if (!customer)
@@ -63,7 +62,9 @@ export const getPaymentDetails: Handler = async (req, res, next) => {
     const { id } = v.paymentIDValidator.parse(req.query);
     const paymentDetails = await paymentRepository.getPaymentDetails(id);
     if (!paymentDetails)
-      throw new NotFoundError(`Payment with provided details could not be found.`);
+      throw new NotFoundError(
+        `Payment with provided details could not be found.`
+      );
     return res.status(httpstatus.OK).json({ paymentDetails, isSuccess: true });
   } catch (err) {
     next(err);

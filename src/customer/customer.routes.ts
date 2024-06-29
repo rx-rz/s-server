@@ -12,6 +12,11 @@ customerRouter.post(
   customerRoutes.login_customer,
   customerHandlers.loginCustomer
 );
+
+customerRouter.get(
+  customerRoutes.get_customer_details,
+  customerHandlers.getCustomerDetails
+);
 customerRouter.get(
   customerRoutes.list_customers,
   customerHandlers.listCustomers

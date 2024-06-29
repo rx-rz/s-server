@@ -86,6 +86,17 @@ const listCustomers: Handler = async (req, res, next) => {
   }
 };
 
+const getCustomerDetails: Handler = async (req, res, next) => {
+  try {
+    const { email } = v.emailValidator.parse(req.query);
+    const customer =
+      await customerRepository.getCustomerWithBookingAndPaymentDetails(email);
+    return res.status(httpstatus.OK).json({ customer, isSuccess: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const deleteCustomer: Handler = async (req, res, next) => {
   try {
     const { email } = v.emailValidator.parse(req.query);
@@ -133,7 +144,6 @@ const updateCustomerRefreshToken: Handler = async (req, res, next) => {
     next(err);
   }
 };
-
 
 const updateCustomerEmail: Handler = async (req, res, next) => {
   try {
@@ -185,5 +195,6 @@ export const customerHandlers = {
   updateCustomer,
   updateCustomerEmail,
   updateCustomerPassword,
+  getCustomerDetails,
   loginCustomer,
 };

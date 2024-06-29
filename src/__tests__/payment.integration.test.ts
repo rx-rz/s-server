@@ -1,34 +1,18 @@
 import { describe, it } from "vitest";
-import { authenticatedTestApi } from "./setup";
+import { getABooking } from "./test-helpers";
 import { createRoute } from "../routes";
-
-async function getCustomer() {
-  const response = await authenticatedTestApi("ADMIN")
-    .get(
-      createRoute({
-        prefix: "customers",
-        route: "/listCustomers",
-        includeBaseURL: true,
-      })
-    )
-    .query({ limit: 1 });
-
-  return response.body.customers[0];
-}
-
-async function getABooking() {
-  const response = await authenticatedTestApi("ADMIN").get(
-    createRoute({
-      prefix: "bookings",
-      route: "/listBookings",
-      includeBaseURL: true,
-    })
-  );
-  return response.body.bookings[0];
-}
+import { testApi } from "./setup";
 
 describe("PAYMENT", () => {
   describe("Create payment", () => {
-    it("should create a payment")
+    const route = createRoute({
+      prefix: "payments",
+      route: "/createPayment",
+      includeBaseURL: true
+    })
+    it("should create a payment instance in db and return an authorization url to make payment", async () => {
+      const booking = await getABooking();
+      const email = await 
+      const response = await testApi.post({bookingId: booking.id})
   });
 });

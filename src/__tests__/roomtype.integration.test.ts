@@ -165,6 +165,8 @@ describe("ROOM TYPE", () => {
     });
   });
 
+
+
   describe("Get room type details", () => {
     const route = createRoute({
       prefix: "roomtypes",

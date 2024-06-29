@@ -127,8 +127,8 @@ const buildBookingSearchQuery = (search: Search) => {
   const filterQueries: SQLWrapper[] = [];
   for (const { key, value } of search) {
     switch (key) {
-      case "id":
-        filterQueries.push(ilike(bookingTable.id, `%${value.toString()}%`));
+      case "startDate":
+        filterQueries.push(gte(bookingTable.startDate, value.toString()));
         break;
       case "endDate":
         filterQueries.push(lte(bookingTable.endDate, value.toString()));
@@ -143,11 +143,9 @@ const buildBookingSearchQuery = (search: Search) => {
         break;
       case "customerEmail":
         filterQueries.push(eq(customerTable.email, value.toString()));
-      case "startDate":
-        filterQueries.push(gte(bookingTable.startDate, value.toString()));
-        break;
+
       default:
-        filterQueries.push(gte(bookingTable[key], value.toString()));
+        filterQueries.push(eq(bookingTable[key], value.toString()));
         break;
     }
   }

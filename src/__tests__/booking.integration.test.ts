@@ -7,12 +7,13 @@ import {
   Booking,
   CreateBookingResponse,
   GetBookingDetailsResponse,
+  ListBookingsResponse,
   UpdateBookingResponse,
 } from "../types/booking.types";
 import { Customer } from "../types/customer.types";
 import { faker } from "@faker-js/faker";
 import { Room } from "../types/room.types";
-
+import qs from "qs";
 const date = new Date();
 type BookingCreationObject = {
   customerId: string;
@@ -156,9 +157,73 @@ describe("BOOKING", () => {
     });
     it("should list bookings", async () => {
       const response = await authenticatedTestApi("ADMIN").get(route);
-      expect(response.body.isSuccess).toBe(true);
-      console.log(response.body);
-      expect(response.body.bookings).toBeDefined();
+      const responseBody: ListBookingsResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(Array.isArray(responseBody.bookings)).toBe(true);
+    });
+
+    it("should filter bookings by id correctly", async () => {
+      const existingBookingInDB = await getABooking();
+      const response = await authenticatedTestApi("ADMIN")
+        .get(route)
+        .query(
+          qs.stringify({
+            searchBy: [
+              {
+                key: "id",
+                value: existingBookingInDB.id,
+              },
+            ],
+          })
+        );
+      const responseBody: ListBookingsResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.bookings[0].id).toBe(existingBookingInDB.id);
+    });
+
+    it("should filter bookings by specified search queries correctly", async () => {
+      const existingBookingInDB = await getABooking();
+      const response = await authenticatedTestApi("ADMIN")
+        .get(route)
+        .query(
+          qs.stringify({
+            searchBy: [
+              {
+                key: "status",
+                value: existingBookingInDB.status,
+              },
+              {
+                key: "roomNo",
+                value: existingBookingInDB.roomNo,
+              },
+              {
+                key: "amount",
+                value: existingBookingInDB.amount,
+              },
+            ],
+          })
+        );
+      const responseBody: ListBookingsResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.bookings[0].status).toBe(existingBookingInDB.status);
+      expect(responseBody.bookings[0].roomNo).toBe(existingBookingInDB.roomNo);
+      expect(responseBody.bookings[0].amount).toBe(existingBookingInDB.amount);
+    });
+
+    it("should handle pagination correctly", async () => {
+      const response = await authenticatedTestApi("ADMIN")
+        .get(route)
+        .query({ limit: 5 });
+      const responseBody: ListBookingsResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.bookings.length).toBeLessThanOrEqual(5);
+    });
+    it("should handle invalid query parameters", async () => {
+      const response = await authenticatedTestApi("ADMIN")
+        .get(route)
+        .query({ limit: "akhi" });
+      expect(response.body.isSuccess).toBe(false);
+      expect(response.body.error_type).toBe("Validation Error");
     });
   });
 });

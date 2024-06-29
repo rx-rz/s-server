@@ -18,6 +18,7 @@ export const customerRoutes = {
   list_customers: "/listCustomers",
   delete_customer: "/deleteCustomer",
   update_customer: "/updateCustomer",
+  get_customer_details: "/getCustomerDetails",
   update_customer_email: "/updateCustomerEmail",
   update_customer_password: "/updateCustomerPassword",
   update_customer_refresh_token: "/updateRefreshToken",
@@ -104,6 +105,7 @@ export const routesThatDontRequireAuthentication = [
   createRoute({ prefix: "rooms", route: "/getAvailableRooms" }),
   createRoute({ prefix: "bookings", route: "/checkExpiredBookings" }),
   createRoute({ prefix: "bookings", route: "/createBooking" }),
+  createRoute({ prefix: "payments", route: "/createPayment" }),
   createRoute({
     prefix: "bookings",
     route: "/updateBookingPaymentStatus",

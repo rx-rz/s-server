@@ -107,6 +107,10 @@ describe("CUSTOMER", () => {
     });
   });
 
+  describe("Get details for a customer", async () => {
+    
+  })
+
   describe("Update a customer", async () => {
     const route = createRoute({
       prefix: "customers",
@@ -208,10 +212,10 @@ describe("CUSTOMER", () => {
                 key: "email",
                 value: email,
               },
-              // {
-              //   key: "isVerified",
-              //   value: false
-              // }
+              {
+                key: "isVerified",
+                value: false
+              }
             ],
           })
         );
