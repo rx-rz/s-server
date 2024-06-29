@@ -8,19 +8,18 @@ import { adminRepository } from "../admin";
 
 const sendOTP: Handler = async (req, res, next) => {
   try {
-    const { email, role } = v.createOTPValidator.parse(req.query);
+    const { email, role } = v.createOTPValidator.parse(req.body);
     let user;
     if (role === "admin") {
       user = await adminRepository.getAdminDetails(email);
-      if (!user) {
-        throw new NotFoundError(`Details provided for user does not exist.`);
-      }
     } else {
       user = await customerRepository.getCustomerDetails(email);
-      if (!user)
-        throw new NotFoundError(`Details provided for user does not exist.`);
     }
-    const otpDetails = await otpRepository.createOTP(email, role);
+    if (!user) {
+      throw new NotFoundError("User does not exist.");
+    }
+    console.log({user})
+    const otpDetails = await otpRepository.createOTP(email, role)
     //TODO: uncomment later lol
     // if (otpDetails) {
     //   const response = await sendOTPEmail({
@@ -29,7 +28,7 @@ const sendOTP: Handler = async (req, res, next) => {
     //     subscriberMail: email,
     //   });
     //   if (response) {
-    return res.status(201).send({ otpDetails, isSuccess: true });
+    return res.status(httpstatus.CREATED).send({ otpDetails, isSuccess: true });
     //   }
     // }
   } catch (err) {
@@ -48,22 +47,20 @@ const verifyOTP: Handler = async (req, res, next) => {
         isSuccess: false,
       });
     }
+    
     if (dbOTP.otp === otp) {
-      await otpRepository.deleteOTP(email);
-      if (dbOTP.role === "admin") {
-        await adminRepository.updateAdminDetails({
-          email: email,
-          isVerified: true,
-        });
-        return res.status(httpstatus.OK).send({
-          message: `User  has been verified.`,
-          isSuccess: true,
-        });
-      }
-      await customerRepository.updateCustomer({
-        email: email,
-        isVerified: true,
-      });
+      await Promise.all([
+        otpRepository.deleteOTP(email),
+        dbOTP.role === "admin"
+          ? adminRepository.updateAdminDetails({
+              email: email,
+              isVerified: true,
+            })
+          : customerRepository.updateCustomer({
+              email: email,
+              isVerified: true,
+            }),
+      ]);
       return res.status(httpstatus.OK).send({
         message: `User has been verified.`,
         isSuccess: true,

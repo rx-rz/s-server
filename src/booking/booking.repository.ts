@@ -141,9 +141,6 @@ const buildBookingSearchQuery = (search: Search) => {
           )
         );
         break;
-      case "customerEmail":
-        filterQueries.push(eq(customerTable.email, value.toString()));
-
       default:
         filterQueries.push(eq(bookingTable[key], value.toString()));
         break;
@@ -172,8 +169,7 @@ const listBookings = async ({
     }
   }
   if (orderBy) {
-    const orderColumn =
-      orderBy === "customerEmail" ? customerTable.email : bookingTable[orderBy];
+    const orderColumn = bookingTable[orderBy];
     query = query.orderBy(
       ascOrDesc === "asc" ? asc(orderColumn) : desc(orderColumn)
     );

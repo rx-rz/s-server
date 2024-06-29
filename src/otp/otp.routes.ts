@@ -4,5 +4,5 @@ import { otpRoutes } from "../routes";
 
 export const otpRouter = Router();
 
-otpRouter.get(otpRoutes.send_otp, otpHandlers.sendOTP);
+otpRouter.post(otpRoutes.send_otp, otpHandlers.sendOTP);
 otpRouter.post(otpRoutes.verify_otp, otpHandlers.verifyOTP);

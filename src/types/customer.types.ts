@@ -20,34 +20,37 @@ export type LoginCustomerResponse = {
 };
 
 export type GetCustomerDetailsResponse = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  createdAt: string | null;
-  hasCreatedPasswordForAccount: boolean | null;
-  isVerified: boolean | null;
-  bookings: {
-    status: "pending" | "active" | "cancelled" | "done";
+  customer: {
     id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
     createdAt: string | null;
-    customerId: string;
-    amount: string;
-    roomNo: number;
-    startDate: string;
-    endDate: string;
-  }[];
-  payments: {
-    bookingId: string;
-    reference: string;
-    payedAt: string | null;
-    status: "pending" | "confirmed" | "failed";
-    id: string;
-    createdAt: string | null;
-    customerId: string;
-    amount: string;
-    roomNo: number;
-  }[];
+    hasCreatedPasswordForAccount: boolean | null;
+    isVerified: boolean | null;
+    bookings: {
+      status: "pending" | "active" | "cancelled" | "done";
+      id: string;
+      createdAt: string | null;
+      customerId: string;
+      amount: string;
+      roomNo: number;
+      startDate: string;
+      endDate: string;
+    }[];
+    payments: {
+      bookingId: string;
+      reference: string;
+      payedAt: string | null;
+      status: "pending" | "confirmed" | "failed";
+      id: string;
+      createdAt: string | null;
+      customerId: string;
+      amount: string;
+      roomNo: number;
+    }[];
+  };
+  isSuccess: boolean;
 };
 
 export type ListCustomersResponse = {

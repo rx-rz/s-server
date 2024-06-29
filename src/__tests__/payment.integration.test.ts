@@ -1,5 +1,5 @@
 import { describe, it } from "vitest";
-import { getABooking } from "./test-helpers";
+import { getABooking, getACustomerByEmail } from "./test-helpers";
 import { createRoute } from "../routes";
 import { testApi } from "./setup";
 
@@ -12,7 +12,8 @@ describe("PAYMENT", () => {
     })
     it("should create a payment instance in db and return an authorization url to make payment", async () => {
       const booking = await getABooking();
-      const email = await 
+      
+      const email = await getACustomerByEmail(booking.c)
       const response = await testApi.post({bookingId: booking.id})
   });
 });

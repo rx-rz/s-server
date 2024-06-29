@@ -5,14 +5,23 @@ import {
 import { createRoute } from "../routes";
 import { ListAdminsResponse } from "../types/admin.types";
 import { ListBookingsResponse } from "../types/booking.types";
-import { ListCustomersResponse } from "../types/customer.types";
+import {
+  GetCustomerDetailsResponse,
+  ListCustomersResponse,
+} from "../types/customer.types";
 import { GetRoomTypesResponse } from "../types/roomtype.types";
 import { authenticatedTestApi, testApi } from "./setup";
-export async function getACustomerByEmail(email: string){
-  const response = await authenticatedTestApi("ADMIN").get(createRoute({
-    prefix: "customers",
-    route: "/customer"
-  }))
+export async function getACustomerByEmail(email: string) {
+  const response = await authenticatedTestApi("ADMIN")
+    .get(
+      createRoute({
+        prefix: "customers",
+        route: "/getCustomerDetails",
+      })
+    )
+    .query({ email });
+  const responseBody: GetCustomerDetailsResponse = response.body;
+  return responseBody.customer;
 }
 export async function getAvailableRoom() {
   const response = await testApi.get(

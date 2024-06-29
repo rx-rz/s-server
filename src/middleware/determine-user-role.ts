@@ -16,7 +16,6 @@ export function decodeUserToken(token: string) {
 }
 
 export const adminAccessOnly: Handler = (req, res, next) => {
-  console.log("HERE!")
   if (adminOnlyRoutes.includes(req.path)) {
     const userToken = req.headers.authorization?.split(" ")[1];
     if (!userToken) {

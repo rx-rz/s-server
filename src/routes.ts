@@ -1,5 +1,3 @@
-import { ENV_VARS } from "../env";
-
 export const adminRoutes = {
   register_admin: "/registerAdmin",
   login_admin: "/loginAdmin",
@@ -30,8 +28,8 @@ export const paymentRoutes = {
 } as const;
 
 export const otpRoutes = {
-  send_otp: "/sendOTP",
   verify_otp: "/verifyOTP",
+  send_otp: "/sendOTP",
 } as const;
 
 export const roomRoutes = {
@@ -102,6 +100,8 @@ export const routesThatDontRequireAuthentication = [
   createRoute({ prefix: "customers", route: "/loginCustomer" }),
   createRoute({ prefix: "admin", route: "/registerAdmin" }),
   createRoute({ prefix: "admin", route: "/loginAdmin" }),
+  createRoute({ prefix: "otp", route: "/sendOTP" }),
+  createRoute({ prefix: "otp", route: "/verifyOTP" }),
   createRoute({ prefix: "rooms", route: "/getAvailableRooms" }),
   createRoute({ prefix: "bookings", route: "/checkExpiredBookings" }),
   createRoute({ prefix: "bookings", route: "/createBooking" }),

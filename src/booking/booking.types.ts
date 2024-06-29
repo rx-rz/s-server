@@ -25,7 +25,7 @@ export type Booking = {
 export type Bookings = Bookings[];
 
 export type Search = {
-  key: keyof Booking & "customerEmail";
+  key: keyof Booking ;
   value: number | string;
 }[];
 
@@ -34,5 +34,5 @@ export type ListBookingParams = {
   pageNo: number;
   searchBy?: Search;
   ascOrDesc: "asc" | "desc";
-  orderBy: keyof Booking & "customerEmail";
+  orderBy: keyof Booking ;
 };

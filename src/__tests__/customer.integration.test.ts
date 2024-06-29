@@ -6,6 +6,7 @@ import { authenticatedTestApi, testApi } from "./setup";
 import { httpstatus } from "../ctx";
 import qs from "qs";
 import {
+  GetCustomerDetailsResponse,
   ListCustomersResponse,
   LoginCustomerResponse,
   RegisterCustomerResponse,
@@ -40,6 +41,7 @@ describe("CUSTOMER", () => {
     });
     it("should register a new customer", async () => {
       const response = await testApi.post(route).send(newCustomer);
+      console.log({response})
       const responseBody: RegisterCustomerResponse = response.body;
       expect(responseBody.isSuccess).toBe(true);
       expect(responseBody.message).toBe("Account created");
@@ -51,6 +53,8 @@ describe("CUSTOMER", () => {
       expect(response.body.error_type).toBe("Duplicate Entry Error");
     });
   });
+
+
 
   beforeEach(async () => {
     testCustomer = {
@@ -108,8 +112,27 @@ describe("CUSTOMER", () => {
   });
 
   describe("Get details for a customer", async () => {
-    
-  })
+    const route = createRoute({
+      prefix: "customers",
+      route: "/getCustomerDetails",
+      includeBaseURL: true,
+    });
+
+    it("should fetch the details of a particular customer", async () => {
+      const response = await authenticatedTestApi("ADMIN")
+        .get(route)
+        .query({ email: testCustomer.email });
+      const responseBody: GetCustomerDetailsResponse = response.body;
+      expect(responseBody.isSuccess).toBe(true);
+      expect(responseBody.customer.email).toBe(testCustomer.email);
+    });
+
+    const response = await authenticatedTestApi("CUSTOMER")
+      .get(route)
+      .query({ email: "Fake@Fake.com" });
+    expect(response.body.isSuccess).toBe(false);
+    expect(response.body.error_type).toBe("Not Found Error");
+  });
 
   describe("Update a customer", async () => {
     const route = createRoute({
@@ -214,8 +237,8 @@ describe("CUSTOMER", () => {
               },
               {
                 key: "isVerified",
-                value: false
-              }
+                value: false,
+              },
             ],
           })
         );
@@ -316,7 +339,7 @@ describe("CUSTOMER", () => {
         .patch(route)
         .set({ Cookie: "" })
         .send({ email: testCustomer.email });
-      expect(response.body.isSuccess).toBe(false);  
+      expect(response.body.isSuccess).toBe(false);
       expect(response.statusCode).toBe(httpstatus.UNAUTHORIZED);
     });
 
