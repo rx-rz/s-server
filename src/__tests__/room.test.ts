@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import { authenticatedTestApi, testApi } from "./setup";
 import { createRoute } from "../routes";
 import { getARoom, getRoomTypeID } from "./test-helpers";
-import { CreateRoomResponse, GetAvailableRoomsResponse, GetRoomDetailsResponse } from "../room/room.types";
-
+import {
+  CreateRoomResponse,
+  GetAvailableRoomsResponse,
+  GetRoomDetailsResponse,
+} from "../room/room.types";
 
 describe("ROOM", () => {
   describe("Create rooms", () => {
@@ -21,9 +24,9 @@ describe("ROOM", () => {
       const response = await authenticatedTestApi("ADMIN")
         .post(route)
         .send(rooms);
-      const responseBody: CreateRoomResponse = response.body
+      const responseBody: CreateRoomResponse = response.body;
       expect(responseBody.isSuccess).toBe(true);
-      expect(responseBody.message).toBeDefined()
+      expect(responseBody.message).toBeDefined();
     });
 
     it("should throw  a not found error when an existent room type ID is provided.", async () => {
@@ -32,11 +35,11 @@ describe("ROOM", () => {
         noOfRooms: 2,
       };
       const response = await authenticatedTestApi("ADMIN")
-      .post(route)
-      .send(rooms);
-      expect(response.body.isSuccess).toBe(false)
-      expect(response.body.error_type).toBe("Not Found Error")
-    })
+        .post(route)
+        .send(rooms);
+      expect(response.body.isSuccess).toBe(false);
+      expect(response.body.error_type).toBe("Not Found Error");
+    });
   });
 
   describe("Get room details", () => {
@@ -50,16 +53,18 @@ describe("ROOM", () => {
       const response = await authenticatedTestApi("ADMIN")
         .get(route)
         .query({ roomNo: existingRoomInDB.roomNo });
-        const responseBody: GetRoomDetailsResponse = response.body
+      const responseBody: GetRoomDetailsResponse = response.body;
       expect(responseBody.isSuccess).toBe(true);
       expect(responseBody.rooms.roomNo).toBe(existingRoomInDB.roomNo);
     });
 
     it("should throw a not found error for when an inexistent room number is provided", async () => {
-      const response = await authenticatedTestApi("ADMIN").get(route).query({roomNo: Infinity})
-      expect(response.body.isSuccess).toBe(false)
-      expect(response.body.error_type).toBe("Not Found Error")
-    })
+      const response = await authenticatedTestApi("ADMIN")
+        .get(route)
+        .query({ roomNo: 1_000_000_000 });
+      expect(response.body.isSuccess).toBe(false);
+      expect(response.body.error_type).toBe("Not Found Error");
+    });
   });
 
   describe("Get available rooms", () => {
@@ -70,9 +75,13 @@ describe("ROOM", () => {
     });
     it("get rooms with a status of available", async () => {
       const response = await testApi.get(route);
-      const responseBody: GetAvailableRoomsResponse = response.body
+      const responseBody: GetAvailableRoomsResponse = response.body;
       expect(responseBody.isSuccess).toBe(true);
-      expect(responseBody.availableRooms.every(availableRoom => availableRoom.rooms.status === "available")).toBe(true);
+      expect(
+        responseBody.availableRooms.every(
+          (availableRoom) => availableRoom.rooms.status === "available"
+        )
+      ).toBe(true);
     });
   });
 

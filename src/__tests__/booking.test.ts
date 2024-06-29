@@ -84,7 +84,6 @@ describe("BOOKING", () => {
     })
     it("should list bookings", async () => {
       const response =await authenticatedTestApi("ADMIN").get(route)
-      console.log({b: response.body.bookings})
       expect(response.body.isSuccess).toBe(true)
       expect(response.body.bookings).toBeDefined()
     })

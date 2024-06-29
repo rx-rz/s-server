@@ -8,7 +8,7 @@ type UserToken = {
   iat: number;
   exp: number;
 };
-function decodeUserToken(token: string) {
+export function decodeUserToken(token: string) {
   const userToken = JSON.parse(
     Buffer.from(token.split(".")[1], "base64").toString()
   );
@@ -16,6 +16,7 @@ function decodeUserToken(token: string) {
 }
 
 export const adminAccessOnly: Handler = (req, res, next) => {
+  console.log("HERE!")
   if (adminOnlyRoutes.includes(req.path)) {
     const userToken = req.headers.authorization?.split(" ")[1];
     if (!userToken) {
@@ -26,7 +27,6 @@ export const adminAccessOnly: Handler = (req, res, next) => {
       });
     }
     const token: UserToken = decodeUserToken(userToken);
-    console.log({token})
     if(!token){
       return res.status(httpstatus.FORBIDDEN).json({
         error_type: "JWT Error",

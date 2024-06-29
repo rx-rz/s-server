@@ -4,6 +4,7 @@ import { app } from "../app";
 import request from "supertest";
 import { ENV_VARS } from "../../env";
 import { sign } from "jsonwebtoken";
+import { decodeUserToken } from "../middleware/determine-user-role";
 beforeAll(async () => {
   // using 0 means the OS will find an available port
   await startTestServer(0);
@@ -15,14 +16,12 @@ afterAll(async () => {
 
 function generateJWTToken(role: "ADMIN" | "CUSTOMER") {
   const secret = ENV_VARS.JWT_SECRET || "secret";
-  const payload = { role };
-  return sign(payload, secret, { expiresIn: "10m" });
+  return sign({user: {role}}, secret, { expiresIn: "10m" });
 }
 
 function generateRefreshToken(role: "ADMIN" | "CUSTOMER") {
   const secret = ENV_VARS.JWT_REFRESH_SECRET || "refresh-secret";
-  const payload = { role };
-  return sign(payload, secret, { expiresIn: "7d" });
+  return sign({user: {role}}, secret, { expiresIn: "7d" });
 }
 
 const tokens = {
@@ -39,6 +38,7 @@ const tokens = {
 export const testApi = request.agent(app);
 
 export const authenticatedTestApi = (role: "ADMIN" | "CUSTOMER") => {
+  console.log({tokens: decodeUserToken(tokens.ADMIN.accessToken), a: decodeUserToken(tokens.CUSTOMER.accessToken).role})
   testApi.set("Authorization", `Bearer ${tokens[role].accessToken}`);
   return testApi;
 };

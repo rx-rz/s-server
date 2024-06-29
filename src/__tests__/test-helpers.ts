@@ -76,6 +76,5 @@ export async function getARoom(available?: boolean) {
       })
     )
     const responseBody: ListRoomsResponse = response.body
-  console.log({responseBody})
   return responseBody.rooms[0];
 }

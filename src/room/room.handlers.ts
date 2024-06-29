@@ -4,7 +4,6 @@ import { roomRepository } from "./room.repository";
 import { httpstatus } from "../ctx";
 import { roomTypeRepository } from "../room_types/roomtype.repository";
 import { NotFoundError } from "../errors";
-import { checkIfRoomTypeExists } from "../room_types/roomtype.handlers";
 
 async function checkIfRoomExists(roomNo: number) {
   const room = await roomRepository.getRoomDetails(roomNo);
@@ -101,7 +100,7 @@ const deleteRoom: Handler = async (req, res, next) => {
     const roomDeleted = await roomRepository.deleteRoom(roomNo);
     return res.status(httpstatus.OK).json({
       roomDeleted,
-      isSuccess: true,
+      isSuccess: true
     });
   } catch (err) {
     next(err);
