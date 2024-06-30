@@ -41,7 +41,6 @@ describe("CUSTOMER", () => {
     });
     it("should register a new customer", async () => {
       const response = await testApi.post(route).send(newCustomer);
-      console.log({response})
       const responseBody: RegisterCustomerResponse = response.body;
       expect(responseBody.isSuccess).toBe(true);
       expect(responseBody.message).toBe("Account created");
@@ -53,8 +52,6 @@ describe("CUSTOMER", () => {
       expect(response.body.error_type).toBe("Duplicate Entry Error");
     });
   });
-
-
 
   beforeEach(async () => {
     testCustomer = {

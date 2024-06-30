@@ -40,7 +40,6 @@ const tokens = {
 export const testApi = request.agent(app);
 
 export const authenticatedTestApi = (role: "ADMIN" | "CUSTOMER") => {
-  console.log({tokens: decodeUserToken(tokens.ADMIN.accessToken), a: decodeUserToken(tokens.CUSTOMER.accessToken).role})
   testApi.set("Authorization", `Bearer ${tokens[role].accessToken}`);
   return testApi;
 };

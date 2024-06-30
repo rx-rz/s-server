@@ -18,7 +18,6 @@ const sendOTP: Handler = async (req, res, next) => {
     if (!user) {
       throw new NotFoundError("User does not exist.");
     }
-    console.log({user})
     const otpDetails = await otpRepository.createOTP(email, role)
     //TODO: uncomment later lol
     // if (otpDetails) {

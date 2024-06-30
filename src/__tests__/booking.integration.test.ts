@@ -76,6 +76,7 @@ describe("BOOKING", () => {
     });
 
     it("it should throw an invalid input error when the provided booking price is not correct", async () => {
+      const room = await getAvailableRoom()
       const booking = {
         customerId: customer.id,
         roomNo: room.roomNo,
@@ -85,9 +86,16 @@ describe("BOOKING", () => {
       };
       const response = await testApi.post(route).send(booking);
       expect(response.body.isSuccess).toBe(false);
-      expect(response.body.error_type).toBe("Duplicate Entry Error");
+      expect(response.body.error_type).toBe("Invalid Input Error");
     });
   });
+
+  // describe("Update booking and payment status", async () => {
+  //   const route = createRoute({
+  //     prefix: "bookings",
+  //     route: "/updateBookingPaymentStatus"
+  //   })
+  // })
 
   describe("Update a booking", () => {
     const route = createRoute({

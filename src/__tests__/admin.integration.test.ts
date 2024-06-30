@@ -31,7 +31,6 @@ describe("ADMIN", () => {
     });
     it("should register a new admin", async () => {
       const response = await testApi.post(route).send(newAdmin);
-      console.log(response)
       const responseBody: RegisterAdminResponse = response.body;
       expect(responseBody.isSuccess).toBe(true);
       expect(responseBody.message).toBe("Account created");
