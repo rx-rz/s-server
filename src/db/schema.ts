@@ -36,9 +36,9 @@ export const customer = pgTable(
     password: text("password"),
     refreshToken: text("refresh_token").unique().notNull(),
     createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
-    hasCreatedPasswordForAccount: boolean(
-      "has_created_password_for_account"
-    ).default(false),
+    phoneNo: varchar("phone_number", { length: 50 }),
+    address: text("address"),
+    zip: varchar("zip", { length: 10 }),
     isVerified: boolean("is_verified").default(false),
   },
   (table) => {
@@ -185,8 +185,8 @@ export const booking = pgTable(
   "bookings",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    customerId: uuid("customer_id")
-      .references(() => customer.id, { onDelete: "no action" })
+    customerEmail: varchar("customer_email", {length: 255})
+      .references(() => customer.email, { onDelete: "no action" })
       .notNull(),
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
     roomNo: integer("roomNo")
@@ -202,7 +202,7 @@ export const booking = pgTable(
   },
   (table) => {
     return {
-      customer_id_idx: index("customer_id_idx").on(table.customerId),
+      customer_email_idx: index("customer_email_idx").on(table.customerEmail),
     };
   }
 );
@@ -215,17 +215,14 @@ export const bookingRelation = relations(booking, ({ one, many }) => {
       relationName: "room",
     }),
     customers: one(customer, {
-      fields: [booking.customerId],
-      references: [customer.id],
+      fields: [booking.customerEmail],
+      references: [customer.email],
       relationName: "customer",
     }),
   };
 });
 
-export const userOtpsEnum = pgEnum("user_role", [
-  "admin",
-  "customer"
-])
+export const userOtpsEnum = pgEnum("user_role", ["admin", "customer"]);
 
 export const userOtps = pgTable("user_otps", {
   id: serial("id").primaryKey(),
@@ -234,7 +231,6 @@ export const userOtps = pgTable("user_otps", {
   role: userOtpsEnum("role").default("customer"),
   expiresAt: bigint("expires_at", { mode: "number" }).notNull(),
 });
-
 
 export const dbSchema = {
   customer,
@@ -250,7 +246,6 @@ export const dbSchema = {
   bookingstatusEnum,
   admin,
   userOtps,
- 
 };
 
 export type dbSchemaType = typeof dbSchema;

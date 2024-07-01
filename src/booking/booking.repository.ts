@@ -1,20 +1,13 @@
-import { SQLWrapper, and, asc, desc, eq, gte, ilike, lte } from "drizzle-orm";
+import { SQLWrapper, and, asc, desc, eq, gte, lte } from "drizzle-orm";
 import { ctx } from "../ctx";
-import {
-  Booking,
-  Bookings,
-  CreateBookingRequest,
-  ListBookingParams,
-  Search,
-  UpdateBookingRequest,
-} from "./booking.types";
+import { Booking, CreateBookingRequest, ListBookingRequest, Search, UpdateBookingRequest } from "../types/booking.types";
 const bookingTable = ctx.schema.booking;
 const customerTable = ctx.schema.customer;
 const roomTable = ctx.schema.room;
 
 const bookingValues = {
   id: bookingTable.id,
-  customerId: bookingTable.customerId,
+  customerEmail: bookingTable.customerEmail,
   startDate: bookingTable.startDate,
   endDate: bookingTable.endDate,
   status: bookingTable.status,
@@ -24,7 +17,7 @@ const bookingValues = {
 };
 
 const createBooking = async ({
-  customerId,
+  customerEmail,
   endDate,
   roomNo,
   startDate,
@@ -32,7 +25,7 @@ const createBooking = async ({
 }: CreateBookingRequest) => {
   const [booking] = await ctx.db
     .insert(bookingTable)
-    .values({ customerId, endDate, startDate, amount, roomNo })
+    .values({ customerEmail, endDate, startDate, amount, roomNo })
     .returning(bookingValues);
   return booking;
 };
@@ -120,9 +113,11 @@ const getBookingDetails = async (bookingID: string) => {
 const deleteBooking = async (bookingID: string) => {
   const bookingDeleted = await ctx.db
     .delete(bookingTable)
-    .where(eq(bookingTable.id, bookingID));
+    .where(eq(bookingTable.id, bookingID))
+    .returning(bookingValues);
   return bookingDeleted;
 };
+
 const buildBookingSearchQuery = (search: Search) => {
   const filterQueries: SQLWrapper[] = [];
   for (const { key, value } of search) {
@@ -132,6 +127,9 @@ const buildBookingSearchQuery = (search: Search) => {
         break;
       case "endDate":
         filterQueries.push(lte(bookingTable.endDate, value.toString()));
+        break;
+      case "customerEmail":
+        filterQueries.push(eq(bookingTable.customerEmail, value.toString()));
         break;
       case "status":
         filterQueries.push(
@@ -156,12 +154,15 @@ const listBookings = async ({
   orderBy,
   ascOrDesc,
   searchBy,
-}: ListBookingParams) => {
+}: ListBookingRequest) => {
   let query;
   query = ctx.db
     .select({ ...bookingValues, customerEmail: customerTable.email })
     .from(bookingTable)
-    .leftJoin(customerTable, eq(customerTable.id, bookingTable.customerId));
+    .leftJoin(
+      customerTable,
+      eq(customerTable.email, bookingTable.customerEmail)
+    );
   if (searchBy) {
     const filterCondition = buildBookingSearchQuery(searchBy);
     if (filterCondition) {
@@ -177,6 +178,7 @@ const listBookings = async ({
 
   const noOfBookings = (await query).length;
   const bookings = await query.limit(limit).offset((pageNo - 1) * limit);
+
   return { noOfBookings, bookings };
 };
 

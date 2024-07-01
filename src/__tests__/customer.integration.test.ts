@@ -20,6 +20,9 @@ type CustomerRegisterObject = {
   firstName: string;
   lastName: string;
   password: string;
+  zip: string;
+  phoneNo: string;
+  address: string;
 };
 
 let testCustomer: CustomerRegisterObject;
@@ -31,6 +34,9 @@ describe("CUSTOMER", () => {
       firstName: faker.person.firstName(),
       lastName: faker.person.lastName(),
       password: faker.internet.password(),
+      zip: faker.location.zipCode(),
+      phoneNo: faker.phone.number(),
+      address: faker.location.streetAddress(),
     };
     const refreshToken = generateRefreshToken(customer.email);
     const newCustomer = { ...customer, refreshToken };
@@ -59,6 +65,9 @@ describe("CUSTOMER", () => {
       lastName: faker.person.lastName(),
       firstName: faker.person.firstName(),
       password: faker.internet.password(),
+      zip: faker.location.zipCode(),
+      phoneNo: faker.phone.number(),
+      address: faker.location.streetAddress(),
     };
     await testApi
       .post(

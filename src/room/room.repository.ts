@@ -6,17 +6,10 @@ import {
   desc,
   eq,
   gte,
-  like,
-  sql,
 } from "drizzle-orm";
 import { ctx } from "../ctx";
-import {
-  CreateRoomRequest,
-  ListRoomParams,
-  Search,
-  UpdateRoomRequest,
-} from "./room.types";
 import { db } from "../db/db";
+import { CreateRoomRequest, ListRoomRequest, Search, UpdateRoomRequest } from "../types/room.types";
 
 const roomTable = ctx.schema.room;
 const roomTypeTable = ctx.schema.roomType;
@@ -113,8 +106,9 @@ const listRooms = async ({
   orderBy,
   searchBy,
   ascOrDesc,
-}: ListRoomParams) => {
+}: ListRoomRequest) => {
   let query;
+  
   query = ctx.db
     .select(roomListValues)
     .from(roomTable)

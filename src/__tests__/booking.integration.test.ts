@@ -16,7 +16,7 @@ import { Room } from "../types/room.types";
 import qs from "qs";
 const date = new Date();
 type BookingCreationObject = {
-  customerId: string;
+  customerEmail: string;
   roomNo: number;
   startDate: string;
   endDate: string;
@@ -50,7 +50,7 @@ describe("BOOKING", () => {
 
     it("should create a booking", async () => {
       const booking = {
-        customerId: customer.id,
+        customerEmail: customer.email,
         roomNo: room.roomNo,
         startDate,
         endDate,
@@ -64,7 +64,7 @@ describe("BOOKING", () => {
 
     it("should throw a duplicate entry error for a room that has already been booked", async () => {
       const booking = {
-        customerId: customer.id,
+        customerEmail: customer.email,
         roomNo: room.roomNo,
         startDate,
         endDate,
@@ -78,7 +78,7 @@ describe("BOOKING", () => {
     it("it should throw an invalid input error when the provided booking price is not correct", async () => {
       const room = await getAvailableRoom()
       const booking = {
-        customerId: customer.id,
+        customerEmail: customer.email,
         roomNo: room.roomNo,
         startDate,
         endDate,

@@ -11,7 +11,11 @@ type UserCreationObject = {
   password?: string | undefined;
 };
 
-let testCustomer: UserCreationObject;
+let testCustomer: UserCreationObject & {
+  zip: string;
+  phoneNo: string;
+  address: string;
+};
 let testAdmin: UserCreationObject;
 let adminOtp: number;
 let customerOtp: number;
@@ -22,12 +26,15 @@ beforeAll(async () => {
     lastName: faker.person.lastName(),
     firstName: faker.person.firstName(),
     password: faker.internet.password(),
+    zip: faker.location.zipCode(),
+    phoneNo: faker.phone.number(),
+    address: faker.location.streetAddress(),
   };
   testAdmin = {
     email: faker.internet.email(),
     lastName: faker.person.lastName(),
     firstName: faker.person.firstName(),
-    password: faker.internet.password(),  
+    password: faker.internet.password(),
   };
 
   await Promise.all([
@@ -141,12 +148,10 @@ describe("OTP", () => {
     });
 
     it("should throw a not found error for if an invalid / inexistent otp is provided", async () => {
-      const response = await testApi
-        .post(route)
-        .send({
-          email: testAdmin.email,
-          otp: faker.number.int({ min: 1000000, max: 1100000 }),
-        });
+      const response = await testApi.post(route).send({
+        email: testAdmin.email,
+        otp: faker.number.int({ min: 1000000, max: 1100000 }),
+      });
       expect(response.body.isSuccess).toBe(false);
       expect(response.body.error_type).toBe("Not Found Error");
     });

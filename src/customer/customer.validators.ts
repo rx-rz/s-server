@@ -16,6 +16,10 @@ const registrationValidator = z.object({
   email: z.string({ required_error: "Email is required!" }).email({
     message: "Email input is not a valid email. Please correct and try again",
   }),
+  zip: z.string().max(10),
+  phoneNo: z.string().max(50),
+  address: z.string(),
+
   password: z
     .string({ invalid_type_error: "Password must be a string" })
     .min(6, { message: "Minimum of 6 characters are allowed" })
@@ -69,7 +73,9 @@ const updateValidator = z.object({
   email: z.string({ required_error: "Email is required!" }).email({
     message: "Email input is not a valid email. Please correct and try again.",
   }),
-  hasCreatedPasswordForAccount: z.boolean().optional(),
+  zip: z.string().max(10).optional(),
+  phoneNo: z.string().max(50).optional(),
+  address: z.string().optional(),
 });
 
 const updateEmailValidator = z.object({

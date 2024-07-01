@@ -55,8 +55,6 @@ const loginCustomer: Handler = async (req, res, next) => {
       id: existingCustomer.id,
       isVerified: existingCustomer.isVerified,
       role: "CUSTOMER",
-      hasCreatedPasswordForAccount:
-        existingCustomer.hasCreatedPasswordForAccount,
       firstName: existingCustomer.firstName,
       lastName: existingCustomer.lastName,
     });
@@ -101,9 +99,7 @@ const deleteCustomer: Handler = async (req, res, next) => {
   try {
     const { email } = v.emailValidator.parse(req.query);
     await checkIfCustomerExists(email);
-    const customerDeleted = await customerRepository.deleteCustomer({
-      email,
-    });
+    const customerDeleted = await customerRepository.deleteCustomer(email);
     return res.status(httpstatus.OK).send({ customerDeleted, isSuccess: true });
   } catch (err) {
     next(err);
@@ -132,10 +128,10 @@ const updateCustomerRefreshToken: Handler = async (req, res, next) => {
     }
     const customer = await checkIfCustomerExists(email);
     const newRefreshToken = generateRefreshToken(email);
-    await customerRepository.updateRefreshToken(
-      customer.email,
-      newRefreshToken
-    );
+    await customerRepository.updateRefreshToken({
+      email: customer.email,
+      refreshToken: newRefreshToken,
+    });
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       secure: ENV_VARS.NODE_ENV === "production" ? true : false,
@@ -168,6 +164,7 @@ const updateCustomerEmail: Handler = async (req, res, next) => {
 const updateCustomerPassword: Handler = async (req, res, next) => {
   try {
     const body = v.updatePasswordValidator.parse(req.body);
+
     await checkIfCustomerExists(body.email);
     const passwordIsCorrect = await checkIfPasswordIsCorrect(
       body.currentPassword,

@@ -1,25 +1,14 @@
-import {
-  SQLWrapper,
-  and,
-  asc,
-  desc,
-  eq,
-  exists,
-  ilike,
-  is,
-  like,
-  sql,
-} from "drizzle-orm";
+import { SQLWrapper, and, asc, desc, eq, ilike } from "drizzle-orm";
 import { ctx } from "../ctx";
 import {
-  CustomerDeleteRequest,
-  CustomerRegisterRequest,
-  CustomerUpdateEmailRequest,
-  CustomerUpdatePasswordRequest,
-  CustomerUpdateRequest,
-  ListCustomerParams,
+  ListCustomerRequest,
+  RegisterCustomerRequest,
   Search,
-} from "./customer.types";
+  UpdateCustomerEmailRequest,
+  UpdateCustomerPasswordRequest,
+  UpdateCustomerRequest,
+  UpdateRefreshTokenRequest,
+} from "../types/customer.types";
 
 const customerTable = ctx.schema.customer;
 
@@ -29,12 +18,13 @@ export const customerValues = {
   email: customerTable.email,
   id: customerTable.id,
   isVerified: customerTable.isVerified,
-  refreshToken: customerTable.refreshToken,
-  hasCreatedPasswordForAccount: customerTable.hasCreatedPasswordForAccount,
+  address: customerTable.address,
+  phoneNo: customerTable.phoneNo,
+  zip: customerTable.zip,
   createdAt: customerTable.createdAt,
 };
 
-const register = async (customerRequest: CustomerRegisterRequest) => {
+const register = async (customerRequest: RegisterCustomerRequest) => {
   const [customer] = await ctx.db
     .insert(customerTable)
     .values(customerRequest)
@@ -58,7 +48,10 @@ const getRefreshToken = async (email: string) => {
   return customer.refreshToken || "";
 };
 
-const updateRefreshToken = async (email: string, refreshToken: string) => {
+const updateRefreshToken = async ({
+  email,
+  refreshToken,
+}: UpdateRefreshTokenRequest) => {
   const [customer] = await ctx.db
     .update(customerTable)
     .set({ refreshToken })
@@ -78,7 +71,6 @@ const getCustomerWithBookingAndPaymentDetails = async (email: string) => {
   });
   return customerDetails;
 };
-
 
 const customerListSearch = (search: Search): SQLWrapper[] => {
   let filterQueries = [];
@@ -107,7 +99,7 @@ const listCustomer = async ({
   pageNo,
   searchBy,
   ascOrDesc,
-}: ListCustomerParams) => {
+}: ListCustomerRequest) => {
   let customers;
   const query = ctx.db.select(customerValues).from(customerTable);
   if (searchBy) {
@@ -128,15 +120,15 @@ const listCustomer = async ({
   return { customers, noOfCustomers: customerList.length };
 };
 
-const deleteCustomer = async (customerRequest: CustomerDeleteRequest) => {
+const deleteCustomer = async (email: string) => {
   const [customerDeleted] = await ctx.db
     .delete(customerTable)
-    .where(eq(customerValues.email, customerRequest.email))
+    .where(eq(customerValues.email, email))
     .returning(customerValues);
   return customerDeleted;
 };
 
-const updateCustomer = async (customerRequest: CustomerUpdateRequest) => {
+const updateCustomer = async (customerRequest: UpdateCustomerRequest) => {
   const { email, ...request } = customerRequest;
   const [customerUpdated] = await ctx.db
     .update(customerTable)
@@ -147,7 +139,7 @@ const updateCustomer = async (customerRequest: CustomerUpdateRequest) => {
 };
 
 const updateCustomerEmail = async (
-  customerRequest: CustomerUpdateEmailRequest
+  customerRequest: UpdateCustomerEmailRequest
 ) => {
   const [customerUpdated] = await ctx.db
     .update(customerTable)
@@ -158,7 +150,7 @@ const updateCustomerEmail = async (
 };
 
 const updateCustomerPassword = async (
-  customerRequest: CustomerUpdatePasswordRequest
+  customerRequest: UpdateCustomerPasswordRequest
 ) => {
   const [customerUpdated] = await ctx.db
     .update(customerTable)

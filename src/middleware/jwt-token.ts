@@ -9,7 +9,6 @@ export type User = {
   role: "ADMIN" | "CUSTOMER";
   email: string;
   isVerified: boolean | null;
-  hasCreatedPasswordForAccount: boolean | null;
   firstName: string | null;
   lastName: string | null;
 };

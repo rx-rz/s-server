@@ -60,7 +60,6 @@ const loginAdmin: Handler = async (req, res, next) => {
       role: "ADMIN",
       firstName: existingAdmin.firstName,
       lastName: existingAdmin.lastName,
-      hasCreatedPasswordForAccount: true,
       isVerified: existingAdmin.isVerified,
     });
 

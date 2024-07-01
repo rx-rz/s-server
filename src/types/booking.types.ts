@@ -1,12 +1,40 @@
 export type Booking = {
-  customerId: string;
-  endDate: string;
-  roomNo: number;
-  startDate: string;
-  amount: string;
   id: string;
   createdAt: string | null;
-  status: "pending" | "active" | "cancelled" | "done";
+  customerEmail: string;
+  amount: string;
+  startDate: string;
+  endDate: string;
+  status: "active" | "cancelled" | "done" | "pending";
+  roomNo: number;
+};
+
+export type CreateBookingRequest = {
+  roomNo: number;
+  startDate: string;
+  endDate: string;
+  customerEmail: string;
+  amount: string;
+};
+
+export type UpdateBookingRequest = {
+  id: string;
+  status?: "active" | "cancelled" | "done" | "pending";
+} & Partial<CreateBookingRequest>;
+
+export type Bookings = Bookings[];
+
+export type Search = {
+  key: keyof Booking;
+  value: number | string;
+}[];
+
+export type ListBookingRequest = {
+  limit: number;
+  pageNo: number;
+  searchBy?: Search;
+  ascOrDesc: "asc" | "desc";
+  orderBy: keyof Booking;
 };
 
 export type CreateBookingResponse = {
@@ -33,7 +61,7 @@ export type DeleteBookingResponse = {
 
 export type GetBookingDetailsResponse = {
   booking: {
-    customerId: string;
+    customerEmail: string;
     endDate: string;
     roomNo: number;
     startDate: string;

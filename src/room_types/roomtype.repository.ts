@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { ctx } from "../ctx";
-import { CreateRoomTypeRequest, UpdateRoomTypeRequest } from "./roomtype.types";
+import { CreateRoomTypeRequest, UpdateRoomTypeRequest } from "../types/roomtype.types";
 const roomTypeTable = ctx.schema.roomType;
 
 const roomTypeValues = {

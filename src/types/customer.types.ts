@@ -3,10 +3,63 @@ export type Customer = {
   lastName: string;
   email: string;
   id: string;
+  zip: string;
+  phoneNo: string;
+  address: string;
   isVerified: boolean | null;
   refreshToken: string;
   hasCreatedPasswordForAccount: boolean | null;
   createdAt: string | null;
+};
+
+export type RegisterCustomerRequest = {
+  firstName: string;
+  lastName: string;
+  zip: string;
+  address: string;
+  phoneNo: string;
+  email: string;
+  password?: string | undefined;
+  refreshToken: string;
+};
+
+export type Search = {
+  key: "firstName" | "lastName" | "email" | "createdAt" | "isVerified";
+  value: number | string | boolean;
+}[];
+export type ListCustomerRequest = {
+  limit: number;
+  pageNo: number;
+  orderBy: "firstName" | "lastName" | "email" | "createdAt" | "isVerified";
+  ascOrDesc: "asc" | "desc";
+  searchBy?: Search;
+};
+
+export type UpdateRefreshTokenRequest = {
+  email: string;
+  refreshToken: string;
+};
+
+export type UpdateCustomerPasswordRequest = {
+  email: string;
+  currentPassword: string;
+  newPassword: string;
+};
+
+export type UpdateCustomerRequest = {
+  firstName?: string;
+  lastName?: string;
+  isVerified?: boolean;
+  zip?: string;
+  phoneNo?: string;
+  address?: string;
+  email: string;
+};
+
+export type UpdateCustomerEmailRequest = {
+  email: string;
+  newEmail: string;
+  password: string;
 };
 
 export type RegisterCustomerResponse = {
@@ -24,6 +77,9 @@ export type GetCustomerDetailsResponse = {
     id: string;
     firstName: string;
     lastName: string;
+    zip: string;
+    phoneNo: string;
+    address: string;
     email: string;
     createdAt: string | null;
     hasCreatedPasswordForAccount: boolean | null;
@@ -32,7 +88,7 @@ export type GetCustomerDetailsResponse = {
       status: "pending" | "active" | "cancelled" | "done";
       id: string;
       createdAt: string | null;
-      customerId: string;
+      customerEmail: string;
       amount: string;
       roomNo: number;
       startDate: string;
@@ -45,7 +101,7 @@ export type GetCustomerDetailsResponse = {
       status: "pending" | "confirmed" | "failed";
       id: string;
       createdAt: string | null;
-      customerId: string;
+      customerEmail: string;
       amount: string;
       roomNo: number;
     }[];

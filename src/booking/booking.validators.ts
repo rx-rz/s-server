@@ -12,7 +12,7 @@ const createBookingValidator = z
     endDate: z.coerce.string().refine((date) => date > currentTimestamp, {
       message: "End date must be greater than the current date.",
     }),
-    customerId: z.string().uuid(),
+    customerEmail: z.string().email(),
   })
   .superRefine(({ startDate, endDate }, ctx) => {
     if (endDate < startDate) {
@@ -33,7 +33,7 @@ const updateBookingValidator = z.object({
   roomNos: z.array(z.number()).optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-  customerId: z.string().optional(),
+  customerEmail: z.string().optional(),
 });
 
 const listBookingValidator = z.object({
@@ -69,17 +69,7 @@ const listBookingValidator = z.object({
     .default("createdAt"),
 });
 
-export type Booking = {
-  id: string;
-  createdAt: string | null;
-  customerId: string;
-  amount: string;
-  startDate: string;
-  endDate: string;
-  status: "active" | "cancelled" | "done" | "pending";
-  paymentStatus: "pending" | "confirmed";
-  roomNo: number;
-};
+
 export const v = {
   createBookingValidator,
   bookingIDValidator,

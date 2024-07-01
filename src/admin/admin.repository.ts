@@ -1,11 +1,6 @@
 import { eq } from "drizzle-orm";
 import { ctx } from "../ctx";
-import {
-  AdminCreationRequest,
-  AdminUpdateRequest,
-  ChangeAdminEmailRequest,
-  ChangeAdminPasswordRequest,
-} from "./admin.types";
+import { ChangeAdminEmailRequest, ChangeAdminPasswordRequest, CreateAdminRequest, UpdateAdminRequest } from "../types/admin.types";
 
 const adminTable = ctx.schema.admin;
 
@@ -17,7 +12,7 @@ const adminValues = {
   isVerified: adminTable.isVerified,
 };
 
-const register = async (adminRequest: AdminCreationRequest) => {
+const register = async (adminRequest: CreateAdminRequest) => {
   const [admin] = await ctx.db
     .insert(adminTable)
     .values(adminRequest)
@@ -65,7 +60,7 @@ const deleteAdmin = async (email: string) => {
   return adminDeleted;
 };
 
-const updateAdminDetails = async (adminRequest: AdminUpdateRequest) => {
+const updateAdminDetails = async (adminRequest: UpdateAdminRequest) => {
   const { email, ...request } = adminRequest;
   const [adminUpdated] = await ctx.db
     .update(adminTable)
