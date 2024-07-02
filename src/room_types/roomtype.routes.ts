@@ -16,6 +16,12 @@ roomTypeRouter.get(
   roomTypeRoutes.get_room_types,
   roomTypeHandlers.getRoomTypes
 );
+
+roomTypeRouter.get(
+  roomTypeRoutes.get_room_types_for_homepage,
+  roomTypeHandlers.getRoomTypesForHomePage
+);
+
 roomTypeRouter.patch(
   roomTypeRoutes.update_room_type,
   roomTypeHandlers.updateRoomType
