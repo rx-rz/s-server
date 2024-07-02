@@ -61,6 +61,11 @@ const getRoomTypes = async () => {
   return roomTypes;
 };
 
+const getRoomTypesForHomePage = async () => {
+  const roomTypes = await ctx.db.select(roomTypeValues).from(roomTypeTable).limit(4);
+  return roomTypes;
+}
+
 const getRoomsForRoomType = async (name: string) => {
   const roomtypeRooms = await ctx.db.query.roomType.findFirst({
     where: eq(roomTypeTable.name, name),
@@ -72,6 +77,7 @@ const getRoomsForRoomType = async (name: string) => {
 };
 export const roomTypeRepository = {
   updateRoomType,
+  getRoomTypesForHomePage,
   deleteRoomType,
   getRoomTypeDetails,
   getRoomTypeDetailsByID,

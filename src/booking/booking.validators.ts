@@ -69,7 +69,6 @@ const listBookingValidator = z.object({
     .default("createdAt"),
 });
 
-
 export const v = {
   createBookingValidator,
   bookingIDValidator,

@@ -1,12 +1,10 @@
 import { Handler } from "express";
 import { v } from "./roomtype.validators";
 import { roomTypeRepository } from "./roomtype.repository";
-import {  httpstatus } from "../ctx";
+import { httpstatus } from "../ctx";
 import { DuplicateEntryError, NotFoundError } from "../errors";
 
-import {
-  uploadFilesAndGetLinks,
-} from "./roomtype.helpers";
+import { uploadFilesAndGetLinks } from "./roomtype.helpers";
 
 export async function checkIfRoomTypeExists(name: string) {
   const roomTypeExists = await roomTypeRepository.getRoomTypeDetails(name);
@@ -34,13 +32,13 @@ const uploadImagesForRoomType: Handler = async (req, res, next) => {
       throw new NotFoundError(`Room type images are not provided.`);
     }
     const { name, files } = v.roomTypeImageUploadValidator.parse(req.body);
-    const {fileLinks, fileNames} = await uploadFilesAndGetLinks(files, name);
-    if(fileLinks){
+    const { fileLinks, fileNames } = await uploadFilesAndGetLinks(files, name);
+    if (fileLinks) {
       await roomTypeRepository.updateRoomType({
-        currentName:name,
+        currentName: name,
         imageFileNames: fileNames,
-        roomImageURLS: fileLinks
-      })
+        roomImageURLS: fileLinks,
+      });
     }
   } catch (err) {
     next(err);
@@ -70,6 +68,14 @@ const getRoomTypes: Handler = async (req, res, next) => {
     next(err);
   }
 };
+const getRoomTypesForHomePage: Handler = async (req, res, next) => {
+  try {
+    const roomTypes = await roomTypeRepository.getRoomTypesForHomePage();
+    return res.status(httpstatus.OK).send({ roomTypes, isSuccess: true });
+  } catch (err) {
+    next(err);
+  }
+};
 
 const getRoomTypeDetails: Handler = async (req, res, next) => {
   try {
@@ -86,9 +92,7 @@ const getRoomsForRoomType: Handler = async (req, res, next) => {
   try {
     const { name } = v.roomTypeNameValidator.parse(req.query);
     await checkIfRoomTypeExists(name);
-    const roomsForRoomType = await roomTypeRepository.getRoomsForRoomType(
-      name
-    );
+    const roomsForRoomType = await roomTypeRepository.getRoomsForRoomType(name);
     return res
       .status(httpstatus.OK)
       .json({ roomsForRoomType, isSuccess: true });
@@ -116,4 +120,5 @@ export const roomTypeHandlers = {
   getRoomTypeDetails,
   uploadImagesForRoomType,
   getRoomsForRoomType,
+  getRoomTypesForHomePage,
 };
