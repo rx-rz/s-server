@@ -2,7 +2,6 @@ export type RoomType = {
   id: number;
   name: string;
   description: string | null;
-  rating: string;
   price: string;
   roomImageURLS: string[] | null;
   features: string[] | null;
@@ -49,7 +48,6 @@ export type GetRoomsForRoomTypeResponse = {
     name: string;
     createdAt: string | null;
     description: string | null;
-    rating: string;
     price: string;
     roomImageURLS: string[] | null;
     features: string[] | null;
@@ -69,7 +67,6 @@ export type DeleteRoomTypeResponse = {
   id: number;
   name: string;
   description: string | null;
-  rating: string;
   price: string;
   roomImageURLS: string[] | null;
   features: string[] | null;

@@ -24,7 +24,6 @@ export type RoomDetails = {
     name: string;
     createdAt: string | null;
     description: string | null;
-    rating: string;
     price: string;
     roomImageURLS: string[] | null;
     features: string[] | null;

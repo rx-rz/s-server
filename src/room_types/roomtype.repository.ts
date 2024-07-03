@@ -11,7 +11,6 @@ const roomTypeValues = {
   id: roomTypeTable.id,
   features: roomTypeTable.features,
   description: roomTypeTable.description,
-  rating: roomTypeTable.rating,
 };
 
 const createRoomType = async (request: CreateRoomTypeRequest) => {
