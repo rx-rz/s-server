@@ -17,7 +17,6 @@ import { roomTypeRouter } from "./room_types/roomtype.routes";
 import { roomRouter } from "./room/room.routes";
 import { bookingRouter } from "./booking/booking.routes";
 import { paymentRouter } from "./payment/payment.routes";
-import { Server } from "socket.io";
 import { createServer } from "http";
 import morgan from "morgan";
 import { verifyRequest } from "./middleware/jwt-token";
@@ -77,16 +76,10 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 // Create an HTTP server with the express app
 const server = createServer(app);
 
-// Initialize Socket.io with the created server
-const io = new Server(server);
-
 // Start the server only in development mode. Production mode will be handled soon.
 if (process.env.NODE_ENV === "development") {
   server.listen(ENV_VARS.PORT, ENV_VARS.HOST, () => {
     connectToDb(); // Connect to the database
-    io.on("connection", (socket) => {
-      console.log("a user connected!");
-    });
     console.log(
       `\nServer running at http://${ENV_VARS.HOST}:${ENV_VARS.PORT}/. 🚀 \n`
     );

@@ -102,6 +102,7 @@ export const routesThatDontRequireAuthentication = [
   createRoute({ prefix: "admin", route: "/registerAdmin" }),
   createRoute({ prefix: "admin", route: "/loginAdmin" }),
   createRoute({ prefix: "roomtypes", route: "/getRoomTypesForHomePage" }),
+  createRoute({ prefix: "roomtypes", route: "/roomTypeDetails" }),
   createRoute({ prefix: "otp", route: "/sendOTP" }),
   createRoute({ prefix: "otp", route: "/verifyOTP" }),
   createRoute({ prefix: "rooms", route: "/getAvailableRooms" }),
@@ -140,6 +141,5 @@ export const adminOnlyRoutes = [
   createRoute({ prefix: "roomtypes", route: "/deleteRoomType" }),
   createRoute({ prefix: "roomtypes", route: "/getRoomTypes" }),
   createRoute({ prefix: "roomtypes", route: "/updateRoomType" }),
-  createRoute({ prefix: "roomtypes", route: "/roomTypeDetails" }),
   createRoute({ prefix: "roomtypes", route: "/getRoomsForRoomType" }),
 ];

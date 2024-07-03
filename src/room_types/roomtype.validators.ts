@@ -12,7 +12,12 @@ const createRoomTypeValidator = z.object({
 });
 
 const roomTypeNameValidator = z.object({
-  name: z.string({ required_error: "Room Type value should be provided." }),
+  //because a room type name might have spaces in between, the encoding of the 
+  //space might cause a problem- which is why i decode the uri immediately to
+  //prevent issues.
+  name: z
+    .string({ required_error: "Room Type value should be provided." })
+    .transform((val) => decodeURIComponent(val)),
 });
 
 const updateRoomTypeValidator = z.object({
@@ -43,5 +48,5 @@ export const v = {
   createRoomTypeValidator,
   roomTypeNameValidator,
   updateRoomTypeValidator,
-  roomTypeImageUploadValidator
+  roomTypeImageUploadValidator,
 };
