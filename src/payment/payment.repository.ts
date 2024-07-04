@@ -8,7 +8,7 @@ const paymentValues = {
   id: paymentTable.id,
   paymentReference: paymentTable.reference,
   amount: paymentTable.amount,
-  customerId: paymentTable.customerId,
+  customerEmail: paymentTable.customerEmail,
   createdAt: paymentTable.createdAt,
   bookingId: paymentTable.bookingId,
 };

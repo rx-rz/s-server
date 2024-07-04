@@ -11,6 +11,7 @@ export type Room = {
   createdAt: string | null;
   name: string | null;
   price: string | null;
+  description: string;
 };
 
 export type RoomDetails = {

@@ -31,6 +31,7 @@ const roomListValues = {
   createdAt: roomTable.createdAt,
   name: roomTypeTable.name,
   price: roomTypeTable.price,
+  description: roomTypeTable.description
 };
 
 const createRoom = async (request: CreateRoomRequest) => {

@@ -12,6 +12,7 @@ import { createHmac } from "node:crypto";
 import { ENV_VARS } from "../../env";
 import { paymentRepository } from "../payment/payment.repository";
 import { roomRepository } from "../room/room.repository";
+import { initializePaystackTransaction } from "../payment/payment.helpers";
 
 export async function checkIfBookingExists(id: string) {
   const booking = await bookingRepository.getBookingDetails(id);
@@ -42,10 +43,24 @@ const createBooking: Handler = async (req, res, next) => {
         status: "pending",
       }),
     ]);
-
+    const { data: paymentData, noError } = await initializePaystackTransaction({
+      amount: (Number(bookingCreated.amount) * 100).toString(),
+      email: bookingRequest.customerEmail,
+    });
+    const payment = await paymentRepository.createPayment({
+      amount: bookingRequest.amount,
+      bookingId: bookingCreated.id,
+      customerEmail: bookingRequest.customerEmail,
+      reference: paymentData?.reference || "",
+      roomNo: bookingCreated.roomNo,
+    });
     return res
       .status(httpstatus.CREATED)
-      .json({ bookingCreated, isSuccess: true });
+      .json({
+        bookingCreated,
+        paymentUrl: paymentData?.authorization_url,
+        isSuccess: true,
+      });
   } catch (err) {
     next(err);
   }

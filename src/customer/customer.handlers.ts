@@ -20,7 +20,8 @@ export async function checkIfCustomerExists(email: string) {
 
 const registerCustomer: Handler = async (req, res, next) => {
   try {
-    const body = v.registrationValidator.parse(req.body);
+    const { registrationIsOnTheBookingPage, ...body } =
+      v.registrationValidator.parse(req.body);
     if (body.password) {
       body.password = hashUserPassword(body.password);
     }
@@ -28,9 +29,15 @@ const registerCustomer: Handler = async (req, res, next) => {
       body.email
     );
     if (customerDetails) {
-      throw new DuplicateEntryError(
-        `Customer with provided email already exists.`
-      );
+      if (!registrationIsOnTheBookingPage) {
+        throw new DuplicateEntryError(
+          `Customer with provided email already exists.`
+        );
+      } else {
+        return res
+          .status(httpstatus.OK)
+          .send({ message: "Existing customer.", isSuccess: true });
+      }
     }
     const refreshToken = generateRefreshToken(body.email);
     await customerRepository.register({ ...body, refreshToken });

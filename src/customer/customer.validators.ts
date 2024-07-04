@@ -7,6 +7,7 @@ const registrationValidator = z.object({
       invalid_type_error: "First name can only be a string!",
     })
     .max(30, { message: "First name should be a maximum of 30 characters." }),
+  registrationIsOnTheBookingPage: z.boolean().default(false).optional(),
   lastName: z
     .string({
       required_error: "Last name is required!",

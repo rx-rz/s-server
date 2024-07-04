@@ -133,8 +133,8 @@ export const payment = pgTable(
     roomNo: integer("roomNo")
       .references(() => room.roomNo)
       .notNull(),
-    customerId: uuid("customer_id")
-      .references(() => customer.id, {
+    customerEmail: varchar("customer_email", {length: 255})
+      .references(() => customer.email, {
         onDelete: "cascade",
       })
       .notNull(),
@@ -157,8 +157,8 @@ export const payment = pgTable(
 export const paymentRelation = relations(payment, ({ one, many }) => {
   return {
     customer: one(customer, {
-      fields: [payment.customerId],
-      references: [customer.id],
+      fields: [payment.customerEmail],
+      references: [customer.email],
     }),
     booking: one(booking, {
       fields: [payment.bookingId],
@@ -182,7 +182,7 @@ export const booking = pgTable(
   "bookings",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    customerEmail: varchar("customer_email", {length: 255})
+    customerEmail: varchar("customer_email", { length: 255 })
       .references(() => customer.email, { onDelete: "no action" })
       .notNull(),
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),

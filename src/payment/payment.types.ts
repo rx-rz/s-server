@@ -1,7 +1,7 @@
 export type CreatePaymentRequest = {
   amount: string;
   reference: string;
-  customerId: string;
+  customerEmail: string;
   bookingId: string;
   roomNo: number;
 };
