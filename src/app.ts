@@ -70,7 +70,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.log({ err: errors.error }); // Log the error
   return res
     .status(errors.status)
-    .json({ error_type: errors.type, error: errors.error, isSuccess: false });
+    .json({ error_type: errors.type, error: errors.error, isSuccess: false, status: errors.status });
 });
 
 // Create an HTTP server with the express app

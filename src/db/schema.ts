@@ -36,6 +36,9 @@ export const customer = pgTable(
     password: text("password"),
     refreshToken: text("refresh_token").unique().notNull(),
     createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
+    hasSetPasswordForAccount: boolean("has_set_password_for_account").default(
+      false
+    ),
     phoneNo: varchar("phone_number", { length: 50 }),
     address: text("address"),
     zip: varchar("zip", { length: 10 }),
@@ -133,7 +136,7 @@ export const payment = pgTable(
     roomNo: integer("roomNo")
       .references(() => room.roomNo)
       .notNull(),
-    customerEmail: varchar("customer_email", {length: 255})
+    customerEmail: varchar("customer_email", { length: 255 })
       .references(() => customer.email, {
         onDelete: "cascade",
       })

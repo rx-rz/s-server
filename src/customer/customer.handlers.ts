@@ -28,19 +28,28 @@ const registerCustomer: Handler = async (req, res, next) => {
     const customerDetails = await customerRepository.getCustomerDetails(
       body.email
     );
-    if (customerDetails) {
-      if (!registrationIsOnTheBookingPage) {
-        throw new DuplicateEntryError(
-          `Customer with provided email already exists.`
-        );
-      } else {
-        return res
-          .status(httpstatus.OK)
-          .send({ message: "Existing customer.", isSuccess: true });
-      }
+    if (customerDetails && registrationIsOnTheBookingPage === false) {
+      throw new DuplicateEntryError(
+        `Customer with provided email already exists.`
+      );
     }
+    if (customerDetails && registrationIsOnTheBookingPage === true) {
+      return res.status(httpstatus.CREATED).send({
+        message: "Existing customer",
+        customerIsNew: false,
+        isSuccess: true,
+      });
+    }
+
     const refreshToken = generateRefreshToken(body.email);
     await customerRepository.register({ ...body, refreshToken });
+    if (registrationIsOnTheBookingPage) {
+      return res.status(httpstatus.CREATED).send({
+        message: "Existing customer",
+        customerIsNew: true,
+        isSuccess: true,
+      });
+    }
     return res
       .status(httpstatus.CREATED)
       .send({ message: "Account created", isSuccess: true });

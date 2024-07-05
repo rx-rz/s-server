@@ -43,24 +43,22 @@ const createBooking: Handler = async (req, res, next) => {
         status: "pending",
       }),
     ]);
-    const { data: paymentData, noError } = await initializePaystackTransaction({
+    const { data: paymentData } = await initializePaystackTransaction({
       amount: (Number(bookingCreated.amount) * 100).toString(),
       email: bookingRequest.customerEmail,
     });
-    const payment = await paymentRepository.createPayment({
+    await paymentRepository.createPayment({
       amount: bookingRequest.amount,
       bookingId: bookingCreated.id,
       customerEmail: bookingRequest.customerEmail,
       reference: paymentData?.reference || "",
       roomNo: bookingCreated.roomNo,
     });
-    return res
-      .status(httpstatus.CREATED)
-      .json({
-        bookingCreated,
-        paymentUrl: paymentData?.authorization_url,
-        isSuccess: true,
-      });
+    return res.status(httpstatus.CREATED).json({
+      bookingCreated,
+      paymentUrl: paymentData?.authorization_url,
+      isSuccess: true,
+    });
   } catch (err) {
     next(err);
   }

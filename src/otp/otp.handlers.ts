@@ -5,10 +5,13 @@ import { otpRepository } from "./otp.repository";
 import { httpstatus } from "../ctx";
 import { NotFoundError } from "../errors";
 import { adminRepository } from "../admin";
+import { sendOTPEmail, sendOTPEmailForPasswordCreation } from "./otp.helpers";
 
 const sendOTP: Handler = async (req, res, next) => {
   try {
-    const { email, role } = v.createOTPValidator.parse(req.body);
+    const { email, role, isForSettingPassword } = v.createOTPValidator.parse(
+      req.body
+    );
     let user;
     if (role === "admin") {
       user = await adminRepository.getAdminDetails(email);
@@ -18,18 +21,26 @@ const sendOTP: Handler = async (req, res, next) => {
     if (!user) {
       throw new NotFoundError("User does not exist.");
     }
-    const otpDetails = await otpRepository.createOTP(email, role)
+    const otpDetails = await otpRepository.createOTP(email, role);
     //TODO: uncomment later lol
-    // if (otpDetails) {
-    //   const response = await sendOTPEmail({
-    //     otp: otpDetails.otp,
-    //     name: `${firstName} ${lastName}`,
-    //     subscriberMail: email,
-    //   });
-    //   if (response) {
-    return res.status(httpstatus.CREATED).send({ otpDetails, isSuccess: true });
-    //   }
-    // }
+    if (otpDetails) {
+      const response = isForSettingPassword
+        ? await sendOTPEmail({
+            otp: otpDetails.otp,
+            name: `${user.firstName} ${user.lastName}`,
+            subscriberMail: email,
+          })
+        : await sendOTPEmailForPasswordCreation({
+            otp: otpDetails.otp,
+            name: `${user.firstName} ${user.lastName}`,
+            subscriberMail: email,
+          });
+      if (response) {
+        return res
+          .status(httpstatus.CREATED)
+          .send({ otpDetails, isSuccess: true });
+      }
+    }
   } catch (err) {
     next(err);
   }
@@ -46,7 +57,7 @@ const verifyOTP: Handler = async (req, res, next) => {
         isSuccess: false,
       });
     }
-    
+
     if (dbOTP.otp === otp) {
       await Promise.all([
         otpRepository.deleteOTP(email),

@@ -65,6 +65,7 @@ export type UpdateCustomerEmailRequest = {
 export type RegisterCustomerResponse = {
   message: string;
   isSuccess: boolean;
+  customerIsNew?: boolean;
 };
 
 export type LoginCustomerResponse = {

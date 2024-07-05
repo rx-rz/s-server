@@ -18,6 +18,7 @@ export const customerValues = {
   email: customerTable.email,
   id: customerTable.id,
   isVerified: customerTable.isVerified,
+  hasSetPasswordForAccount: customerTable.hasSetPasswordForAccount,
   address: customerTable.address,
   phoneNo: customerTable.phoneNo,
   zip: customerTable.zip,
