@@ -1,7 +1,10 @@
 export type CreatePaymentRequest = {
-  bookingId: string;
+  reference: string;
   email: string;
-};
+  amount: string;
+  roomNo: number;
+  bookingId: string;
+}
 
 export type CreatePaymentResponse = {
   payment: {

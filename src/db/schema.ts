@@ -141,7 +141,7 @@ export const payment = pgTable(
         onDelete: "cascade",
       })
       .notNull(),
-    reference: text("reference").notNull().unique(),
+    reference: varchar("reference", { length: 20 }).notNull().unique(),
     bookingId: uuid("booking_id")
       .references(() => booking.id, {
         onDelete: "cascade",

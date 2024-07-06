@@ -39,6 +39,8 @@ export type ListBookingRequest = {
 
 export type CreateBookingResponse = {
   bookingCreated: Booking;
+  paymentReference: string;
+  paymentUrl: string;
   isSuccess: boolean;
 };
 

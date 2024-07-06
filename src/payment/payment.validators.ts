@@ -10,6 +10,9 @@ const makePaymentValidator = z.object({
   email: z
     .string({ required_error: "Email must be provided" })
     .email({ message: "Email provided is not a valid email." }),
+  reference: z.string({ required_error: "Reference must be provided." }),
+  roomNo: z.coerce.number({ required_error: "Room number must be provided." }),
+  amount: z.coerce.string({ required_error: "Amount must be provided." }),
 });
 
 const paymentIDValidator = z.object({

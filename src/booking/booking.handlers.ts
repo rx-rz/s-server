@@ -22,7 +22,8 @@ export async function checkIfBookingExists(id: string) {
 
 const createBooking: Handler = async (req, res, next) => {
   try {
-    const bookingRequest = v.createBookingValidator.parse(req.body);
+    const { paymentCallbackUrl, ...bookingRequest } =
+      v.createBookingValidator.parse(req.body);
     const room = await checkIfRoomIsAvailable(bookingRequest.roomNo);
     if (!room) {
       throw new DuplicateEntryError(`Room is already booked.`);
@@ -46,6 +47,7 @@ const createBooking: Handler = async (req, res, next) => {
     const { data: paymentData } = await initializePaystackTransaction({
       amount: (Number(bookingCreated.amount) * 100).toString(),
       email: bookingRequest.customerEmail,
+      callback_url: paymentCallbackUrl,
     });
     await paymentRepository.createPayment({
       amount: bookingRequest.amount,
@@ -57,6 +59,7 @@ const createBooking: Handler = async (req, res, next) => {
     return res.status(httpstatus.CREATED).json({
       bookingCreated,
       paymentUrl: paymentData?.authorization_url,
+      paymentReference: paymentData?.reference,
       isSuccess: true,
     });
   } catch (err) {

@@ -9,6 +9,7 @@ const createBookingValidator = z
       message: "Start date must be greater than the current date.",
     }),
     amount: z.coerce.string(),
+    paymentCallbackUrl: z.coerce.string(),
     endDate: z.coerce.string().refine((date) => date > currentTimestamp, {
       message: "End date must be greater than the current date.",
     }),

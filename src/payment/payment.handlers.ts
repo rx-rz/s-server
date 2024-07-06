@@ -1,9 +1,8 @@
 import { Handler } from "express";
 import { paymentRepository } from "./payment.repository";
 import { v } from "./payment.validators";
-import {  NotFoundError } from "../errors";
+import { NotFoundError } from "../errors";
 import { httpstatus } from "../ctx";
-
 
 export const getPaymentDetails: Handler = async (req, res, next) => {
   try {
