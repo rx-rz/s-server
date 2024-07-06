@@ -49,6 +49,7 @@ export type UpdateCustomerPasswordRequest = {
 export type UpdateCustomerRequest = {
   firstName?: string;
   lastName?: string;
+  hasSetPasswordForAccount?: boolean;
   isVerified?: boolean;
   zip?: string;
   phoneNo?: string;

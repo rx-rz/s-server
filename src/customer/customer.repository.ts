@@ -28,7 +28,11 @@ export const customerValues = {
 const register = async (customerRequest: RegisterCustomerRequest) => {
   const [customer] = await ctx.db
     .insert(customerTable)
-    .values(customerRequest)
+    .values(
+      customerRequest.password
+        ? { ...customerRequest, hasSetPasswordForAccount: true }
+        : customerRequest
+    )
     .returning(customerValues);
   return customer;
 };

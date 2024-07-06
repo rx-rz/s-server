@@ -28,31 +28,41 @@ const registerCustomer: Handler = async (req, res, next) => {
     const customerDetails = await customerRepository.getCustomerDetails(
       body.email
     );
-    if (customerDetails && registrationIsOnTheBookingPage === false) {
-      throw new DuplicateEntryError(
-        `Customer with provided email already exists.`
-      );
-    }
-    if (customerDetails && registrationIsOnTheBookingPage === true) {
-      return res.status(httpstatus.CREATED).send({
-        message: "Existing customer",
-        customerIsNew: false,
-        isSuccess: true,
-      });
+    const refreshToken = generateRefreshToken(body.email);
+    if (customerDetails) {
+      if (registrationIsOnTheBookingPage) {
+        return res.status(httpstatus.OK).send({
+          message: "Customer exists, proceed with booking",
+          isSuccess: true,
+        });
+      } else {
+        if (customerDetails.hasSetPasswordForAccount) {
+          throw new DuplicateEntryError(`Customer already exists.`);
+        } else {
+          await Promise.all([
+            customerRepository.updateCustomerPassword({
+              currentPassword: "",
+              newPassword: body.password || "",
+              email: body.email,
+            }),
+            customerRepository.updateCustomer({
+              ...body,
+              hasSetPasswordForAccount: true,
+            }),
+          ]);
+          return res.status(httpstatus.OK).send({
+            message: "Account created, password set.",
+            isSuccess: true,
+          });
+        }
+      }
     }
 
-    const refreshToken = generateRefreshToken(body.email);
     await customerRepository.register({ ...body, refreshToken });
-    if (registrationIsOnTheBookingPage) {
-      return res.status(httpstatus.CREATED).send({
-        message: "Existing customer",
-        customerIsNew: true,
-        isSuccess: true,
-      });
-    }
-    return res
-      .status(httpstatus.CREATED)
-      .send({ message: "Account created", isSuccess: true });
+    return res.status(httpstatus.CREATED).send({
+      message: "Account created",
+      isSuccess: true,
+    });
   } catch (err) {
     next(err);
   }
