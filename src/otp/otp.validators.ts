@@ -23,7 +23,7 @@ const emailValidator = z.object({
 });
 const verifyOTPValidator = z.object({
   email: z
-    .string({ required_error: "Email is required!" })
+    .string({ required_error: "Email is required!", invalid_type_error: "Email should be a string" })
     .email({
       message:
         "Email input is not a valid email. Please correct and try again.",

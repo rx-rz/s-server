@@ -24,17 +24,18 @@ const sendOTP: Handler = async (req, res, next) => {
     const otpDetails = await otpRepository.createOTP(email, role);
     //TODO: uncomment later lol
     if (otpDetails) {
-      const response = isForSettingPassword
-        ? await sendOTPEmail({
-            otp: otpDetails.otp,
-            name: `${user.firstName} ${user.lastName}`,
-            subscriberMail: email,
-          })
-        : await sendOTPEmailForPasswordCreation({
-            otp: otpDetails.otp,
-            name: `${user.firstName} ${user.lastName}`,
-            subscriberMail: email,
-          });
+      const response =
+        isForSettingPassword === false
+          ? await sendOTPEmail({
+              otp: otpDetails.otp,
+              name: `${user.firstName} ${user.lastName}`,
+              subscriberMail: email,
+            })
+          : await sendOTPEmailForPasswordCreation({
+              otp: otpDetails.otp,
+              name: `${user.firstName} ${user.lastName}`,
+              subscriberMail: email,
+            });
       if (response) {
         return res
           .status(httpstatus.CREATED)
@@ -76,7 +77,7 @@ const verifyOTP: Handler = async (req, res, next) => {
         isSuccess: true,
       });
     } else {
-      throw new NotFoundError("Could not fetch user with provided details");
+      throw new NotFoundError("Incorrect OTP");
     }
   } catch (err) {
     next(err);
