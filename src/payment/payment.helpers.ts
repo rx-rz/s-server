@@ -14,6 +14,5 @@ export const initializePaystackTransaction = async ({
     amount,
     callback_url,
   });
-  console.log(res.data, res.status);
   return { data: res.data, noError: res.status };
 };

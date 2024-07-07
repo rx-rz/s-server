@@ -24,6 +24,7 @@ import {
   adminAccessOnly,
   customerAccessOnly,
 } from "./middleware/determine-user-role";
+import cookieParser from "cookie-parser";
 
 // Load environment variables from .env file
 config({ path: ".env" });
@@ -32,13 +33,20 @@ export const app: Express = express();
 
 const corsOptions: CorsOptions = {
   origin: "http://127.0.0.1:3000",
-  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
-  exposedHeaders: ['Authorization', 'Set-Cookie'],
-  credentials: true
-}
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+  allowedHeaders: [
+    "Origin",
+    "X-Requested-With",
+    "Content-Type",
+    "Accept",
+    "Authorization",
+  ],
+  exposedHeaders: ["Authorization", "Set-Cookie"],
+  credentials: true,
+};
 
 app.use(cors(corsOptions));
+app.use(cookieParser());
 
 // Middleware to parse JSON requests with a size limit of 50mb
 app.use(express.json({ limit: "50mb" }));
