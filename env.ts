@@ -26,7 +26,8 @@ const ENV = z.object({
   STORAGE_ENDPOINT: z.literal(process.env.STORAGE_ENDPOINT).default(""),
   STORAGE_ACCESS_KEY_ID: z.literal(process.env.STORAGE_ACCESS_KEY_ID).default(""),
   STORAGE_SECRET_ACCESS_KEY_ID: z.literal(process.env.STORAGE_SECRET_ACCESS_KEY_ID).default(""),
-  STORAGE_BUCKET: z.literal(process.env.STORAGE_BUCKET).default("")
+  STORAGE_BUCKET: z.literal(process.env.STORAGE_BUCKET).default(""),
+  SESSION_SECRET: z.literal(process.env.SESSION_SECRET).default(""),
 });
 
 export const ENV_VARS = ENV.parse(process.env);

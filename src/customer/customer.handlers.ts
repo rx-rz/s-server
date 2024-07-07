@@ -88,6 +88,14 @@ const loginCustomer: Handler = async (req, res, next) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: ENV_VARS.NODE_ENV === "production" ? true : false,
+      path: "/",
+      maxAge: 10 * 24 * 60 * 60 * 1000, 
+    });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: ENV_VARS.NODE_ENV === "production" ? true : false,
+      path: "/",
+      maxAge: 10 * 60 * 1000,
     });
     return res.status(httpstatus.OK).send({ token, isSuccess: true });
   } catch (err) {

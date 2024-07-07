@@ -33,11 +33,14 @@ export function generateRefreshToken(email: string) {
   });
   return token;
 }
- 
+
 export function verifyRequest(req: Request, res: Response, next: NextFunction) {
   if (routesThatDontRequireAuthentication.includes(req.path)) next();
   else {
-    const token = req.headers.authorization?.split(" ")[1];
+    console.log({ req });
+    const token =
+      req.headers.authorization?.split(" ")[1] || req.cookies?.token;
+    console.log({ token });
     if (!token) {
       return res.status(httpstatus.UNAUTHORIZED).json({
         error_type: "JWT Error",
@@ -47,7 +50,7 @@ export function verifyRequest(req: Request, res: Response, next: NextFunction) {
     }
     const user = decodeUserToken(token);
     const refreshToken = req.cookies?.refreshToken || "";
-    verify(token, ENV_VARS.JWT_SECRET!, async (err) => {
+    verify(token, ENV_VARS.JWT_SECRET!, async (err: any) => {
       if (err) {
         if (err.name === "TokenExpiredError") {
           const { isExpired } = checkIfRefreshTokenHasExpired(refreshToken);
@@ -55,8 +58,10 @@ export function verifyRequest(req: Request, res: Response, next: NextFunction) {
             const newAccessToken = generateAccessToken(user);
             res.setHeader("Authorization", `Bearer ${newAccessToken}`);
             return next();
-          }else{
-            return res.status(403).json({message: "Refresh token has expired."})
+          } else {
+            return res
+              .status(403)
+              .json({ message: "Refresh token has expired." });
           }
         }
         return res

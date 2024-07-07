@@ -1,4 +1,4 @@
-import cors from "cors";
+import cors, { CorsOptions } from "cors";
 import express, {
   Express,
   NextFunction,
@@ -25,14 +25,20 @@ import {
   customerAccessOnly,
 } from "./middleware/determine-user-role";
 
-
 // Load environment variables from .env file
 config({ path: ".env" });
 
 export const app: Express = express();
 
-// Middleware to enable CORS
-app.use(cors());
+const corsOptions: CorsOptions = {
+  origin: "http://127.0.0.1:3000",
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+  exposedHeaders: ['Authorization', 'Set-Cookie'],
+  credentials: true
+}
+
+app.use(cors(corsOptions));
 
 // Middleware to parse JSON requests with a size limit of 50mb
 app.use(express.json({ limit: "50mb" }));
@@ -42,8 +48,6 @@ app.use(express.urlencoded({ extended: false }));
 
 // Middleware to log HTTP requests
 app.use(morgan("dev"));
-
-
 
 // Create a new Router instance for API routes
 const api = Router();
@@ -68,9 +72,12 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   const errors = handleErrors(err);
   console.trace(errors); // Log the error stack trace
   console.log({ err: errors.error }); // Log the error
-  return res
-    .status(errors.status)
-    .json({ error_type: errors.type, error: errors.error, isSuccess: false, status: errors.status });
+  return res.status(errors.status).json({
+    error_type: errors.type,
+    error: errors.error,
+    isSuccess: false,
+    status: errors.status,
+  });
 });
 
 // Create an HTTP server with the express app
