@@ -33,16 +33,10 @@ export const customer = pgTable(
     firstName: varchar("first_name", { length: 30 }).notNull(),
     lastName: varchar("last_name", { length: 30 }).notNull(),
     email: varchar("email", { length: 255 }).unique().notNull(),
-    password: text("password"),
-    refreshToken: text("refresh_token").unique().notNull(),
     createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
-    hasSetPasswordForAccount: boolean("has_set_password_for_account").default(
-      false
-    ),
     phoneNo: varchar("phone_number", { length: 50 }),
     address: text("address"),
     zip: varchar("zip", { length: 10 }),
-    isVerified: boolean("is_verified").default(false),
   },
   (table) => {
     return {
@@ -228,7 +222,6 @@ export const userOtps = pgTable("user_otps", {
   id: serial("id").primaryKey(),
   email: varchar("email", { length: 100 }).notNull(),
   otp: integer("otp").notNull(),
-  role: userOtpsEnum("role").default("customer"),
   expiresAt: bigint("expires_at", { mode: "number" }).notNull(),
 });
 

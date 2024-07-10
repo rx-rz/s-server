@@ -3,15 +3,17 @@ import { ENV_VARS } from "../../env";
 import { NextFunction, Request, Response } from "express";
 import { httpstatus } from "../ctx";
 import { routesThatDontRequireAuthentication } from "../routes";
+import { compare } from "bcryptjs";
+import { adminRepository } from "../admin";
 
 export type User = {
   id: string;
-  role: "ADMIN" | "CUSTOMER";
   email: string;
   isVerified: boolean | null;
   firstName: string | null;
   lastName: string | null;
 };
+
 function decodeUserToken(token: string) {
   const userToken = JSON.parse(
     Buffer.from(token.split(".")[1], "base64").toString()
@@ -34,40 +36,10 @@ export function generateRefreshToken(email: string) {
   return token;
 }
 
-export function verifyRequest(req: Request, res: Response, next: NextFunction) {
-  if (routesThatDontRequireAuthentication.includes(req.path)) next();
-  else {
-    const token = req.cookies?.token;
-    if (!token) {
-      return res.status(httpstatus.UNAUTHORIZED).json({
-        error_type: "JWT Error",
-        error: "Unauthorized request. No token provided.",
-        isSuccess: false,
-      });
-    }
-    const user = decodeUserToken(token);
-    const refreshToken = req.cookies?.refreshToken || "";
-    verify(token, ENV_VARS.JWT_SECRET!, async (err: any) => {
-      if (err) {
-        if (err.name === "TokenExpiredError") {
-          const { isExpired } = checkIfRefreshTokenHasExpired(refreshToken);
-          if (isExpired === false) {
-            const newAccessToken = generateAccessToken(user);
-            res.setHeader("Authorization", `Bearer ${newAccessToken}`);
-            return next();
-          } else {
-            return res
-              .status(403)
-              .json({ message: "Refresh token has expired." });
-          }
-        }
-        return res
-          .status(403)
-          .json({ message: "Failed to authenticate token" });
-      }
-      next();
-    });
-  }
+async function verifyRefreshToken(providedToken: string, email: string) {
+  const refreshTokenInDB = await adminRepository.getRefreshToken(email);
+  const isValid = await compare(providedToken, refreshTokenInDB);
+  return isValid;
 }
 
 function checkIfRefreshTokenHasExpired(refreshToken: string) {
@@ -80,4 +52,57 @@ function checkIfRefreshTokenHasExpired(refreshToken: string) {
     }
   });
   return { isExpired };
+}
+
+export function verifyRequest(req: Request, res: Response, next: NextFunction) {
+  if (routesThatDontRequireAuthentication.includes(req.path)) next();
+  else {
+    const [token, refreshToken] = [
+      req.cookies?.token,
+      req.cookies?.refreshToken,
+    ];
+    if (!token) {
+      return res.status(httpstatus.UNAUTHORIZED).json({
+        error_type: "JWT Error",
+        error: "Unauthorized request. No token provided.",
+        isSuccess: false,
+      });
+    }
+    const user = decodeUserToken(token);
+    if (!user) {
+      return res.status(httpstatus.UNPROCESSABLE_ENTITY).json({
+        error_type: "JWT Error",
+        error: "Invalid token",
+        isSuccess: false,
+      });
+    }
+    verify(token, ENV_VARS.JWT_SECRET!, async (err: any) => {
+      if (err) {
+        if (err.name === "TokenExpiredError") {
+          const { isExpired } = checkIfRefreshTokenHasExpired(refreshToken);
+          if (isExpired) {
+            return res.status(httpstatus.MOVED_TEMPORARILY).json({
+              isSuccess: false,
+              error_type: "JWT Error",
+              error: "Refresh token has expired, Please go to the login page",
+            });
+          }
+          const isValid = await verifyRefreshToken(refreshToken, user.email);
+          if (isValid) {
+            const newAccessToken = generateAccessToken(user);
+            res.cookie("token", newAccessToken, {
+              httpOnly: true,
+              secure: ENV_VARS.NODE_ENV === "production" ? true : false,
+              path: "/",
+              maxAge: 10 * 60 * 1000,
+            });
+          }
+        }
+        return res
+          .status(403)
+          .json({ message: "Failed to authenticate token" });
+      }
+      next();
+    });
+  }
 }

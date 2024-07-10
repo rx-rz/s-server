@@ -2,7 +2,12 @@ import { Handler } from "express";
 import { v } from "./booking.validators";
 import { bookingRepository } from "./booking.repository";
 import { httpstatus } from "../ctx";
-import { checkIfRoomIsAvailable, getNoOfDays } from "./booking.helpers";
+import {
+  checkIfRoomIsAvailable,
+  getNoOfDays,
+  sendBookingFailureEmail,
+  sendBookingSuccessEmail,
+} from "./booking.helpers";
 import {
   DuplicateEntryError,
   InvalidInputError,
@@ -104,6 +109,12 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
             reference: body.data.reference,
             status: "confirmed",
           }),
+          sendBookingSuccessEmail(existingBooking.customerEmail, {
+            startDate: existingBooking.startDate,
+            endDate: existingBooking.endDate,
+            roomNo: existingBooking.roomNo,
+            paymentAmount: existingBooking.amount,
+          }),
         ]);
       } else {
         await Promise.all([
@@ -118,6 +129,12 @@ const updateBookingAndBookingPaymentStatus: Handler = async (
           roomRepository.updateRoom({
             roomNo: Number(existingBooking.roomNo),
             status: "available",
+          }),
+          sendBookingFailureEmail(existingBooking.customerEmail, {
+            startDate: existingBooking.startDate,
+            endDate: existingBooking.endDate,
+            roomNo: existingBooking.roomNo,
+            paymentAmount: existingBooking.amount,
           }),
         ]);
       }

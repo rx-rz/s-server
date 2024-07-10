@@ -4,6 +4,8 @@ import { v } from "./payment.validators";
 import { NotFoundError } from "../errors";
 import { httpstatus } from "../ctx";
 
+
+
 export const getPaymentDetails: Handler = async (req, res, next) => {
   try {
     const { id } = v.paymentIDValidator.parse(req.query);

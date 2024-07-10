@@ -6,7 +6,6 @@ export type Customer = {
   zip: string;
   phoneNo: string;
   address: string;
-  isVerified: boolean | null;
   refreshToken: string;
   hasCreatedPasswordForAccount: boolean | null;
   createdAt: string | null;
@@ -19,18 +18,16 @@ export type RegisterCustomerRequest = {
   address: string;
   phoneNo: string;
   email: string;
-  password?: string | undefined;
-  refreshToken: string;
 };
 
 export type Search = {
-  key: "firstName" | "lastName" | "email" | "createdAt" | "isVerified";
+  key: "firstName" | "lastName" | "email" | "createdAt";
   value: number | string | boolean;
 }[];
 export type ListCustomerRequest = {
   limit: number;
   pageNo: number;
-  orderBy: "firstName" | "lastName" | "email" | "createdAt" | "isVerified";
+  orderBy: "firstName" | "lastName" | "email" | "createdAt";
   ascOrDesc: "asc" | "desc";
   searchBy?: Search;
 };
@@ -50,7 +47,7 @@ export type UpdateCustomerRequest = {
   firstName?: string;
   lastName?: string;
   hasSetPasswordForAccount?: boolean;
-  isVerified?: boolean;
+
   zip?: string;
   phoneNo?: string;
   address?: string;
@@ -85,7 +82,6 @@ export type GetCustomerDetailsResponse = {
     email: string;
     createdAt: string | null;
     hasCreatedPasswordForAccount: boolean | null;
-    isVerified: boolean | null;
     bookings: {
       status: "pending" | "active" | "cancelled" | "done";
       id: string;

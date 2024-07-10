@@ -11,15 +11,10 @@ export const adminRoutes = {
 } as const;
 
 export const customerRoutes = {
-  register_customer: "/registerCustomer",
-  login_customer: "/loginCustomer",
+  create_customer: "/createCustomer",
   list_customers: "/listCustomers",
   delete_customer: "/deleteCustomer",
-  update_customer: "/updateCustomer",
   get_customer_details: "/getCustomerDetails",
-  update_customer_email: "/updateCustomerEmail",
-  update_customer_password: "/updateCustomerPassword",
-  update_customer_refresh_token: "/updateRefreshToken",
 } as const;
 
 export const paymentRoutes = {
@@ -97,8 +92,6 @@ export const createRoute = ({
 };
 
 export const routesThatDontRequireAuthentication = [
-  createRoute({ prefix: "customers", route: "/registerCustomer" }),
-  createRoute({ prefix: "customers", route: "/loginCustomer" }),
   createRoute({ prefix: "admin", route: "/registerAdmin" }),
   createRoute({ prefix: "admin", route: "/loginAdmin" }),
   createRoute({ prefix: "roomtypes", route: "/getRoomTypesForHomePage" }),
@@ -113,33 +106,4 @@ export const routesThatDontRequireAuthentication = [
     prefix: "bookings",
     route: "/updateBookingPaymentStatus",
   }),
-];
-
-export const customerOnlyRoutes = [
-  createRoute({ prefix: "customers", route: "/deleteCustomer" }),
-  createRoute({ prefix: "customers", route: "/updateRefreshToken" }),
-  createRoute({ prefix: "customers", route: "/updateCustomer" }),
-  createRoute({ prefix: "customers", route: "/updateCustomerEmail" }),
-  createRoute({ prefix: "customers", route: "/updateCustomerPassword" }),
-];
-
-export const adminOnlyRoutes = [
-  createRoute({ prefix: "rooms", route: "/createRooms" }),
-  createRoute({ prefix: "rooms", route: "/updateRoom" }),
-  createRoute({ prefix: "admin", route: "/updateRefreshToken" }),
-  createRoute({ prefix: "admin", route: "/listAdmins" }),
-  createRoute({ prefix: "rooms", route: "/listRooms" }),
-  createRoute({ prefix: "rooms", route: "/deleteRoom" }),
-  createRoute({ prefix: "admin", route: "/deleteAdmin" }),
-  createRoute({ prefix: "admin", route: "/updateAdmin" }),
-  createRoute({ prefix: "admin", route: "/updateAdminEmail" }),
-  createRoute({ prefix: "admin", route: "/updateAdminPassword" }),
-  createRoute({ prefix: "admin", route: "/getDashboardDetails" }),
-  createRoute({ prefix: "bookings", route: "/listBookings" }),
-  createRoute({ prefix: "customers", route: "/listCustomers" }),
-  createRoute({ prefix: "roomtypes", route: "/createRoomType" }),
-  createRoute({ prefix: "roomtypes", route: "/deleteRoomType" }),
-  createRoute({ prefix: "roomtypes", route: "/getRoomTypes" }),
-  createRoute({ prefix: "roomtypes", route: "/updateRoomType" }),
-  createRoute({ prefix: "roomtypes", route: "/getRoomsForRoomType" }),
 ];

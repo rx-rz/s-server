@@ -21,8 +21,7 @@ import { createServer } from "http";
 import morgan from "morgan";
 import { verifyRequest } from "./middleware/jwt-token";
 import {
-  adminAccessOnly,
-  customerAccessOnly,
+  authorizedAccessOnly
 } from "./middleware/determine-user-role";
 import cookieParser from "cookie-parser";
 
@@ -63,9 +62,8 @@ const api = Router();
 // Define API routes
 app.use("/api/v1", api);
 
-api.use(verifyRequest);
-api.use(adminAccessOnly);
-api.use(customerAccessOnly);
+// api.use(verifyRequest);
+// api.use(adminAccessOnly);
 
 api.use("/customers", customerRouter);
 api.use("/otp", otpRouter);

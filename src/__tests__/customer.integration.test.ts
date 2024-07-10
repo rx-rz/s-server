@@ -28,37 +28,6 @@ type CustomerRegisterObject = {
 let testCustomer: CustomerRegisterObject;
 
 describe("CUSTOMER", () => {
-  describe("Register new customer", () => {
-    const customer = {
-      email: faker.internet.email(),
-      firstName: faker.person.firstName(),
-      lastName: faker.person.lastName(),
-      password: faker.internet.password(),
-      zip: faker.location.zipCode(),
-      phoneNo: faker.phone.number(),
-      address: faker.location.streetAddress(),
-    };
-    const refreshToken = generateRefreshToken(customer.email);
-    const newCustomer = { ...customer, refreshToken };
-    const route = createRoute({
-      prefix: "customers",
-      route: "/registerCustomer",
-      includeBaseURL: true,
-    });
-    it("should register a new customer", async () => {
-      const response = await testApi.post(route).send(newCustomer);
-      const responseBody: RegisterCustomerResponse = response.body;
-      expect(responseBody.isSuccess).toBe(true);
-      expect(responseBody.message).toBe("Account created");
-    });
-
-    it("should throw a duplicate entry error when registered with the same customer", async () => {
-      const response = await testApi.post(route).send(newCustomer);
-      expect(response.body.isSuccess).toBe(false);
-      expect(response.body.error_type).toBe("Duplicate Entry Error");
-    });
-  });
-
   beforeEach(async () => {
     testCustomer = {
       email: faker.internet.email(),

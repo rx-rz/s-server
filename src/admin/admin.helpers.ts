@@ -10,7 +10,7 @@ export const checkIfPasswordIsCorrect = async (
   return passwordIsCorrect;
 };
 
-export const hashUserPassword = (plainPassword: string) => {
+export const hashAValue = (plainPassword: string) => {
   const SALT_ROUNDS = genSaltSync(10);
   let hashedPassword = hashSync(plainPassword, SALT_ROUNDS);
   return hashedPassword;

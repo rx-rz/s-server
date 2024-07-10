@@ -5,18 +5,18 @@ import { customerRoutes } from "../routes";
 export const customerRouter = Router();
 
 customerRouter.post(
-  customerRoutes.register_customer,
-  customerHandlers.registerCustomer
-);
-customerRouter.post(
-  customerRoutes.login_customer,
-  customerHandlers.loginCustomer
+  customerRoutes.create_customer,
+  customerHandlers.createCustomer
 );
 
 customerRouter.get(
   customerRoutes.get_customer_details,
   customerHandlers.getCustomerDetails
 );
+// customerRouter.patch(
+//   customerRoutes.update_customer,
+//   customerHandlers.updateCustomer
+// )
 customerRouter.get(
   customerRoutes.list_customers,
   customerHandlers.listCustomers
@@ -24,20 +24,4 @@ customerRouter.get(
 customerRouter.delete(
   customerRoutes.delete_customer,
   customerHandlers.deleteCustomer
-);
-customerRouter.patch(
-  customerRoutes.update_customer,
-  customerHandlers.updateCustomer
-);
-customerRouter.patch(
-  customerRoutes.update_customer_email,
-  customerHandlers.updateCustomerEmail
-);
-customerRouter.patch(
-  customerRoutes.update_customer_refresh_token,
-  customerHandlers.updateCustomerRefreshToken
-);
-customerRouter.patch(
-  customerRoutes.update_customer_password,
-  customerHandlers.updateCustomerPassword
 );

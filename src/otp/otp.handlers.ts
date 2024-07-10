@@ -1,41 +1,27 @@
 import { Handler } from "express";
 import { v } from "./otp.validators";
-import { customerRepository } from "../customer/customer.repository";
 import { otpRepository } from "./otp.repository";
 import { httpstatus } from "../ctx";
 import { NotFoundError } from "../errors";
 import { adminRepository } from "../admin";
-import { sendOTPEmail, sendOTPEmailForPasswordCreation } from "./otp.helpers";
+import { sendOTPEmail } from "./otp.helpers";
 
 const sendOTP: Handler = async (req, res, next) => {
   try {
-    const { email, role, isForSettingPassword } = v.createOTPValidator.parse(
-      req.body
-    );
-    let user;
-    if (role === "admin") {
-      user = await adminRepository.getAdminDetails(email);
-    } else {
-      user = await customerRepository.getCustomerDetails(email);
-    }
+    const { email } = v.createOTPValidator.parse(req.body);
+    const user = await adminRepository.getAdminDetails(email);
+
     if (!user) {
       throw new NotFoundError("User does not exist.");
     }
-    const otpDetails = await otpRepository.createOTP(email, role);
+    const otpDetails = await otpRepository.createOTP(email);
     //TODO: uncomment later lol
     if (otpDetails) {
-      const response =
-        isForSettingPassword === false
-          ? await sendOTPEmail({
-              otp: otpDetails.otp,
-              name: `${user.firstName} ${user.lastName}`,
-              subscriberMail: email,
-            })
-          : await sendOTPEmailForPasswordCreation({
-              otp: otpDetails.otp,
-              name: `${user.firstName} ${user.lastName}`,
-              subscriberMail: email,
-            });
+      const response = await sendOTPEmail({
+        otp: otpDetails.otp,
+        name: `${user.firstName} ${user.lastName}`,
+        subscriberMail: email,
+      });
       if (response) {
         return res
           .status(httpstatus.CREATED)
@@ -62,15 +48,10 @@ const verifyOTP: Handler = async (req, res, next) => {
     if (dbOTP.otp === otp) {
       await Promise.all([
         otpRepository.deleteOTP(email),
-        dbOTP.role === "admin"
-          ? adminRepository.updateAdminDetails({
-              email: email,
-              isVerified: true,
-            })
-          : customerRepository.updateCustomer({
-              email: email,
-              isVerified: true,
-            }),
+        adminRepository.updateAdminDetails({
+          email: email,
+          isVerified: true,
+        }),
       ]);
       return res.status(httpstatus.OK).send({
         message: `User has been verified.`,

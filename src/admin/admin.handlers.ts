@@ -9,7 +9,7 @@ import {
 } from "../middleware/jwt-token";
 import { paymentRepository } from "../payment/payment.repository";
 import { roomRepository } from "../room/room.repository";
-import { checkIfPasswordIsCorrect, hashUserPassword } from "./admin.helpers";
+import { checkIfPasswordIsCorrect, hashAValue } from "./admin.helpers";
 import { adminRepository } from "./admin.repository";
 import { v } from "./admin.validators";
 import { Handler } from "express";
@@ -27,15 +27,16 @@ const registerAdmin: Handler = async (req, res, next) => {
   try {
     const body = v.registrationValidator.parse(req.body);
     const existingAdmin = await adminRepository.getAdminDetails(body.email);
+
     if (existingAdmin)
       throw new DuplicateEntryError(
         `Admin with provided email already exists.`
       );
     if (body.password) {
       //set the password provided in the body to a hashed one
-      body.password = hashUserPassword(body.password);
+      body.password = hashAValue(body.password);
     }
-    const refreshToken = generateRefreshToken(body.email);
+    const refreshToken = hashAValue(generateRefreshToken(body.email));
     await adminRepository.register({ ...body, refreshToken });
     return res
       .status(httpstatus.CREATED)
@@ -57,18 +58,29 @@ const loginAdmin: Handler = async (req, res, next) => {
     const token = generateAccessToken({
       email: existingAdmin.email,
       id: existingAdmin.id,
-      role: "ADMIN",
       firstName: existingAdmin.firstName,
       lastName: existingAdmin.lastName,
       isVerified: existingAdmin.isVerified,
     });
 
-    const refreshToken = await adminRepository.getRefreshToken(email);
-    //set a refresh token
-    res.cookie("refreshToken", refreshToken, {
+    const newRefreshToken = hashAValue(generateRefreshToken(email));
+    // rotate refresh token
+    await adminRepository.updateRefreshToken(email, newRefreshToken);
+
+    res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      secure: ENV_VARS.NODE_ENV === "production",
+      secure: ENV_VARS.NODE_ENV === "production" ? true : false,
+      path: "/",
+      maxAge: 10 * 24 * 60 * 60 * 1000,
     });
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: ENV_VARS.NODE_ENV === "production" ? true : false,
+      path: "/",
+      maxAge: 10 * 60 * 1000,
+    });
+
     return res.status(httpstatus.OK).send({ token, isSuccess: true });
   } catch (err) {
     next(err);
@@ -163,7 +175,7 @@ const updateAdminPassword: Handler = async (req, res, next) => {
         `User with the provided credentials could not be found.`
       );
     }
-    const newPasswordHash = hashUserPassword(body.newPassword);
+    const newPasswordHash = hashAValue(body.newPassword);
     const adminUpdated = await adminRepository.updateAdminPassword({
       email: body.email,
       newPassword: newPasswordHash,
