@@ -62,7 +62,6 @@ const loginAdmin: Handler = async (req, res, next) => {
       lastName: existingAdmin.lastName,
       isVerified: existingAdmin.isVerified,
     });
-
     const newRefreshToken = hashAValue(generateRefreshToken(email));
     // rotate refresh token
     await adminRepository.updateRefreshToken(email, newRefreshToken);

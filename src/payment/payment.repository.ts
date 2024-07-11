@@ -11,6 +11,8 @@ const paymentValues = {
   customerEmail: paymentTable.customerEmail,
   createdAt: paymentTable.createdAt,
   bookingId: paymentTable.bookingId,
+  status: paymentTable.status,
+  payedAt: paymentTable.payedAt,
 };
 
 const createPayment = async (request: CreatePaymentRequest) => {

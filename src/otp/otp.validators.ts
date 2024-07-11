@@ -30,7 +30,7 @@ const verifyOTPValidator = z.object({
     })
     .max(255, { message: "Email cannot be more than 255 characters." }),
   otp: z
-    .number({ invalid_type_error: "OTP should be a number" })
+    .coerce.number({ invalid_type_error: "OTP should be a number" })
     .min(100000, { message: "Invalid OTP value" }),
   role: z.enum(["customer", "admin"]).default("customer"),
 });

@@ -44,7 +44,6 @@ const getRoomDetails: Handler = async (req, res, next) => {
 const getAvailableRooms: Handler = async (req, res, next) => {
   try {
     const availableRooms = await roomRepository.getAvailableRooms();
-    console.log({availableRooms})
     return res.status(httpstatus.OK).json({
       availableRooms,
       isSuccess: true,

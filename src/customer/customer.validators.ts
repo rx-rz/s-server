@@ -24,7 +24,7 @@ const registrationValidator = z.object({
 const emailValidator = z.object({
   email: z.string({ required_error: "Email is required!" }).email({
     message: "Email input is not a valid email. Please correct and try again.",
-  }),
+  }).transform((val) => decodeURIComponent(val)),
 });
 
 const updateValidator = z.object({
@@ -43,7 +43,6 @@ const updateValidator = z.object({
   phoneNo: z.string().max(50).optional(),
   address: z.string().optional(),
 });
-
 
 
 const listCustomerValidator = z.object({

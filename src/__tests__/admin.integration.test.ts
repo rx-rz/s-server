@@ -4,7 +4,14 @@ import { generateRefreshToken } from "../middleware/jwt-token";
 import { createRoute } from "../routes";
 import { authenticatedTestApi, testApi } from "./setup";
 import { httpstatus } from "../ctx";
-import { AdminDashboardOverviewDetails, LoginAdminResponse, RegisterAdminResponse, UpdateAdminEmailResponse, UpdateAdminPasswordResponse, UpdateAdminResponse } from "../types/admin.types";
+import {
+  AdminDashboardOverviewDetails,
+  LoginAdminResponse,
+  RegisterAdminResponse,
+  UpdateAdminEmailResponse,
+  UpdateAdminPasswordResponse,
+  UpdateAdminResponse,
+} from "../types/admin.types";
 
 type AdminRegisterObject = {
   email: string;

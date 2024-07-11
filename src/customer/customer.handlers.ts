@@ -12,15 +12,15 @@ export async function checkIfCustomerExists(email: string) {
   return existingCustomer;
 }
 
-const createCustomer: Handler = async (req, res, next) => { 
+const createCustomer: Handler = async (req, res, next) => {
   try {
     const body = v.registrationValidator.parse(req.body);
-    const customer =await checkIfCustomerExists(body.email)
-    if(customer){
-      return res.status(httpstatus.OK).send({customer, isSuccess: true})
-    }else{
-      await customerRepository.createCustomer(body)
-      return res.status(httpstatus.CREATED).send({ customer, isSuccess: true });
+    const customer = await customerRepository.getCustomerDetails(body.email);
+    if (customer) {
+      return res.status(httpstatus.OK).send({ message: "Customer exists", isSuccess: true });
+    } else {
+      await customerRepository.createCustomer(body);
+      return res.status(httpstatus.CREATED).send({ message: "Customer created", isSuccess: true });
     }
   } catch (err) {
     next(err);

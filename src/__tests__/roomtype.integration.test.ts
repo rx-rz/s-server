@@ -82,7 +82,7 @@ describe("ROOM TYPE", () => {
       .delete(
         createRoute({
           prefix: "roomtypes",
-          route: "/loginCustomer",
+          route: "/deleteRoomType",
           includeBaseURL: true,
         })
       )
@@ -157,15 +157,13 @@ describe("ROOM TYPE", () => {
     });
 
     it("should throw a not found error for an inexistent room type", async () => {
-        const response = await authenticatedTestApi("ADMIN")
+      const response = await authenticatedTestApi("ADMIN")
         .get(route)
         .query({ name: "Inexistent Room Type" });
       expect(response.body.isSuccess).toBe(false);
       expect(response.body.error_type).toBe("Not Found Error");
     });
   });
-
-
 
   describe("Get room type details", () => {
     const route = createRoute({
@@ -213,6 +211,4 @@ describe("ROOM TYPE", () => {
       expect(response.body.error_type).toBe("Not Found Error");
     });
   });
-
-
 });

@@ -25,7 +25,7 @@ const sendOTP: Handler = async (req, res, next) => {
       if (response) {
         return res
           .status(httpstatus.CREATED)
-          .send({ otpDetails, isSuccess: true });
+          .send({ message: "OTP sent successfully", isSuccess: true });
       }
     }
   } catch (err) {

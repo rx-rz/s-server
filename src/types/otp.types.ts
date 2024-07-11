@@ -1,11 +1,15 @@
+export type SendOTPRequest = {
+  email: string;
+};
+
 export type SendOTPResponse = {
-  otpDetails: {
-    otp: number;
-    email: string;
-    role: "admin" | "customer" | null;
-    expiresAt: number;
-  };
+  message: string;
   isSuccess: boolean;
+};
+
+export type VerifyOTPRequest = {
+  otp: number;
+  email: string;
 };
 
 export type VerifyOTPResponse = {

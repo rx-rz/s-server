@@ -31,7 +31,7 @@ config({ path: ".env" });
 export const app: Express = express();
 
 const corsOptions: CorsOptions = {
-  origin: "http://127.0.0.1:3000",
+  origin: ["http://127.0.0.1:3000", "http://localhost:3000"],
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
   allowedHeaders: [
     "Origin",
