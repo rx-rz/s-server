@@ -80,6 +80,7 @@ const getRoomTypesForHomePage: Handler = async (req, res, next) => {
 const getRoomTypeDetails: Handler = async (req, res, next) => {
   try {
     const { name } = v.roomTypeNameValidator.parse(req.query);
+    console.log(name)
     await checkIfRoomTypeExists(name);
     const roomTypeDetails = await roomTypeRepository.getRoomTypeDetails(name);
     return res.status(httpstatus.OK).json({ roomTypeDetails, isSuccess: true });

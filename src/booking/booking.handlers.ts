@@ -49,6 +49,7 @@ const createBooking: Handler = async (req, res, next) => {
         status: "pending",
       }),
     ]);
+    // SRP be damned eh
     const { data: paymentData } = await initializePaystackTransaction({
       amount: (Number(bookingCreated.amount) * 100).toString(),
       email: bookingRequest.customerEmail,
@@ -181,7 +182,10 @@ const getBookingDetails: Handler = async (req, res, next) => {
   try {
     const { id } = v.bookingIDValidator.parse(req.query);
     const booking = await checkIfBookingExists(id);
-    return res.status(httpstatus.OK).json({ booking, isSuccess: true });
+    const payment = await paymentRepository.getPaymentByBookingId(id);
+    return res
+      .status(httpstatus.OK)
+      .json({ booking: { ...booking, payment }, isSuccess: true });
   } catch (err) {
     next(err);
   }

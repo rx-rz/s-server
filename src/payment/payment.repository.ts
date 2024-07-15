@@ -42,6 +42,13 @@ const getPaymentDetails = async (id: string) => {
   return paymentDetails;
 };
 
+const getPaymentByBookingId = async (bookingId: string) => {
+  const paymentDetails = await ctx.db.query.payment.findFirst({
+    where: eq(paymentTable.bookingId, bookingId),
+  });
+  return paymentDetails;
+};
+
 const updatePayment = async ({
   reference,
   payedAt,
@@ -87,7 +94,7 @@ export const paymentRepository = {
   createPayment,
   deletePayment,
   getPaymentDetailsByReference,
-  // getPaymentDetailsByBookingID,
+  getPaymentByBookingId,
   getPaymentDetails,
   getLastFivePayments,
   updatePayment,

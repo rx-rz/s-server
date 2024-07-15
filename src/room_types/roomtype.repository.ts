@@ -22,11 +22,13 @@ const createRoomType = async (request: CreateRoomTypeRequest) => {
 };
 
 const getRoomTypeDetails = async (name: string) => {
-  const [getRoomDetails] = await ctx.db
-    .select(roomTypeValues)
-    .from(roomTypeTable)
-    .where(eq(roomTypeTable.name, name));
-  return getRoomDetails;
+  const roomTypeDetails = await ctx.db.query.roomType.findFirst({
+    where: eq(roomTypeTable.name, name),
+    with: {
+      rooms: true,
+    },
+  });
+  return roomTypeDetails;
 };
 
 const getRoomTypeDetailsByID = async (id: number) => {
